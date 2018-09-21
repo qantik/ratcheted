@@ -42,48 +42,48 @@ func gen() (*pk, *sk) {
 	return pk, sk
 }
 
-func pkUpdate(pk *pk, ad []byte) {
-	pk.A = append(pk.A, ad...)
-	pk.P = append(pk.P, pairing.NewG1().SetFromStringHash(string(pk.A), sha256.New()))
-	pk.l += 1
+func (p *pk) update(ad []byte) {
+	p.A = append(p.A, ad...)
+	p.P = append(p.P, pairing.NewG1().SetFromStringHash(string(p.A), sha256.New()))
+	p.l += 1
 
 	return
 }
 
-func skUpdate(sk *sk, ad []byte) {
-	sk.A = append(sk.A, ad...)
-	Pl1 := pairing.NewG1().SetFromStringHash(string(sk.A), sha256.New())
+func (s *sk) update(ad []byte) {
+	s.A = append(s.A, ad...)
+	Pl1 := pairing.NewG1().SetFromStringHash(string(s.A), sha256.New())
 
 	sl := pairing.NewZr().Rand()
 
-	sk.Q = append(sk.Q, pairing.NewG1().MulZn(sk.P0, sl))
-	sk.S = pairing.NewG1().Add(sk.S, pairing.NewG1().MulZn(Pl1, sl))
-	sk.l += 1
+	s.Q = append(s.Q, pairing.NewG1().MulZn(s.P0, sl))
+	s.S = pairing.NewG1().Add(s.S, pairing.NewG1().MulZn(Pl1, sl))
+	s.l += 1
 
 	return
 }
 
-func enc(pk *pk) (K *pbc.Element, C []*pbc.Element) {
+func (p *pk) enc() (K *pbc.Element, C []*pbc.Element) {
 	r := pairing.NewZr().Rand()
 
-	K = pairing.NewGT().MulZn(pairing.NewGT().Pair(pk.Q0, pk.P[1]), r)
+	K = pairing.NewGT().MulZn(pairing.NewGT().Pair(p.Q0, p.P[1]), r)
 
-	C = make([]*pbc.Element, pk.l+1)
-	C[0] = pairing.NewG1().MulZn(pk.P[0], r)
+	C = make([]*pbc.Element, p.l+1)
+	C[0] = pairing.NewG1().MulZn(p.P[0], r)
 	C[1] = nil
 
-	for i := 2; i < 1+pk.l; i++ {
-		C[i] = pairing.NewG1().MulZn(pk.P[i], r)
+	for i := 2; i < 1+p.l; i++ {
+		C[i] = pairing.NewG1().MulZn(p.P[i], r)
 	}
 
 	return
 }
 
-func dec(sk *sk, C []*pbc.Element) (K *pbc.Element) {
-	K = pairing.NewGT().Pair(C[0], sk.S)
+func (s *sk) dec(C []*pbc.Element) (K *pbc.Element) {
+	K = pairing.NewGT().Pair(C[0], s.S)
 
-	for i := 2; i < 1+sk.l; i++ {
-		K = pairing.NewGT().Sub(K, pairing.NewGT().Pair(sk.Q[i-1], C[i]))
+	for i := 2; i < 1+s.l; i++ {
+		K = pairing.NewGT().Sub(K, pairing.NewGT().Pair(s.Q[i-1], C[i]))
 	}
 
 	return

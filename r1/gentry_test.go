@@ -9,14 +9,14 @@ func TestGentry(t *testing.T) {
 	pk, sk := gen()
 
 	for i := 0; i < 10; i++ {
-		Ka, C := enc(pk)
-		Kb := dec(sk, C)
+		Ka, C := pk.enc()
+		Kb := sk.dec(C)
 		if !Ka.Equals(Kb) {
 			t.Fatal("keys do not match")
 		}
 
 		ad := []byte{1, 2, 3}
-		pkUpdate(pk, ad)
-		skUpdate(sk, ad)
+		pk.update(ad)
+		sk.update(ad)
 	}
 }
