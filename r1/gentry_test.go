@@ -3,19 +3,24 @@
 
 package r1
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestGentry(t *testing.T) {
+	require := require.New(t)
+
 	pk, sk := gen()
+
+	ad := []byte{1, 2, 3}
 
 	for i := 0; i < 10; i++ {
 		Ka, C := pk.enc()
 		Kb := sk.dec(C)
-		if !Ka.Equals(Kb) {
-			t.Fatal("keys do not match")
-		}
+		require.True(Ka.Equals(Kb))
 
-		ad := []byte{1, 2, 3}
 		pk.update(ad)
 		sk.update(ad)
 	}
