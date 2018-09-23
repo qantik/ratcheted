@@ -42,6 +42,15 @@ func gen() (*pk, *sk) {
 	return pk, sk
 }
 
+func (s *sk) gen() *pk {
+	s0 := pairing.NewZr().Rand()
+
+	P1 := pairing.NewG1().MulZn(s.S, pairing.NewZr().Invert(s0))
+	Q0 := pairing.NewG1().MulZn(s.P0, s0)
+
+	return &pk{Q0: Q0, A: []byte{}, l: 1, P: []*pbc.Element{s.P0, P1}}
+}
+
 func (p *pk) update(ad []byte) {
 	p.A = append(p.A, ad...)
 	p.P = append(p.P, pairing.NewG1().SetFromStringHash(string(p.A), sha256.New()))
