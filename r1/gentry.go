@@ -13,14 +13,14 @@ import (
 // size 512 bits. The generated groups are of order 160 bits.
 var pairing = pbc.GenerateA(160, 512).NewPairing()
 
-type pk struct {
+type gentryPublic struct {
 	Q0 *pbc.Element
 	A  []byte // associated data
 	l  int    // update count
 	P  []*pbc.Element
 }
 
-type sk struct {
+type gentrySecret struct {
 	P0 *pbc.Element
 	Q  []*pbc.Element
 	A  []byte // associated data
@@ -28,7 +28,7 @@ type sk struct {
 	S  *pbc.Element
 }
 
-func gen() (*pk, *sk) {
+func gen() (*gentryPublic, *gentrySecret) {
 	P0, P1 := pairing.NewG1().Rand(), pairing.NewG1().Rand()
 
 	s0 := pairing.NewZr().Rand()
@@ -36,22 +36,29 @@ func gen() (*pk, *sk) {
 	S1 := pairing.NewG1().MulZn(P1, s0)
 	Q0 := pairing.NewG1().MulZn(P0, s0)
 
-	pk := &pk{Q0: Q0, A: []byte{}, l: 1, P: []*pbc.Element{P0, P1}}
-	sk := &sk{P0: P0, Q: []*pbc.Element{nil}, A: []byte{}, l: 1, S: S1}
+	gentryPublic := &gentryPublic{Q0: Q0, A: []byte{}, l: 1, P: []*pbc.Element{P0, P1}}
+	gentrySecret := &gentrySecret{P0: P0, Q: []*pbc.Element{nil}, A: []byte{}, l: 1, S: S1}
 
-	return pk, sk
+	return gentryPublic, gentrySecret
 }
 
-func (s *sk) gen() *pk {
+func genSecret(seed []byte) *gentrySecret {
+	P0 := pairing.NewG1().SetFromHash(seed[:len(seed)/2])
+	S1 := pairing.NewG1().SetFromHash(seed[len(seed)/2:])
+
+	return &gentrySecret{P0: P0, Q: []*pbc.Element{nil}, A: []byte{}, l: 1, S: S1}
+}
+
+func (s *gentrySecret) gen() *gentryPublic {
 	s0 := pairing.NewZr().Rand()
 
 	P1 := pairing.NewG1().MulZn(s.S, pairing.NewZr().Invert(s0))
 	Q0 := pairing.NewG1().MulZn(s.P0, s0)
 
-	return &pk{Q0: Q0, A: []byte{}, l: 1, P: []*pbc.Element{s.P0, P1}}
+	return &gentryPublic{Q0: Q0, A: []byte{}, l: 1, P: []*pbc.Element{s.P0, P1}}
 }
 
-func (p *pk) update(ad []byte) {
+func (p *gentryPublic) update(ad []byte) {
 	p.A = append(p.A, ad...)
 	p.P = append(p.P, pairing.NewG1().SetFromStringHash(string(p.A), sha256.New()))
 	p.l += 1
@@ -59,7 +66,7 @@ func (p *pk) update(ad []byte) {
 	return
 }
 
-func (s *sk) update(ad []byte) {
+func (s *gentrySecret) update(ad []byte) {
 	s.A = append(s.A, ad...)
 	Pl1 := pairing.NewG1().SetFromStringHash(string(s.A), sha256.New())
 
@@ -72,7 +79,7 @@ func (s *sk) update(ad []byte) {
 	return
 }
 
-func (p *pk) enc() (K *pbc.Element, C []*pbc.Element) {
+func (p *gentryPublic) enc() (K *pbc.Element, C []*pbc.Element) {
 	r := pairing.NewZr().Rand()
 
 	K = pairing.NewGT().MulZn(pairing.NewGT().Pair(p.Q0, p.P[1]), r)
@@ -88,7 +95,7 @@ func (p *pk) enc() (K *pbc.Element, C []*pbc.Element) {
 	return
 }
 
-func (s *sk) dec(C []*pbc.Element) (K *pbc.Element) {
+func (s *gentrySecret) dec(C []*pbc.Element) (K *pbc.Element) {
 	K = pairing.NewGT().Pair(C[0], s.S)
 
 	for i := 2; i < 1+s.l; i++ {
