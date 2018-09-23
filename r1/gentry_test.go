@@ -4,6 +4,8 @@
 package r1
 
 import (
+	"bytes"
+	"crypto/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,5 +25,22 @@ func TestGentry(t *testing.T) {
 
 		pk.update(ad)
 		sk.update(ad)
+	}
+}
+
+func TestGenerate(t *testing.T) {
+	require := require.New(t)
+
+	gentry := NewGentryKEM(rand.Reader)
+	pk, sk := gentry.GenerateKeys()
+	ad := []byte{1, 2, 3}
+
+	for i := 0; i < 20; i++ {
+		Ka, C := gentry.Encrypt(pk)
+		Kb := gentry.Decrypt(sk, C)
+		require.True(bytes.Equal(Ka, Kb))
+
+		pk = gentry.UpdatePublic(pk, ad)
+		sk = gentry.UpdateSecret(sk, ad)
 	}
 }
