@@ -5,3 +5,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/Nik-U/pbc"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/dchest/wots"

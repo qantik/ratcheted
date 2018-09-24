@@ -13,3 +13,9 @@ type kuKEM interface {
 	Encrypt(public []byte) (k, c []byte)
 	Decrypt(secret, c []byte) []byte
 }
+
+type ots interface {
+	GenerateKeys() (pk, sk []byte)
+	Sign(sk, msg []byte) (sig []byte)
+	Verify(pk, msg, sig []byte) bool
+}
