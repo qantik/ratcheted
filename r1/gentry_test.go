@@ -14,23 +14,6 @@ import (
 func TestGentry(t *testing.T) {
 	require := require.New(t)
 
-	pk, sk := gen()
-
-	ad := []byte{1, 2, 3}
-
-	for i := 0; i < 10; i++ {
-		Ka, C := pk.enc()
-		Kb := sk.dec(C)
-		require.True(Ka.Equals(Kb))
-
-		pk.update(ad)
-		sk.update(ad)
-	}
-}
-
-func TestGenerate(t *testing.T) {
-	require := require.New(t)
-
 	gentry := NewGentryKEM(rand.Reader)
 	pk, sk := gentry.GenerateKeys()
 	ad := []byte{1, 2, 3}

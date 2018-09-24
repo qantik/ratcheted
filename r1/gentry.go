@@ -30,7 +30,6 @@ type gentryCiphertextAux struct {
 
 func (g *gentryCiphertext) encode() []byte {
 	var aux gentryCiphertextAux
-	aux.C = make([][]byte, 0)
 	for _, c := range g.C {
 		if c == nil {
 			aux.C = append(aux.C, nil)
@@ -52,7 +51,6 @@ func (g *gentryCiphertext) decode(data []byte) {
 		panic(err)
 	}
 
-	g.C = make([]*pbc.Element, 0)
 	for _, c := range aux.C {
 		if c == nil {
 			g.C = append(g.C, nil)
@@ -79,11 +77,7 @@ type gentryPublicAux struct {
 }
 
 func (g *gentryPublic) encode() []byte {
-	var aux gentryPublicAux
-	aux.Q0 = g.Q0.Bytes()
-	aux.A = g.A
-	aux.L = g.l
-	aux.P = make([][]byte, 0)
+	aux := gentryPublicAux{Q0: g.Q0.Bytes(), A: g.A, L: g.l}
 	for _, p := range g.P {
 		aux.P = append(aux.P, p.Bytes())
 	}
@@ -101,10 +95,7 @@ func (g *gentryPublic) decode(data []byte) {
 		panic(err)
 	}
 
-	g.Q0 = pairing.NewG1().SetBytes(aux.Q0)
-	g.A = aux.A
-	g.l = aux.L
-	g.P = make([]*pbc.Element, 0)
+	g.Q0, g.A, g.l = pairing.NewG1().SetBytes(aux.Q0), aux.A, aux.L
 	for _, p := range aux.P {
 		g.P = append(g.P, pairing.NewG1().SetBytes(p))
 	}
@@ -129,12 +120,7 @@ type gentrySecretAux struct {
 }
 
 func (g *gentrySecret) encode() []byte {
-	var aux gentrySecretAux
-	aux.P0 = g.P0.Bytes()
-	aux.A = g.A
-	aux.L = g.l
-	aux.S = g.S.Bytes()
-	aux.Q = make([][]byte, 0)
+	aux := gentrySecretAux{P0: g.P0.Bytes(), A: g.A, L: g.l, S: g.S.Bytes()}
 	for _, q := range g.Q {
 		if q == nil {
 			aux.Q = append(aux.Q, nil)
@@ -156,11 +142,8 @@ func (g *gentrySecret) decode(data []byte) {
 		panic(err)
 	}
 
-	g.P0 = pairing.NewG1().SetBytes(aux.P0)
-	g.A = aux.A
-	g.l = aux.L
+	g.P0, g.A, g.l = pairing.NewG1().SetBytes(aux.P0), aux.A, aux.L
 	g.S = pairing.NewG1().SetBytes(aux.S)
-	g.Q = make([]*pbc.Element, 0)
 	for _, q := range aux.Q {
 		if q == nil {
 			g.Q = append(g.Q, nil)
@@ -190,42 +173,12 @@ func (g *GentryKEM) GenerateKeys() (pk, sk []byte) {
 	return public.encode(), secret.encode()
 }
 
-func gen() (*gentryPublic, *gentrySecret) {
-	P0, P1 := pairing.NewG1().Rand(), pairing.NewG1().Rand()
-
-	s0 := pairing.NewZr().Rand()
-
-	S1 := pairing.NewG1().MulZn(P1, s0)
-	Q0 := pairing.NewG1().MulZn(P0, s0)
-
-	gentryPublic := &gentryPublic{Q0: Q0, A: []byte{}, l: 1, P: []*pbc.Element{P0, P1}}
-	gentrySecret := &gentrySecret{P0: P0, Q: []*pbc.Element{nil}, A: []byte{}, l: 1, S: S1}
-
-	return gentryPublic, gentrySecret
-}
-
-func genSecret(seed []byte) *gentrySecret {
-	P0 := pairing.NewG1().SetFromHash(seed[:len(seed)/2])
-	S1 := pairing.NewG1().SetFromHash(seed[len(seed)/2:])
-
-	return &gentrySecret{P0: P0, Q: []*pbc.Element{nil}, A: []byte{}, l: 1, S: S1}
-}
-
 func (g *GentryKEM) GenerateSecret(seed []byte) []byte {
 	P0 := pairing.NewG1().SetFromHash(seed[:len(seed)/2])
 	S1 := pairing.NewG1().SetFromHash(seed[len(seed)/2:])
 
 	secret := &gentrySecret{P0: P0, Q: []*pbc.Element{nil}, A: []byte{}, l: 1, S: S1}
 	return secret.encode()
-}
-
-func (s *gentrySecret) gen() *gentryPublic {
-	s0 := pairing.NewZr().Rand()
-
-	P1 := pairing.NewG1().MulZn(s.S, pairing.NewZr().Invert(s0))
-	Q0 := pairing.NewG1().MulZn(s.P0, s0)
-
-	return &gentryPublic{Q0: Q0, A: []byte{}, l: 1, P: []*pbc.Element{s.P0, P1}}
 }
 
 func (g *GentryKEM) GeneratePublicFromSecret(secret []byte) []byte {
@@ -241,14 +194,6 @@ func (g *GentryKEM) GeneratePublicFromSecret(secret []byte) []byte {
 	return public.encode()
 }
 
-func (p *gentryPublic) update(ad []byte) {
-	p.A = append(p.A, ad...)
-	p.P = append(p.P, pairing.NewG1().SetFromStringHash(string(p.A), sha256.New()))
-	p.l += 1
-
-	return
-}
-
 func (g *GentryKEM) UpdatePublic(public, ad []byte) []byte {
 	p := &gentryPublic{}
 	p.decode(public)
@@ -258,19 +203,6 @@ func (g *GentryKEM) UpdatePublic(public, ad []byte) []byte {
 	p.l += 1
 
 	return p.encode()
-}
-
-func (s *gentrySecret) update(ad []byte) {
-	s.A = append(s.A, ad...)
-	Pl1 := pairing.NewG1().SetFromStringHash(string(s.A), sha256.New())
-
-	sl := pairing.NewZr().Rand()
-
-	s.Q = append(s.Q, pairing.NewG1().MulZn(s.P0, sl))
-	s.S = pairing.NewG1().Add(s.S, pairing.NewG1().MulZn(Pl1, sl))
-	s.l += 1
-
-	return
 }
 
 func (g *GentryKEM) UpdateSecret(secret, ad []byte) []byte {
@@ -287,22 +219,6 @@ func (g *GentryKEM) UpdateSecret(secret, ad []byte) []byte {
 	s.l += 1
 
 	return s.encode()
-}
-
-func (p *gentryPublic) enc() (K *pbc.Element, C []*pbc.Element) {
-	r := pairing.NewZr().Rand()
-
-	K = pairing.NewGT().MulZn(pairing.NewGT().Pair(p.Q0, p.P[1]), r)
-
-	C = make([]*pbc.Element, p.l+1)
-	C[0] = pairing.NewG1().MulZn(p.P[0], r)
-	C[1] = nil
-
-	for i := 2; i < 1+p.l; i++ {
-		C[i] = pairing.NewG1().MulZn(p.P[i], r)
-	}
-
-	return
 }
 
 func (g *GentryKEM) Encrypt(public []byte) ([]byte, []byte) {
@@ -323,16 +239,6 @@ func (g *GentryKEM) Encrypt(public []byte) ([]byte, []byte) {
 
 	aux := &gentryCiphertext{C: C}
 	return K.Bytes(), aux.encode()
-}
-
-func (s *gentrySecret) dec(C []*pbc.Element) (K *pbc.Element) {
-	K = pairing.NewGT().Pair(C[0], s.S)
-
-	for i := 2; i < 1+s.l; i++ {
-		K = pairing.NewGT().Sub(K, pairing.NewGT().Pair(s.Q[i-1], C[i]))
-	}
-
-	return
 }
 
 func (g *GentryKEM) Decrypt(secret, cipher []byte) []byte {
