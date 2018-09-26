@@ -44,6 +44,14 @@
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
   version = "v1.2.2"
 
+[[projects]]
+  branch = "master"
+  digest = "1:86f286e7afe01694ffd50bf9226ce2158a75ad099c03071be32b592d68115325"
+  name = "golang.org/x/crypto"
+  packages = ["hkdf"]
+  pruneopts = "UT"
+  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -51,6 +59,7 @@
     "github.com/Nik-U/pbc",
     "github.com/dchest/wots",
     "github.com/stretchr/testify/require",
+    "golang.org/x/crypto/hkdf",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
