@@ -9,7 +9,7 @@ import (
 )
 
 func TestUNIARK(t *testing.T) {
-	c := elliptic.P384()
+	c := elliptic.P256()
 
 	ecies := NewECIES(c)
 	ecdsa := NewECDSA(c)
@@ -20,20 +20,23 @@ func TestUNIARK(t *testing.T) {
 	s, r, err := uni.Init()
 	require.Nil(t, err)
 
-	for i := 0; i < 100; i++ {
-		ss, ka, ct, err := uni.Send(s)
+	pt := []byte{1, 2, 3}
+	ad := []byte{100, 200}
+
+	for i := 0; i < 15; i++ {
+		ss, ct, err := uni.Send(s, ad, pt)
 		require.Nil(t, err)
 
-		ss, ka1, ct1, err := uni.Send(ss)
+		ss, ct1, err := uni.Send(ss, ad, pt)
 		require.Nil(t, err)
 
-		rr, kb, err := uni.Receive(r, ct)
+		rr, pt1, err := uni.Receive(r, ad, ct)
 		require.Nil(t, err)
-		require.True(t, bytes.Equal(ka, kb))
+		require.True(t, bytes.Equal(pt, pt1))
 
-		rr, kb1, err := uni.Receive(rr, ct1)
+		rr, pt1, err = uni.Receive(rr, ad, ct1)
 		require.Nil(t, err)
-		require.True(t, bytes.Equal(ka1, kb1))
+		require.True(t, bytes.Equal(pt, pt1))
 
 		s, r = ss, rr
 	}

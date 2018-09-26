@@ -63,8 +63,8 @@ func (s *Signcryption) GenerateCipherKeys() (sk, pk []byte, err error) {
 	return
 }
 
-func (s *Signcryption) Signcrypt(sks, pkr []byte, msg []byte) ([]byte, error) {
-	sig, err := s.ecdsa.Sign(sks, msg)
+func (s *Signcryption) Signcrypt(sks, pkr, ad, msg []byte) ([]byte, error) {
+	sig, err := s.ecdsa.Sign(sks, append(ad, msg...))
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (s *Signcryption) Signcrypt(sks, pkr []byte, msg []byte) ([]byte, error) {
 	return ct, nil
 }
 
-func (s *Signcryption) Unsigncrypt(skr, pks, ct []byte) ([]byte, error) {
+func (s *Signcryption) Unsigncrypt(skr, pks, ad, ct []byte) ([]byte, error) {
 	dec, err := s.ecies.Decrypt(pks, ct)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (s *Signcryption) Unsigncrypt(skr, pks, ct []byte) ([]byte, error) {
 	//rr := new(big.Int).SetBytes(signature[:s.curve.Params().BitSize/8])
 	//ss := new(big.Int).SetBytes(signature[s.curve.Params().BitSize/8:])
 
-	if err := s.ecdsa.Verify(skr, msg, sig); err != nil {
+	if err := s.ecdsa.Verify(skr, append(ad, msg...), sig); err != nil {
 		return nil, err
 	}
 

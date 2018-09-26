@@ -1,7 +1,7 @@
 package r2
 
 import (
-	"crypto/rand"
+	"bytes"
 	"encoding/json"
 )
 
@@ -47,24 +47,23 @@ func (u *UNIARK) Init() (s, r []byte, err error) {
 	return
 }
 
-func (u *UNIARK) Send(sts []byte) (upd, k, ct []byte, err error) {
-	var s sender
-	if err = json.Unmarshal(sts, &s); err != nil {
-		return
-	}
+var sep = []byte{0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}
 
-	k = make([]byte, 16)
-	if _, err = rand.Read(k); err != nil {
+func (u *UNIARK) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
+	var s sender
+	if err = json.Unmarshal(state, &s); err != nil {
 		return
 	}
 
 	ss, rr, err := u.Init()
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	upd = ss
 
-	ct, err = u.sc.Signcrypt(s.SKS, s.PKR, append(k, rr...))
+	text := append(pt, append(sep, rr...)...)
+
+	ct, err = u.sc.Signcrypt(s.SKS, s.PKR, ad, text)
 	if err != nil {
 		return
 	}
@@ -72,18 +71,19 @@ func (u *UNIARK) Send(sts []byte) (upd, k, ct []byte, err error) {
 	return
 }
 
-func (u *UNIARK) Receive(str, ct []byte) (upd, k []byte, err error) {
+func (u *UNIARK) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 	var r receiver
 	if err = json.Unmarshal(str, &r); err != nil {
 		return
 	}
 
-	dec, err := u.sc.Unsigncrypt(r.SKR, r.PKS, ct)
+	dec, err := u.sc.Unsigncrypt(r.SKR, r.PKS, ad, ct)
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 
-	k, upd = dec[:16], dec[16:]
+	l := bytes.Split(dec, sep)
+	pt, upd = l[0], l[1]
 
 	return
 }

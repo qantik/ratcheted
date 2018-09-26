@@ -1,8 +1,8 @@
 package r2
 
 import (
+	"bytes"
 	"crypto/elliptic"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,10 +25,12 @@ func TestLa(t *testing.T) {
 	msg[1] = 2
 	msg[2] = 3
 
-	ct, err := sc.Signcrypt(sks, pkr, msg)
+	ad := []byte{100, 200}
+
+	ct, err := sc.Signcrypt(sks, pkr, ad, msg)
 	require.Nil(t, err)
 
-	pt, err := sc.Unsigncrypt(skr, pks, ct)
+	pt, err := sc.Unsigncrypt(skr, pks, ad, ct)
 	require.Nil(t, err)
-	fmt.Println(pt, err)
+	require.True(t, bytes.Equal(msg, pt))
 }
