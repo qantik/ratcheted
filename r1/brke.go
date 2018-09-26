@@ -3,7 +3,9 @@
 
 package r1
 
-import "bytes"
+import (
+	"bytes"
+)
 
 type BRKE struct {
 	srke     *SRKE
