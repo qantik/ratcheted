@@ -47,7 +47,7 @@ func (u *UNIARK) Init() (s, r []byte, err error) {
 	return
 }
 
-var sep = []byte{0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}
+var sep = []byte{0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}
 
 func (u *UNIARK) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
 	var s sender

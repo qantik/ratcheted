@@ -2,7 +2,6 @@ package r2
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,8 +18,6 @@ func TestLiteUni(t *testing.T) {
 
 	su, ct, err := lu.Send(s, ad, pt)
 	require.Nil(t, err)
-
-	fmt.Println(su, ct)
 
 	ru, pt1, err := lu.Receive(r, ad, ct)
 	require.Nil(t, err)

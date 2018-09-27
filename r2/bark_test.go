@@ -2,6 +2,7 @@ package r2
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,6 +41,8 @@ func TestBARK(t *testing.T) {
 		pa, pb = pau, pbu
 		//fmt.Println("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDd")
 	}
+
+	fmt.Println((len(pa) + len(pb)) / 2)
 
 	//_, ka, ct, err = bark.Send(pau)
 	//require.Nil(t, err)
