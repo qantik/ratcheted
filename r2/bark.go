@@ -15,8 +15,15 @@ const (
 	sessionKeySize = 16
 )
 
+type uni interface {
+	Init() ([]byte, []byte, error)
+	Send(state, ad, pt []byte) ([]byte, []byte, error)
+	Receive(state, ad, ct []byte) ([]byte, []byte, error)
+}
+
 type BARK struct {
-	uniARK *UNIARK
+	//uniARK *UNIARK
+	uni uni
 }
 
 type participant struct {
@@ -26,17 +33,17 @@ type participant struct {
 	Hreceived        []byte   // iterated hash received messages
 }
 
-func NewBARK(uniARK *UNIARK) *BARK {
-	return &BARK{uniARK: uniARK}
+func NewBARK(uni uni) *BARK {
+	return &BARK{uni: uni}
 }
 
 func (b BARK) Init() ([]byte, []byte, error) {
-	sa, ra, err := b.uniARK.Init()
+	sa, ra, err := b.uni.Init()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	sb, rb, err := b.uniARK.Init()
+	sb, rb, err := b.uni.Init()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,7 +82,7 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct [][]byte, err error) {
 		return
 	}
 
-	s, r, err := b.uniARK.Init()
+	s, r, err := b.uni.Init()
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -89,7 +96,8 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct [][]byte, err error) {
 
 	//fmt.Println("ka:", k)
 
-	onion := append(k, s...)
+	//onion := append(k, s...)
+	onion := merge(s, k)
 
 	i := 0
 	for j, s := range p.Sender {
@@ -104,7 +112,8 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct [][]byte, err error) {
 		//fmt.Println(i, j, u)
 		index := []byte(strconv.Itoa(u - j))
 		//fmt.Println("a:", string(p.Sender[j]), index, p.Hsent, string(onion))
-		sj, o, err := b.uniARK.Send(p.Sender[j], append(index, p.Hsent...), onion)
+		//fmt.Println("ao:", onion)
+		sj, o, err := b.uni.Send(p.Sender[j], append(index, p.Hsent...), onion)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -155,7 +164,8 @@ func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
 		//fmt.Println(i, j, n, len(p.Sender))
 		index := []byte(strconv.Itoa(i + n - j))
 		//fmt.Println("b:", string(p.Receiver[j]), index, p.Hreceived, string(onion))
-		upd, o, err := b.uniARK.Receive(p.Receiver[j], append(index, p.Hreceived...), onion)
+		upd, o, err := b.uni.Receive(p.Receiver[j], append(index, p.Hreceived...), onion)
+		//fmt.Println("kb:", o)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -163,9 +173,12 @@ func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
 		upds = append(upds, upd)
 	}
 
-	p.Sender = append(p.Sender, onion[sessionKeySize:])
-	k = onion[:sessionKeySize]
-	//fmt.Println("kb:", k)
+	//p.Sender = append(p.Sender, onion[sessionKeySize:])
+	//k = onion[:sessionKeySize]
+	//fmt.Println("b:", onion)
+	l := split(onion)
+	p.Sender = append(p.Sender, l[0])
+	k = l[1]
 
 	for j := i; j <= i+n-1; j++ {
 		p.Receiver[j] = nil

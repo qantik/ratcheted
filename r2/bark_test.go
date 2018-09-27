@@ -2,27 +2,27 @@ package r2
 
 import (
 	"bytes"
-	"crypto/elliptic"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestBARK(t *testing.T) {
-	c := elliptic.P256()
+	//c := elliptic.P256()
 
-	ecies := NewECIES(c)
-	ecdsa := NewECDSA(c)
-	sc := NewSigncryption(ecies, ecdsa)
+	//ecies := NewECIES(c)
+	//ecdsa := NewECDSA(c)
+	//sc := NewSigncryption(ecies, ecdsa)
 
-	uni := NewUNIARK(sc)
+	//uni := NewUNIARK(sc)
+	uni := NewLiteUniARCAD()
 
 	bark := NewBARK(uni)
 
 	pa, pb, err := bark.Init()
 	require.Nil(t, err)
 
-	for i := 0; i < 250; i++ {
+	for i := 0; i < 500; i++ {
 		pau, ka, ct, err := bark.Send(pa)
 		require.Nil(t, err)
 
@@ -50,13 +50,14 @@ func TestBARK(t *testing.T) {
 }
 
 func TestBARK1(t *testing.T) {
-	c := elliptic.P256()
+	//c := elliptic.P256()
 
-	ecies := NewECIES(c)
-	ecdsa := NewECDSA(c)
-	sc := NewSigncryption(ecies, ecdsa)
+	//ecies := NewECIES(c)
+	//ecdsa := NewECDSA(c)
+	//sc := NewSigncryption(ecies, ecdsa)
 
-	uni := NewUNIARK(sc)
+	//uni := NewUNIARK(sc)
+	uni := NewLiteUniARCAD()
 
 	bark := NewBARK(uni)
 

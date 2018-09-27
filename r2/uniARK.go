@@ -61,9 +61,12 @@ func (u *UNIARK) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
 	}
 	upd = ss
 
-	text := append(pt, append(sep, rr...)...)
+	//text := append(pt, append(sep, rr...)...)
+	//fmt.Println("###############################", text)
+	//fmt.Println("###############################", merge(pt, rr))
 
-	ct, err = u.sc.Signcrypt(s.SKS, s.PKR, ad, text)
+	ct, err = u.sc.Signcrypt(s.SKS, s.PKR, ad, merge(rr, pt))
+	//ct, err = u.sc.Signcrypt(s.SKS, s.PKR, ad, text)
 	if err != nil {
 		return
 	}
@@ -82,8 +85,23 @@ func (u *UNIARK) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 		return
 	}
 
-	l := bytes.Split(dec, sep)
-	pt, upd = l[0], l[1]
+	//l := bytes.Split(dec, sep)
+	l := split(dec)
+	//fmt.Println("##:", dec)
+	//pt, upd = l[0], l[1]
+	upd, pt = l[0], l[1]
 
 	return
+}
+
+func merge(lists ...[]byte) []byte {
+	m := lists[0]
+	for _, l := range lists[1:] {
+		m = append(m, append(sep, l...)...)
+	}
+	return m
+}
+
+func split(list []byte) [][]byte {
+	return bytes.SplitN(list, sep, 2)
 }
