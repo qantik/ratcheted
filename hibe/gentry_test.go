@@ -2,16 +2,22 @@ package hibe
 
 import (
 	"bytes"
+	"crypto/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestGentry(t *testing.T) {
-	g := NewGentry(160, 512)
+	require := require.New(t)
 
-	root, err := g.Setup()
-	require.Nil(t, err)
+	g := NewGentry()
+
+	var seed [128]byte
+	rand.Read(seed[:])
+
+	params, root, err := g.Setup(seed[:])
+	require.Nil(err)
 
 	id1 := [][]byte{[]byte{1}}
 	id2 := [][]byte{[]byte{2}}
@@ -24,68 +30,67 @@ func TestGentry(t *testing.T) {
 
 	// Message to id1
 	e1, err := g.Extract(root, id1)
-	require.Nil(t, err)
+	require.Nil(err)
 
-	ct, err := g.Encrypt(msg, id1)
-	require.Nil(t, err)
+	c1, c2, err := g.Encrypt(params, msg, id1)
+	require.Nil(err)
 
-	pt, err := g.Decrypt(e1, ct)
-	require.Nil(t, err)
-	require.True(t, bytes.Equal(msg, pt))
+	pt, err := g.Decrypt(e1, c1, c2)
+	require.Nil(err)
+	require.True(bytes.Equal(msg, pt))
 
 	// Message to id2
 	e2, err := g.Extract(root, id2)
-	require.Nil(t, err)
+	require.Nil(err)
 
-	ct, err = g.Encrypt(msg, id2)
-	require.Nil(t, err)
+	c1, c2, err = g.Encrypt(params, msg, id2)
+	require.Nil(err)
 
-	pt, err = g.Decrypt(e2, ct)
-	require.Nil(t, err)
-	require.True(t, bytes.Equal(msg, pt))
+	pt, err = g.Decrypt(e2, c1, c2)
+	require.Nil(err)
+	require.True(bytes.Equal(msg, pt))
 
 	// Message to id21
 	e21, err := g.Extract(e2, id21)
-	require.Nil(t, err)
+	require.Nil(err)
 
-	ct, err = g.Encrypt(msg, id21)
-	require.Nil(t, err)
+	c1, c2, err = g.Encrypt(params, msg, id21)
+	require.Nil(err)
 
-	pt, err = g.Decrypt(e21, ct)
-	require.Nil(t, err)
-	require.True(t, bytes.Equal(msg, pt))
+	pt, err = g.Decrypt(e21, c1, c2)
+	require.Nil(err)
+	require.True(bytes.Equal(msg, pt))
 
 	// Message to id11
 	e11, err := g.Extract(e1, id11)
-	require.Nil(t, err)
+	require.Nil(err)
 
-	ct, err = g.Encrypt(msg, id11)
-	require.Nil(t, err)
+	c1, c2, err = g.Encrypt(params, msg, id11)
+	require.Nil(err)
 
-	pt, err = g.Decrypt(e11, ct)
-	require.Nil(t, err)
-	require.True(t, bytes.Equal(msg, pt))
+	pt, err = g.Decrypt(e11, c1, c2)
+	require.Nil(err)
+	require.True(bytes.Equal(msg, pt))
 
 	// Message to id111
 	e111, err := g.Extract(e11, id111)
-	require.Nil(t, err)
+	require.Nil(err)
 
-	ct, err = g.Encrypt(msg, id111)
-	require.Nil(t, err)
+	c1, c2, err = g.Encrypt(params, msg, id111)
+	require.Nil(err)
 
-	pt, err = g.Decrypt(e111, ct)
-	require.Nil(t, err)
-	require.True(t, bytes.Equal(msg, pt))
+	pt, err = g.Decrypt(e111, c1, c2)
+	require.Nil(err)
+	require.True(bytes.Equal(msg, pt))
 
 	// Message to id1111
 	e1111, err := g.Extract(e111, id1111)
-	require.Nil(t, err)
+	require.Nil(err)
 
-	ct, err = g.Encrypt(msg, id1111)
-	require.Nil(t, err)
+	c1, c2, err = g.Encrypt(params, msg, id1111)
+	require.Nil(err)
 
-	pt, err = g.Decrypt(e1111, ct)
-	require.Nil(t, err)
-	require.True(t, bytes.Equal(msg, pt))
-
+	pt, err = g.Decrypt(e1111, c1, c2)
+	require.Nil(err)
+	require.True(bytes.Equal(msg, pt))
 }
