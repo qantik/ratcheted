@@ -5,8 +5,8 @@ package r1
 
 import (
 	"bytes"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/sha256"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,8 @@ func TestBRKE(t *testing.T) {
 	require := require.New(t)
 
 	gentry := NewGentryKEM(rand.Reader)
-	lamport := NewLamportOTS(rand.Reader, sha256.New)
+	//lamport := NewLamportOTS(rand.Reader, sha256.New)
+	lamport := NewECDSA(elliptic.P256())
 	srke := NewSRKE(gentry, lamport)
 
 	sender, receiver := srke.init()
