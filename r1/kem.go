@@ -1,6 +1,9 @@
 package r1
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type hhibe interface {
 	Setup(seed []byte) ([]byte, []byte, error)
@@ -44,6 +47,9 @@ func (k kem) UpdatePublicKey(pk, ad []byte) ([]byte, error) {
 }
 
 func (k kem) UpdateSecretKey(sk []byte, ad [][]byte) ([]byte, error) {
+	fmt.Println()
+	fmt.Println("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM", len(ad))
+	fmt.Println()
 	return k.hibe.Extract(sk, ad)
 }
 

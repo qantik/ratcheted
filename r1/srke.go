@@ -9,7 +9,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
-	"fmt"
 	"strconv"
 )
 
@@ -108,14 +107,6 @@ func (s *SRKE) senderSend(sender *srkeSender, ad []byte) (ko []byte, C [][]byte)
 	sender.s += 1
 	sender.l[sender.s] = append(ad, bytes.Join(C, nil)...)
 
-	l := len(sender.pk) * 8
-	l += len(sender.l) * 8
-	for i := range sender.t {
-		l += len(sender.t[i]) * 8
-	}
-
-	fmt.Println("sender:", l)
-
 	return
 }
 
@@ -186,14 +177,6 @@ func (s *SRKE) receiverReceive(receiver *srkeReceiver, ad []byte, C [][]byte) (k
 	}
 	receiver.e0 = e
 	receiver.r += 1
-
-	l := len(receiver.sk) * 8
-	l += len(receiver.l) * 8
-	for i := range receiver.t {
-		l += len(receiver.t[i]) * 8
-	}
-
-	fmt.Println("receiver:", l)
 
 	return
 }
