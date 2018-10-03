@@ -9,3 +9,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/dchest/wots"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
