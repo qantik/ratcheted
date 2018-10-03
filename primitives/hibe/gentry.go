@@ -19,7 +19,7 @@ import (
 var pairing = pbc.GenerateA(160, 512).NewPairing()
 
 // gentry designates a Gentry-Silverberg protocol instance.
-type gentry struct{}
+type Gentry struct{}
 
 // gentryParams composes the public parameters of a protocol instance.
 type gentryParams struct {
@@ -51,13 +51,13 @@ type gentryCiphertext struct {
 
 // NewGentry creates a fresh protocol instance over symmetric pairing of groupe size r bits
 // and an underlying finite field of size q bits.
-func NewGentry() *gentry {
-	return &gentry{}
+func NewGentry() *Gentry {
+	return &Gentry{}
 }
 
 // Setup establishes the public parameters and generates a root entity PKG.
 // FIXME: Make better use of seed for sampling elements.
-func (g *gentry) Setup(seed []byte) (params, root []byte, err error) {
+func (g Gentry) Setup(seed []byte) (params, root []byte, err error) {
 	P0 := pairing.NewG1().SetFromStringHash(string(seed), sha256.New())
 
 	s0 := pairing.NewZr().SetFromStringHash(string(seed), sha256.New())
@@ -80,7 +80,7 @@ func (g *gentry) Setup(seed []byte) (params, root []byte, err error) {
 }
 
 // Extract generates a fresh child entity specified by id from a ancestor entity.
-func (g gentry) Extract(ancestor []byte, id []byte) ([]byte, error) {
+func (g Gentry) Extract(ancestor []byte, id []byte) ([]byte, error) {
 	var e gentryEntity
 	if err := e.UnmarshalJSON(ancestor); err != nil {
 		return nil, err
@@ -106,7 +106,7 @@ func (g gentry) Extract(ancestor []byte, id []byte) ([]byte, error) {
 
 // Encrypt encrypts a message for a given id. Note the ciphertext into two parts to simplify
 // the integration in other protocols.
-func (g gentry) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err error) {
+func (g Gentry) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err error) {
 	var p gentryParams
 	if err = json.Unmarshal(params, &p); err != nil {
 		return
@@ -137,7 +137,7 @@ func (g gentry) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err
 }
 
 // Decrypt decrypts a given ciphertext using the secret key material of an entity.
-func (g gentry) Decrypt(entity, c1, c2 []byte) ([]byte, error) {
+func (g Gentry) Decrypt(entity, c1, c2 []byte) ([]byte, error) {
 	var e gentryEntity
 	if err := e.UnmarshalJSON(entity); err != nil {
 		return nil, err
