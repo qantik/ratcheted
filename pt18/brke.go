@@ -29,12 +29,6 @@ var (
 	errKUKEM            = "error while polling ku-kuKEM"
 )
 
-type ots interface {
-	GenerateKeys() (pk, sk []byte)
-	Sign(sk, msg []byte) (sig []byte)
-	Verify(pk, msg, sig []byte) bool
-}
-
 // BRKE designates the PT18 protocol object defined by a ku-KEM scheme and a
 // one-time signature algorithm.
 type BRKE struct {
