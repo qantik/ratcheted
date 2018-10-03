@@ -29,7 +29,7 @@ func TestGentry(t *testing.T) {
 	msg := []byte("hello")
 
 	// Message to id1
-	e1, err := g.Extract(root, id1)
+	e1, err := g.Extract(root, id1[0])
 	require.Nil(err)
 
 	c1, c2, err := g.Encrypt(params, msg, id1)
@@ -40,7 +40,7 @@ func TestGentry(t *testing.T) {
 	require.True(bytes.Equal(msg, pt))
 
 	// Message to id2
-	e2, err := g.Extract(root, id2)
+	e2, err := g.Extract(root, id2[0])
 	require.Nil(err)
 
 	c1, c2, err = g.Encrypt(params, msg, id2)
@@ -51,7 +51,7 @@ func TestGentry(t *testing.T) {
 	require.True(bytes.Equal(msg, pt))
 
 	// Message to id21
-	e21, err := g.Extract(e2, id21)
+	e21, err := g.Extract(e2, id21[1])
 	require.Nil(err)
 
 	c1, c2, err = g.Encrypt(params, msg, id21)
@@ -62,7 +62,7 @@ func TestGentry(t *testing.T) {
 	require.True(bytes.Equal(msg, pt))
 
 	// Message to id11
-	e11, err := g.Extract(e1, id11)
+	e11, err := g.Extract(e1, id11[1])
 	require.Nil(err)
 
 	c1, c2, err = g.Encrypt(params, msg, id11)
@@ -73,7 +73,7 @@ func TestGentry(t *testing.T) {
 	require.True(bytes.Equal(msg, pt))
 
 	// Message to id111
-	e111, err := g.Extract(e11, id111)
+	e111, err := g.Extract(e11, id111[2])
 	require.Nil(err)
 
 	c1, c2, err = g.Encrypt(params, msg, id111)
@@ -84,7 +84,7 @@ func TestGentry(t *testing.T) {
 	require.True(bytes.Equal(msg, pt))
 
 	// Message to id1111
-	e1111, err := g.Extract(e111, id1111)
+	e1111, err := g.Extract(e111, id1111[3])
 	require.Nil(err)
 
 	c1, c2, err = g.Encrypt(params, msg, id1111)

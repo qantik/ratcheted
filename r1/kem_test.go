@@ -18,13 +18,13 @@ func TestKEM(t *testing.T) {
 	var seed [128]byte
 	rand.Read(seed[:])
 
-	pk, sk, err := kem.Generate(seed[:])
+	pk, sk, err := kem.generate(seed[:])
 	require.Nil(err)
 
-	ka, c, err := kem.Encrypt(pk)
+	ka, c, err := kem.encrypt(pk)
 	require.Nil(err)
 
-	kb, err := kem.Decrypt(sk, c)
+	kb, err := kem.decrypt(sk, c)
 	require.Nil(err)
 	require.True(bytes.Equal(ka, kb))
 }

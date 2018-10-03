@@ -2,32 +2,37 @@ package r1
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type hhibe interface {
 	Setup(seed []byte) ([]byte, []byte, error)
-	Extract(ancestor []byte, id [][]byte) ([]byte, error)
+	Extract(ancestor []byte, id []byte) ([]byte, error)
 	Encrypt(params, message []byte, id [][]byte) ([]byte, []byte, error)
 	Decrypt(entity, c1, c2 []byte) ([]byte, error)
 }
 
+// kuKEM designates the key-updatable key encapsulation mechanism object specified by
+// a hierarchical identity-based encryption scheme.
 type kem struct {
 	hibe hhibe
 }
 
+// kuKEMPublicKey is composed of the HIBE public parameters and associated data
+// that acts as the HIBE public key.
 type kemPublicKey struct {
-	PK []byte   // PK designates the HIBE parameters.
-	A  [][]byte // A is associated data used as the identity in the HIBE scheme.
+	PK []byte
+	A  [][]byte
 }
 
-func (k kem) Generate(seed []byte) (pk, sk []byte, err error) {
+// generate creates a new ku-KEM key pair from a given seed.
+func (k kem) generate(seed []byte) (pk, sk []byte, err error) {
 	params, root, err := k.hibe.Setup(seed)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	sk, err = k.hibe.Extract(root, [][]byte{[]byte{}})
+	// As specified in the paper the first entity has an empty id.
+	sk, err = k.hibe.Extract(root, []byte{})
 	if err != nil {
 		return
 	}
@@ -36,7 +41,8 @@ func (k kem) Generate(seed []byte) (pk, sk []byte, err error) {
 	return
 }
 
-func (k kem) UpdatePublicKey(pk, ad []byte) ([]byte, error) {
+// updatePublicKey updates the ku-KEM public key.
+func (k kem) updatePublicKey(pk, ad []byte) ([]byte, error) {
 	var p kemPublicKey
 	if err := json.Unmarshal(pk, &p); err != nil {
 		return nil, err
@@ -46,14 +52,13 @@ func (k kem) UpdatePublicKey(pk, ad []byte) ([]byte, error) {
 	return json.Marshal(&p)
 }
 
-func (k kem) UpdateSecretKey(sk []byte, ad [][]byte) ([]byte, error) {
-	fmt.Println()
-	fmt.Println("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM", len(ad))
-	fmt.Println()
+// updateSecretKey updates the ku-KEM secret key.
+func (k kem) updateSecretKey(sk []byte, ad []byte) ([]byte, error) {
 	return k.hibe.Extract(sk, ad)
 }
 
-func (k kem) Encrypt(pk []byte) ([]byte, []byte, error) {
+// encrypt generates a new key and encapsulate it in a ciphertext.
+func (k kem) encrypt(pk []byte) ([]byte, []byte, error) {
 	var p kemPublicKey
 	if err := json.Unmarshal(pk, &p); err != nil {
 		return nil, nil, err
@@ -62,6 +67,7 @@ func (k kem) Encrypt(pk []byte) ([]byte, []byte, error) {
 	return k.hibe.Encrypt(p.PK, nil, p.A)
 }
 
-func (k kem) Decrypt(sk, ct []byte) ([]byte, error) {
+// decrypt decapsulates an established key from a ciphertext.
+func (k kem) decrypt(sk, ct []byte) ([]byte, error) {
 	return k.hibe.Decrypt(sk, nil, ct)
 }
