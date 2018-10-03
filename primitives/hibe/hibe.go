@@ -1,8 +1,7 @@
 // (c) 2018 EPFL
 // This code is licensed under MIT license (see LICENSE.txt for details)
 
-// Package hibe bundles different hierachical identity-based encryption schemes
-// for usage in the key exchange protocols.
+// Package hibe bundles different HIBE schemes under a common interface.
 //
 // Currently the following HIBE schemes are implemented:
 //  - Gentry-Silverberg [Hierarchical ID-Based Cryptography, https://eprint.iacr.org/2002/056]
