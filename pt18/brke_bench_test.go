@@ -5,8 +5,7 @@ package pt18
 
 import (
 	"bytes"
-	"crypto/rand"
-	"crypto/sha256"
+	"crypto/elliptic"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,7 +17,8 @@ import (
 func brkeAlternating(n int, b *testing.B) {
 	require := require.New(b)
 
-	brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
+	//brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
+	brke := NewBRKE(hibe.NewGentry(), signature.NewECDSA(elliptic.P256()))
 
 	ad := []byte{1, 2, 3}
 
@@ -51,7 +51,8 @@ func benchmarkBRKEAlternating(i int, b *testing.B) {
 func brkeUnidirectional(n int, b *testing.B) {
 	require := require.New(b)
 
-	brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
+	//brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
+	brke := NewBRKE(hibe.NewGentry(), signature.NewECDSA(elliptic.P256()))
 
 	ad := []byte{1, 2, 3}
 

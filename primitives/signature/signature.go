@@ -6,6 +6,7 @@
 //
 // The following schemes are implemeted:
 //  - Lamport one-time signature [Constructing digital signatures from a one-way function]
+//  - ECDSA
 //
 package signature
 

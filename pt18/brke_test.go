@@ -5,8 +5,7 @@ package pt18
 
 import (
 	"bytes"
-	"crypto/rand"
-	"crypto/sha256"
+	"crypto/elliptic"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,7 +17,8 @@ import (
 func TestBRKE_Synchronous(t *testing.T) {
 	require := require.New(t)
 
-	brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
+	//brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
+	brke := NewBRKE(hibe.NewGentry(), signature.NewECDSA(elliptic.P256()))
 
 	ad := []byte{1, 2, 3}
 
@@ -45,7 +45,8 @@ func TestBRKE_Synchronous(t *testing.T) {
 func TestBRKE_Aynchronous(t *testing.T) {
 	require := require.New(t)
 
-	brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
+	//brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
+	brke := NewBRKE(hibe.NewGentry(), signature.NewECDSA(elliptic.P256()))
 
 	ad := []byte{1, 2, 3}
 
