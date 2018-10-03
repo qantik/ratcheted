@@ -1,4 +1,4 @@
-package r1
+package pt18
 
 import (
 	"bytes"
@@ -7,6 +7,9 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
+
+	"github.com/qantik/ratcheted/primitives/hibe"
+	"github.com/qantik/ratcheted/primitives/signature"
 )
 
 const (
@@ -16,17 +19,24 @@ const (
 )
 
 var (
+	// TODO: Better errors.
 	errInvalidSignature = "unable to verify signature"
 	errOutOfSync        = "communicating parties are out-of-sync"
-	errRNG              = "error while polling random number generator"
-	errKUKEM            = "error while polling ku-kem"
+	errPRNG             = "error while polling random number generator"
+	errKUKEM            = "error while polling ku-kuKEM"
 )
+
+type ots interface {
+	GenerateKeys() (pk, sk []byte)
+	Sign(sk, msg []byte) (sig []byte)
+	Verify(pk, msg, sig []byte) bool
+}
 
 // BRKE designates the PT18 protocol object defined by a ku-KEM scheme and a
 // one-time signature algorithm.
-type upd struct {
-	kem *kem
-	ots ots
+type BRKE struct {
+	kuKEM     *kuKEM
+	signature signature.Signature
 }
 
 // User designates a participant in the protocol that can both send and receive
@@ -80,29 +90,39 @@ type s struct {
 }
 
 // NewBRKE creates a fresh BRKE protocol instance.
-func NewUpd(hibe hhibe, ots ots) *upd {
-	return &upd{kem: &kem{hibe: hibe}, ots: ots}
+//
+// TODO: Make RNG a parameter.
+func NewBRKE(hibe hibe.HIBE, signature signature.Signature) *BRKE {
+	return &BRKE{kuKEM: &kuKEM{hibe: hibe}, signature: signature}
 }
 
 // Init creates two fresh users objects that can communicate with each other.
-func (u upd) Init() (*User, *User, error) {
+//
+// TODO: Decide on what to do with the names.
+func (b BRKE) Init() (*User, *User, error) {
 	// Generate two sets of signature key pairs.
-	vfka, sgka := u.ots.GenerateKeys()
-	vfkb, sgkb := u.ots.GenerateKeys()
+	vfka, sgka, err := b.signature.Generate()
+	if err != nil {
+		return nil, nil, errors.Wrap(err, errPRNG)
+	}
+	vfkb, sgkb, err := b.signature.Generate()
+	if err != nil {
+		return nil, nil, errors.Wrap(err, errPRNG)
+	}
 
 	// Generate two sets of key-updatable KEM key pairs.
 	var seed [seedSize]byte
 	if _, err := rand.Read(seed[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errRNG)
+		return nil, nil, errors.Wrap(err, errPRNG)
 	}
-	pka, ska, err := u.kem.generate(seed[:])
+	pka, ska, err := b.kuKEM.generate(seed[:])
 	if err != nil {
 		return nil, nil, errors.Wrap(err, errKUKEM)
 	}
 	if _, err := rand.Read(seed[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errRNG)
+		return nil, nil, errors.Wrap(err, errPRNG)
 	}
-	pkb, skb, err := u.kem.generate(seed[:])
+	pkb, skb, err := b.kuKEM.generate(seed[:])
 	if err != nil {
 		return nil, nil, errors.Wrap(err, errKUKEM)
 	}
@@ -111,10 +131,10 @@ func (u upd) Init() (*User, *User, error) {
 	var Ka [chainingKeySize]byte
 	var Kb [chainingKeySize]byte
 	if _, err := rand.Read(Ka[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errRNG)
+		return nil, nil, errors.Wrap(err, errPRNG)
 	}
 	if _, err := rand.Read(Kb[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errRNG)
+		return nil, nil, errors.Wrap(err, errPRNG)
 	}
 
 	// Create sub-states for user a.
@@ -132,7 +152,7 @@ func (u upd) Init() (*User, *User, error) {
 		sgk: sgka, K: Ka[:],
 		t: []byte{},
 	}
-	a := &User{r: ra, s: sa, name: "alice"}
+	ua := &User{r: ra, s: sa, name: "alice"}
 
 	// Create sub-states for user b.
 	sb := &s{
@@ -149,9 +169,9 @@ func (u upd) Init() (*User, *User, error) {
 		sgk: sgkb, K: Kb[:],
 		t: []byte{},
 	}
-	b := &User{r: rb, s: sb, name: "bob"}
+	ub := &User{r: rb, s: sb, name: "bob"}
 
-	return a, b, nil
+	return ua, ub, nil
 }
 
 // oracle implements the random oracle specified in the paper by spliting a SHA512 digest.
@@ -171,15 +191,18 @@ func oracle(Ks, ks, ts []byte) ([]byte, []byte, []byte) {
 
 // Send creates a new session key and a corresponding ciphertext that has to be passed
 // to the other user in order to notify him of the update.
-func (u upd) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
+func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	// Generate new signature and ku-KEM key pairs. Store the signing key and append
 	// the two public keys to the ciphertext.
-	vfks, sgks := u.ots.GenerateKeys()
+	vfks, sgks, err := b.signature.Generate()
+	if err != nil {
+		return nil, nil, errors.Wrap(err, errPRNG)
+	}
 	var seed [seedSize]byte
 	if _, err := rand.Read(seed[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errRNG)
+		return nil, nil, errors.Wrap(err, errPRNG)
 	}
-	pks, sks, err := u.kem.generate(seed[:])
+	pks, sks, err := b.kuKEM.generate(seed[:])
 	if err != nil {
 		return nil, nil, errors.Wrap(err, errKUKEM)
 	}
@@ -191,7 +214,7 @@ func (u upd) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	// the generated ciphers to the above ciphertext.
 	ks := []byte{}
 	for i := user.s.E0; i <= user.s.E1; i++ {
-		c1, c2, err := u.kem.encrypt(user.s.PK[i])
+		c1, c2, err := b.kuKEM.encrypt(user.s.PK[i])
 		if err != nil {
 			return nil, nil, errors.Wrap(err, errKUKEM)
 		}
@@ -199,8 +222,11 @@ func (u upd) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	}
 
 	// Sign ciphertext and append it to the history.
-	sigma := u.ots.Sign(user.r.sgk, append(ad, bytes.Join(C, nil)...))
-	C = append(C, sigma)
+	sig, err := b.signature.Sign(user.r.sgk, append(ad, bytes.Join(C, nil)...))
+	if err != nil {
+		return nil, nil, errors.Wrap(err, errPRNG)
+	}
+	C = append(C, sig)
 	user.r.L[user.r.E1] = append(ad, bytes.Join(C, nil)...)
 	user.r.sgk = sgks
 
@@ -209,7 +235,7 @@ func (u upd) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	// there can only be a single active s-epoch after a sending operation.
 	user.s.t = append(user.s.t, append(ad, bytes.Join(C, nil)...)...)
 	ko, Ks, coins := oracle(user.s.K, ks, user.s.t)
-	pk, _, err := u.kem.generate(coins)
+	pk, _, err := b.kuKEM.generate(coins)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, errKUKEM)
 	}
@@ -226,15 +252,15 @@ func (u upd) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 }
 
 // Receive receives a newly established session key created by the opposing user.
-func (u upd) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
+func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	// Update s-transcript.
 	ts := append(ad, bytes.Join(C, nil)...)
 	user.s.t = append(user.s.t, ts...)
 
-	sigma := C[len(C)-1]
+	sig := C[len(C)-1]
 	C = C[:len(C)-1]
-	if !u.ots.Verify(user.s.vfk, append(ad, bytes.Join(C, nil)...), sigma) {
-		return nil, errors.New(errInvalidSignature)
+	if err := b.signature.Verify(user.s.vfk, append(ad, bytes.Join(C, nil)...), sig); err != nil {
+		return nil, errors.Wrap(err, errInvalidSignature)
 	}
 
 	// Unwind ciphertext and delete old ciphertext for out-dated r-epochs.
@@ -250,7 +276,7 @@ func (u upd) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	user.s.L[rr] = []byte{}
 
 	for i := rr + 1; i <= user.s.s; i++ {
-		pks, err = u.kem.updatePublicKey(pks, user.s.L[i])
+		pks, err = b.kuKEM.updatePublicKey(pks, user.s.L[i])
 		if err != nil {
 			panic(err)
 		}
@@ -278,15 +304,15 @@ func (u upd) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	for i := user.r.E0; i <= e; i++ {
 		c := C[0]
 		C = C[1:]
-		k, err := u.kem.decrypt(user.r.SK[i], c)
+		k, err := b.kuKEM.decrypt(user.r.SK[i], c)
 		if err != nil {
 			return nil, errors.Wrap(err, errKUKEM)
 		}
 		ks = append(ks, k...)
 	}
 	user.r.t = append(user.r.t, ts...)
-	ko, kr, coins := oracle(user.r.K, ks, user.r.t)
-	_, sk, err := u.kem.generate(coins)
+	ko, Kr, coins := oracle(user.r.K, ks, user.r.t)
+	_, sk, err := b.kuKEM.generate(coins)
 	if err != nil {
 		return nil, errors.Wrap(err, errKUKEM)
 	}
@@ -297,7 +323,7 @@ func (u upd) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	}
 	user.r.SK[e] = sk
 	for i := e + 1; i <= user.r.E1; i++ {
-		s, err := u.kem.updateSecretKey(user.r.SK[i], ts)
+		s, err := b.kuKEM.updateSecretKey(user.r.SK[i], ts)
 		if err != nil {
 			return nil, errors.Wrap(err, errKUKEM)
 		}
@@ -305,7 +331,7 @@ func (u upd) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	}
 	user.r.E0 = e
 	user.r.r += 1
-	user.r.K = kr
+	user.r.K = Kr
 
 	return ko, nil
 }

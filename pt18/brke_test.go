@@ -1,4 +1,4 @@
-package r1
+package pt18
 
 import (
 	"bytes"
@@ -8,13 +8,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/qantik/ratcheted/hibe"
+	"github.com/qantik/ratcheted/primitives/hibe"
+	"github.com/qantik/ratcheted/primitives/signature"
 )
-
-var brke = NewUpd(hibe.NewGentry(), NewLamportOTS(rand.Reader, sha256.New))
 
 func TestBRKE_Synchronous(t *testing.T) {
 	require := require.New(t)
+
+	brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
 
 	ad := []byte{1, 2, 3}
 
@@ -40,6 +41,8 @@ func TestBRKE_Synchronous(t *testing.T) {
 
 func TestBRKE_Aynchronous(t *testing.T) {
 	require := require.New(t)
+
+	brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
 
 	ad := []byte{1, 2, 3}
 

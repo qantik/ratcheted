@@ -1,4 +1,4 @@
-package r1
+package pt18
 
 import (
 	"bytes"
@@ -7,13 +7,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/qantik/ratcheted/hibe"
+	"github.com/qantik/ratcheted/primitives/hibe"
 )
 
 func TestKEM(t *testing.T) {
 	require := require.New(t)
 
-	kem := &kem{hibe.NewGentry()}
+	kem := &kuKEM{hibe.NewGentry()}
 
 	var seed [128]byte
 	rand.Read(seed[:])
