@@ -9,6 +9,7 @@ import (
 	"io"
 	"math/big"
 
+	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
 
@@ -33,8 +34,8 @@ func randFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) 
 
 // signcryption implements the simple signcryption primitive outlined in the paper.
 type signcryption struct {
-	ecies     *ECIES
-	signature signature.Signature
+	encryption encryption.Asymmetric
+	signature  signature.Signature
 }
 
 // signcryptionBlock bundles the message and signature for easier encryption and decryption.
@@ -50,7 +51,7 @@ func (s signcryption) generateSignKeys() (sk, pk []byte, err error) {
 
 // generateCipherKeys creates a encryption public/private key pair.
 func (s signcryption) generateCipherKeys() (sk, pk []byte, err error) {
-	sk, pk, err = s.ecies.GenerateKeys()
+	pk, sk, err = s.encryption.Generate()
 	return
 }
 
@@ -67,7 +68,7 @@ func (s signcryption) signcrypt(sks, pkr, ad, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	ct, err := s.ecies.Encrypt(pkr, b)
+	ct, err := s.encryption.Encrypt(pkr, b)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,7 @@ func (s signcryption) signcrypt(sks, pkr, ad, msg []byte) ([]byte, error) {
 
 // unsigncrypt a ciphertext with associated data.
 func (s signcryption) unsigncrypt(skr, pks, ad, ct []byte) ([]byte, error) {
-	dec, err := s.ecies.Decrypt(pks, ct)
+	dec, err := s.encryption.Decrypt(pks, ct)
 	if err != nil {
 		return nil, err
 	}

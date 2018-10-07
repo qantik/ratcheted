@@ -10,13 +10,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
 
 func TestSigncryption(t *testing.T) {
 	c := elliptic.P256()
 
-	ecies := NewECIES(c)
+	ecies := encryption.NewECIES(c)
 	ecdsa := signature.NewECDSA(c)
 	sc := &signcryption{ecies, ecdsa}
 

@@ -10,12 +10,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
 
 var (
 	curve = elliptic.P256()
-	ecies = NewECIES(curve)
+	ecies = encryption.NewECIES(curve)
 	ecdsa = signature.NewECDSA(curve)
 )
 
