@@ -4,33 +4,11 @@
 package bark
 
 import (
-	"crypto/elliptic"
 	"encoding/json"
-	"io"
-	"math/big"
 
 	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
-
-var one = new(big.Int).SetInt64(1)
-
-func randFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) {
-	params := c.Params()
-	b := make([]byte, params.BitSize/8+8)
-
-	_, err = io.ReadFull(rand, b)
-	if err != nil {
-		return
-	}
-
-	k = new(big.Int).SetBytes(b)
-	n := new(big.Int).Sub(params.N, one)
-	k.Mod(k, n)
-	k.Add(k, one)
-
-	return
-}
 
 // signcryption implements the simple signcryption primitive outlined in the paper.
 type signcryption struct {
