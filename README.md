@@ -7,10 +7,9 @@ Proof-of-concept.
  - [pbc](https://github.com/Nik-U/pbc) (Standford Pairing-Based Cryptography Library)
 
 ## Installation
-
 ```
 go get -u github.com/qantik/ratcheted
-cd ${GOPATH}/src/github.com/qantik/ratcheted}
+cd ${GOPATH}/src/github.com/qantik/ratcheted
 dep ensure
-go test -v
+go test -v ./...
 ````
