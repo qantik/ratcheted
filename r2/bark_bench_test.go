@@ -1,26 +1,25 @@
-package r2_test
+package r2
 
 import (
 	"bytes"
 	"crypto/elliptic"
-	"fmt"
 	"testing"
 
-	"github.com/qantik/ratcheted/r2"
 	"github.com/stretchr/testify/require"
+
+	"github.com/qantik/ratcheted/primitives/signature"
 )
 
 var (
-	curve        = elliptic.P256()
-	ecies        = r2.NewECIES(curve)
-	ecdsa        = r2.NewECDSA(curve)
-	signcryption = r2.NewSigncryption(ecies, ecdsa)
+	curve = elliptic.P256()
+	ecies = NewECIES(curve)
+	ecdsa = signature.NewECDSA(curve)
 )
 
 func barkSingle(n int, b *testing.B) {
 	require := require.New(b)
 
-	bark := r2.NewBARK(r2.NewUNIARK(signcryption))
+	bark := NewBARK(NewUNIARK(&signcryption{ecies, ecdsa}))
 	pa, pb, err := bark.Init()
 	require.Nil(err)
 
@@ -45,7 +44,7 @@ func benchmarkBARKSingle(i int, b *testing.B) {
 func barkLiteSingle(n int, b *testing.B) {
 	require := require.New(b)
 
-	bark := r2.NewBARK(r2.NewLiteUniARCAD())
+	bark := NewBARK(NewLiteUniARCAD())
 	pa, pb, err := bark.Init()
 	require.Nil(err)
 
@@ -59,7 +58,6 @@ func barkLiteSingle(n int, b *testing.B) {
 
 		pa, pb = pau, pbu
 	}
-	fmt.Println((len(pa) + len(pb)) / 2)
 }
 
 func benchmarkBARKLiteSingle(i int, b *testing.B) {
@@ -71,7 +69,7 @@ func benchmarkBARKLiteSingle(i int, b *testing.B) {
 func barkDual(n int, b *testing.B) {
 	require := require.New(b)
 
-	bark := r2.NewBARK(r2.NewUNIARK(signcryption))
+	bark := NewBARK(NewUNIARK(&signcryption{ecies, ecdsa}))
 	pa, pb, err := bark.Init()
 	require.Nil(err)
 
@@ -103,7 +101,7 @@ func benchmarkBARKDual(i int, b *testing.B) {
 func barkLiteDual(n int, b *testing.B) {
 	require := require.New(b)
 
-	bark := r2.NewBARK(r2.NewLiteUniARCAD())
+	bark := NewBARK(NewLiteUniARCAD())
 	pa, pb, err := bark.Init()
 	require.Nil(err)
 
@@ -124,7 +122,6 @@ func barkLiteDual(n int, b *testing.B) {
 
 		pa, pb = pau, pbu
 	}
-	fmt.Println((len(pa) + len(pb)) / 2)
 }
 
 func benchmarkBARKLiteDual(i int, b *testing.B) {

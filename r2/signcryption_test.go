@@ -6,18 +6,20 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/qantik/ratcheted/primitives/signature"
 )
 
-func TestLa(t *testing.T) {
+func TestSigncryption(t *testing.T) {
 	c := elliptic.P256()
 
 	ecies := NewECIES(c)
-	ecdsa := NewECDSA(c)
-	sc := NewSigncryption(ecies, ecdsa)
+	ecdsa := signature.NewECDSA(c)
+	sc := &signcryption{ecies, ecdsa}
 
-	sks, skr, err := sc.GenerateSignKeys()
+	sks, skr, err := sc.generateSignKeys()
 	require.Nil(t, err)
-	pks, pkr, err := sc.GenerateCipherKeys()
+	pks, pkr, err := sc.generateCipherKeys()
 	require.Nil(t, err)
 
 	msg := make([]byte, 3)
@@ -27,10 +29,10 @@ func TestLa(t *testing.T) {
 
 	ad := []byte{100, 200}
 
-	ct, err := sc.Signcrypt(sks, pkr, ad, msg)
+	ct, err := sc.signcrypt(sks, pkr, ad, msg)
 	require.Nil(t, err)
 
-	pt, err := sc.Unsigncrypt(skr, pks, ad, ct)
+	pt, err := sc.unsigncrypt(skr, pks, ad, ct)
 	require.Nil(t, err)
 	require.True(t, bytes.Equal(msg, pt))
 }

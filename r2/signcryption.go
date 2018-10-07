@@ -2,13 +2,14 @@ package r2
 
 import (
 	"crypto/elliptic"
+	"encoding/json"
 	"io"
 	"math/big"
+
+	"github.com/qantik/ratcheted/primitives/signature"
 )
 
 var one = new(big.Int).SetInt64(1)
-
-const maxMessageLength = 1024
 
 func randFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) {
 	params := c.Params()
@@ -25,73 +26,65 @@ func randFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) 
 	k.Add(k, one)
 
 	return
-
 }
 
-// GenerateKey generates a public and private key pair.
-//func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error) {
-//	k, err := randFieldElement(c, rand)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	priv := new(PrivateKey)
-//	priv.PublicKey.Curve = c
-//	priv.D = k
-//	priv.PublicKey.X, priv.PublicKey.Y = c.ScalarBaseMult(k.Bytes())
-//
-//	return priv, nil
-//
-//}
-
-type Signcryption struct {
-	ecies *ECIES
-	ecdsa *ECDSA
+// signcryption implements the simple signcryption primitive outlined in the paper.
+type signcryption struct {
+	ecies     *ECIES
+	signature signature.Signature
 }
 
-func NewSigncryption(ecies *ECIES, ecdsa *ECDSA) *Signcryption {
-	return &Signcryption{ecies: ecies, ecdsa: ecdsa}
+// signcryptionBlock bundles the message and signature for easier encryption and decryption.
+type signcryptionBlock struct {
+	AD, Message, Signature []byte
 }
 
-func (s *Signcryption) GenerateSignKeys() (sk, pk []byte, err error) {
-	sk, pk, err = s.ecdsa.GenerateKeys()
+// generateSignKeys creates a signature public/private key pair.
+func (s signcryption) generateSignKeys() (sk, pk []byte, err error) {
+	pk, sk, err = s.signature.Generate()
 	return
 }
 
-func (s *Signcryption) GenerateCipherKeys() (sk, pk []byte, err error) {
+// generateCipherKeys creates a encryption public/private key pair.
+func (s signcryption) generateCipherKeys() (sk, pk []byte, err error) {
 	sk, pk, err = s.ecies.GenerateKeys()
 	return
 }
 
-func (s *Signcryption) Signcrypt(sks, pkr, ad, msg []byte) ([]byte, error) {
-	sig, err := s.ecdsa.Sign(sks, append(ad, msg...))
+// signcrypt a message with associated data.
+func (s signcryption) signcrypt(sks, pkr, ad, msg []byte) ([]byte, error) {
+	sig, err := s.signature.Sign(sks, append(ad, msg...))
 	if err != nil {
 		return nil, err
 	}
 
-	ct, err := s.ecies.Encrypt(pkr, append(sig, msg...))
+	block := signcryptionBlock{AD: ad, Message: msg, Signature: sig}
+	b, err := json.Marshal(&block)
 	if err != nil {
 		return nil, err
 	}
 
+	ct, err := s.ecies.Encrypt(pkr, b)
+	if err != nil {
+		return nil, err
+	}
 	return ct, nil
 }
 
-func (s *Signcryption) Unsigncrypt(skr, pks, ad, ct []byte) ([]byte, error) {
+// unsigncrypt a ciphertext with associated data.
+func (s signcryption) unsigncrypt(skr, pks, ad, ct []byte) ([]byte, error) {
 	dec, err := s.ecies.Decrypt(pks, ct)
 	if err != nil {
 		return nil, err
 	}
 
-	l := s.ecdsa.SignatureLength()
-	sig, msg := dec[:l], dec[l:]
-
-	//rr := new(big.Int).SetBytes(signature[:s.curve.Params().BitSize/8])
-	//ss := new(big.Int).SetBytes(signature[s.curve.Params().BitSize/8:])
-
-	if err := s.ecdsa.Verify(skr, append(ad, msg...), sig); err != nil {
+	var b signcryptionBlock
+	if err := json.Unmarshal(dec, &b); err != nil {
 		return nil, err
 	}
 
-	return msg, nil
+	if err := s.signature.Verify(skr, append(b.AD, b.Message...), b.Signature); err != nil {
+		return nil, err
+	}
+	return b.Message, nil
 }

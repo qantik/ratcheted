@@ -6,14 +6,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/qantik/ratcheted/primitives/signature"
 )
 
 func TestUNIARK(t *testing.T) {
 	c := elliptic.P256()
 
 	ecies := NewECIES(c)
-	ecdsa := NewECDSA(c)
-	sc := NewSigncryption(ecies, ecdsa)
+	ecdsa := signature.NewECDSA(c)
+	sc := &signcryption{ecies, ecdsa}
 
 	uni := NewUNIARK(sc)
 

@@ -6,7 +6,7 @@ import (
 )
 
 type UNIARK struct {
-	sc *Signcryption
+	sc *signcryption
 }
 
 type sender struct {
@@ -17,17 +17,17 @@ type receiver struct {
 	SKR, PKS []byte
 }
 
-func NewUNIARK(sc *Signcryption) *UNIARK {
+func NewUNIARK(sc *signcryption) *UNIARK {
 	return &UNIARK{sc: sc}
 }
 
 func (u *UNIARK) Init() (s, r []byte, err error) {
-	sks, skr, err := u.sc.GenerateSignKeys()
+	sks, skr, err := u.sc.generateSignKeys()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	pks, pkr, err := u.sc.GenerateCipherKeys()
+	pks, pkr, err := u.sc.generateCipherKeys()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -61,12 +61,7 @@ func (u *UNIARK) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
 	}
 	upd = ss
 
-	//text := append(pt, append(sep, rr...)...)
-	//fmt.Println("###############################", text)
-	//fmt.Println("###############################", merge(pt, rr))
-
-	ct, err = u.sc.Signcrypt(s.SKS, s.PKR, ad, merge(rr, pt))
-	//ct, err = u.sc.Signcrypt(s.SKS, s.PKR, ad, text)
+	ct, err = u.sc.signcrypt(s.SKS, s.PKR, ad, merge(rr, pt))
 	if err != nil {
 		return
 	}
@@ -80,15 +75,12 @@ func (u *UNIARK) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 		return
 	}
 
-	dec, err := u.sc.Unsigncrypt(r.SKR, r.PKS, ad, ct)
+	dec, err := u.sc.unsigncrypt(r.SKR, r.PKS, ad, ct)
 	if err != nil {
 		return
 	}
 
-	//l := bytes.Split(dec, sep)
 	l := split(dec)
-	//fmt.Println("##:", dec)
-	//pt, upd = l[0], l[1]
 	upd, pt = l[0], l[1]
 
 	return
