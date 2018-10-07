@@ -6,31 +6,40 @@ package hibe
 import (
 	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 
 	"github.com/Nik-U/pbc"
 )
 
-const maxDepth = 50
+// maxDepth is the limit to how deep a Boneh hierarchy can reach.
+const maxDepth = 10
 
+// Boneh designates a Boneh-Boyen-Goh protocol instance.
 type Boneh struct{}
 
+// bonehParams composes the public parameters of a protocol instance.
 type bonehParams struct {
-	G, G1, G2, G3 *pbc.Element
-	H             [maxDepth]*pbc.Element
+	G, G1, G2, G3 *pbc.Element           // G, G1, G2, G3 are generator elements.
+	H             [maxDepth]*pbc.Element // H are blinding factors.
 }
 
+// bonehEntity designates a participant in the protocol. It can be both the root PKG,
+// intermediate PKG or a simple user.
 type bonehEntity struct {
+	// ID is public key of the entity. An entity at level t has an ID of lenght t,
+	// the root PKG has an empty ID.
 	ID [][]byte
 
-	// FIXME
+	// FIXME: Normally, these public parameters should not be part of an entity
+	// but without it it seems not to be possible to perform an extraction.
 	G, G3 *pbc.Element
 	H     [maxDepth]*pbc.Element
 
+	// An entity secret key is composed of A0, A1 and an array B.
 	A0, A1 *pbc.Element
 	B      []*pbc.Element
 }
 
+// gentryCiphertext bundles a ciphertext.
 type bonehCiphertext struct {
 	V, W *pbc.Element
 }
@@ -40,11 +49,10 @@ func NewBoneh() *Boneh {
 	return &Boneh{}
 }
 
-var (
-	g1, g2, ss *pbc.Element
-)
-
+// Setup establishes the public parameters and generates a root entity PKG.
 func (b Boneh) Setup(seed []byte) (params, root []byte, err error) {
+	// In order to reuse the same seed for sampling multiple elements the seed is
+	// iteratively hashed.
 	hash := func(base []byte, n int) []byte {
 		sha := sha256.New()
 		digest := seed
@@ -59,9 +67,7 @@ func (b Boneh) Setup(seed []byte) (params, root []byte, err error) {
 	alpha := pairing.NewZr().SetFromHash(hash(seed, 2))
 
 	G1 := pairing.NewG1().MulZn(G, alpha)
-	g1 = G1
 	G2 := pairing.NewG1().SetFromHash(hash(seed, 3))
-	g2 = G2
 	G3 := pairing.NewG1().SetFromHash(hash(seed, 4))
 
 	r := pairing.NewZr().SetFromHash(hash(seed, 5))
@@ -81,18 +87,12 @@ func (b Boneh) Setup(seed []byte) (params, root []byte, err error) {
 	if err != nil {
 		return
 	}
-
-	e := bonehEntity{
-		ID: [][]byte{},
-		G:  G, G3: G3,
-		H:  H,
-		A0: A0, A1: A1,
-		B: B[:],
-	}
+	e := bonehEntity{ID: [][]byte{}, G: G, G3: G3, H: H, A0: A0, A1: A1, B: B[:]}
 	root, err = e.MarshalJSON()
 	return
 }
 
+// Extract generates a fresh child entity specified by id from an ancestor entity.
 func (b Boneh) Extract(ancestor, id []byte) ([]byte, error) {
 	var e bonehEntity
 	if err := e.UnmarshalJSON(ancestor); err != nil {
@@ -122,16 +122,12 @@ func (b Boneh) Extract(ancestor, id []byte) ([]byte, error) {
 		B = append(B, pairing.NewG1().Add(e.B[i-k+1], pairing.NewG1().MulZn(e.H[i], t)))
 	}
 
-	child := &bonehEntity{
-		ID: childID,
-		G:  e.G, G3: e.G3,
-		H:  e.H,
-		A0: A0, A1: A1,
-		B: B,
-	}
+	child := &bonehEntity{ID: childID, G: e.G, G3: e.G3, H: e.H, A0: A0, A1: A1, B: B}
 	return child.MarshalJSON()
 }
 
+// Encrypt encrypts a messages for a given id. Note, that the ciphertext is split into two
+// parts to simplify the integration in other protocols.
 func (b Boneh) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err error) {
 	var p bonehParams
 	if err := p.UnmarshalJSON(params); err != nil {
@@ -139,7 +135,6 @@ func (b Boneh) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err 
 	}
 
 	s := pairing.NewZr().Rand()
-	ss = s
 	h := pairing.NewGT().MulZn(pairing.NewGT().Pair(p.G1, p.G2), s).Bytes()
 	c1 = xor(message, h)
 
@@ -158,6 +153,7 @@ func (b Boneh) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err 
 	return
 }
 
+// Decrypt decrypts a given ciphertext using the secret key material of an entity.
 func (b Boneh) Decrypt(entity, c1, c2 []byte) ([]byte, error) {
 	var e bonehEntity
 	if err := e.UnmarshalJSON(entity); err != nil {
@@ -169,11 +165,8 @@ func (b Boneh) Decrypt(entity, c1, c2 []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	fmt.Println(pairing.NewGT().MulZn(pairing.NewGT().Pair(g1, g2), ss).Bytes())
-
 	n := pairing.NewGT().Pair(e.A1, c.W)
 	d := pairing.NewGT().Pair(c.V, e.A0)
-	fmt.Println(pairing.NewGT().Sub(n, d).Bytes())
 	return xor(c1, pairing.NewGT().Sub(d, n).Bytes()), nil
 }
 
@@ -211,6 +204,7 @@ func (p *bonehParams) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// bonehEntityPacket is a helper structure that enables marshalling.
 type bonehEntityPacket struct {
 	ID     [][]byte
 	G, G3  []byte

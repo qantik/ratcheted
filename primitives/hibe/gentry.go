@@ -11,14 +11,7 @@ import (
 	"github.com/Nik-U/pbc"
 )
 
-// pairing specifies the symmetric pairing function on the curve y^2=x^3+x over
-// the finite field F_q of size 512 bits. The resulting group is of size 160 bits.
-//
-// TODO: Find a way to dynamically create the pairing instead of hard-coding it.
-// TODO: Use point compression to mitigate ciphertext expansion.
-var pairing = pbc.GenerateA(160, 512).NewPairing()
-
-// gentry designates a Gentry-Silverberg protocol instance.
+// Gentry designates a Gentry-Silverberg protocol instance.
 type Gentry struct{}
 
 // gentryParams composes the public parameters of a protocol instance.
@@ -49,8 +42,7 @@ type gentryCiphertext struct {
 	U []*pbc.Element
 }
 
-// NewGentry creates a fresh protocol instance over symmetric pairing of groupe size r bits
-// and an underlying finite field of size q bits.
+// NewGentry creates a fresh protocol instance over symmetric pairing.
 func NewGentry() *Gentry {
 	return &Gentry{}
 }
@@ -79,7 +71,7 @@ func (g Gentry) Setup(seed []byte) (params, root []byte, err error) {
 	return
 }
 
-// Extract generates a fresh child entity specified by id from a ancestor entity.
+// Extract generates a fresh child entity specified by id from an ancestor entity.
 func (g Gentry) Extract(ancestor []byte, id []byte) ([]byte, error) {
 	var e gentryEntity
 	if err := e.UnmarshalJSON(ancestor); err != nil {
@@ -104,8 +96,8 @@ func (g Gentry) Extract(ancestor []byte, id []byte) ([]byte, error) {
 	return child.MarshalJSON()
 }
 
-// Encrypt encrypts a message for a given id. Note the ciphertext into two parts to simplify
-// the integration in other protocols.
+// Encrypt encrypts a message for a given id. Note, that the ciphertext is split
+// into two parts to simplify the integration in other protocols.
 func (g Gentry) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err error) {
 	var p gentryParams
 	if err = json.Unmarshal(params, &p); err != nil {

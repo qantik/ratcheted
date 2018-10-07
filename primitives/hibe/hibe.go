@@ -4,10 +4,19 @@
 // Package hibe bundles different HIBE schemes under a common interface.
 //
 // Currently the following HIBE schemes are implemented:
-//  - Gentry-Silverberg [Hierarchical ID-Based Cryptography, https://eprint.iacr.org/2002/056]
+//  - Gentry-Silverberg [Hierarchical ID-Based Cryptography]
+//  - Boneh-Boyen-Goh [Hierarchical Identity Based Encryption with Constant Size Ciphertext]
 //
-// TODO: Implement Boneh [Hierarchical Identity Based Encryption with Constant Size Ciphertext]
 package hibe
+
+import "github.com/Nik-U/pbc"
+
+// pairing specifies the symmetric pairing function on the curve y^2=x^3+x over
+// the finite field F_q of size 512 bits. The resulting group is of size 160 bits.
+//
+// TODO: Find a way to dynamically create the pairing instead of hard-coding it.
+// TODO: Use point compression to mitigate ciphertext expansion.
+var pairing = pbc.GenerateA(160, 512).NewPairing()
 
 // HIBE specifies a general interface for HIBE constructions.
 type HIBE interface {
