@@ -65,7 +65,7 @@ func barkLiteSingle(n int, b *testing.B) {
 }
 
 func benchmarkBARKLiteSingle(i int, b *testing.B) {
-	for n := 0; n < 1; n++ {
+	for n := 0; n < b.N; n++ {
 		barkLiteSingle(i, b)
 	}
 }
@@ -134,16 +134,16 @@ func benchmarkBARKLiteDual(i int, b *testing.B) {
 	}
 }
 
-//func BenchmarkBARKSingle50(b *testing.B)  { benchmarkBARKSingle(50, b) }
-//func BenchmarkBARKSingle100(b *testing.B) { benchmarkBARKSingle(100, b) }
-//func BenchmarkBARKSingle200(b *testing.B) { benchmarkBARKSingle(200, b) }
-//func BenchmarkBARKSingle300(b *testing.B) { benchmarkBARKSingle(300, b) }
-//func BenchmarkBARKSingle400(b *testing.B) { benchmarkBARKSingle(400, b) }
-//func BenchmarkBARKSingle500(b *testing.B) { benchmarkBARKSingle(500, b) }
-//func BenchmarkBARKSingle600(b *testing.B) { benchmarkBARKSingle(600, b) }
-//func BenchmarkBARKSingle700(b *testing.B) { benchmarkBARKSingle(700, b) }
-//func BenchmarkBARKSingle800(b *testing.B) { benchmarkBARKSingle(800, b) }
-//func BenchmarkBARKSingle900(b *testing.B) { benchmarkBARKSingle(900, b) }
+func BenchmarkBARKSingle50(b *testing.B)  { benchmarkBARKSingle(50, b) }
+func BenchmarkBARKSingle100(b *testing.B) { benchmarkBARKSingle(100, b) }
+func BenchmarkBARKSingle200(b *testing.B) { benchmarkBARKSingle(200, b) }
+func BenchmarkBARKSingle300(b *testing.B) { benchmarkBARKSingle(300, b) }
+func BenchmarkBARKSingle400(b *testing.B) { benchmarkBARKSingle(400, b) }
+func BenchmarkBARKSingle500(b *testing.B) { benchmarkBARKSingle(500, b) }
+func BenchmarkBARKSingle600(b *testing.B) { benchmarkBARKSingle(600, b) }
+func BenchmarkBARKSingle700(b *testing.B) { benchmarkBARKSingle(700, b) }
+func BenchmarkBARKSingle800(b *testing.B) { benchmarkBARKSingle(800, b) }
+func BenchmarkBARKSingle900(b *testing.B) { benchmarkBARKSingle(900, b) }
 
 func BenchmarkBARKLiteSingle50(b *testing.B)  { benchmarkBARKLiteSingle(50, b) }
 func BenchmarkBARKLiteSingle100(b *testing.B) { benchmarkBARKLiteSingle(100, b) }
@@ -156,24 +156,24 @@ func BenchmarkBARKLiteSingle700(b *testing.B) { benchmarkBARKLiteSingle(700, b) 
 func BenchmarkBARKLiteSingle800(b *testing.B) { benchmarkBARKLiteSingle(800, b) }
 func BenchmarkBARKLiteSingle900(b *testing.B) { benchmarkBARKLiteSingle(900, b) }
 
-//func BenchmarkBARKDual50(b *testing.B)  { benchmarkBARKDual(50, b) }
-//func BenchmarkBARKDual100(b *testing.B) { benchmarkBARKDual(100, b) }
-//func BenchmarkBARKDual200(b *testing.B) { benchmarkBARKDual(200, b) }
-//func BenchmarkBARKDual300(b *testing.B) { benchmarkBARKDual(300, b) }
-//func BenchmarkBARKDual400(b *testing.B) { benchmarkBARKDual(400, b) }
-//func BenchmarkBARKDual500(b *testing.B) { benchmarkBARKDual(500, b) }
-//func BenchmarkBARKDual600(b *testing.B) { benchmarkBARKDual(600, b) }
-//func BenchmarkBARKDual700(b *testing.B) { benchmarkBARKDual(700, b) }
-//func BenchmarkBARKDual800(b *testing.B) { benchmarkBARKDual(800, b) }
-//func BenchmarkBARKDual900(b *testing.B) { benchmarkBARKDual(900, b) }
+func BenchmarkBARKDual50(b *testing.B)  { benchmarkBARKDual(50, b) }
+func BenchmarkBARKDual100(b *testing.B) { benchmarkBARKDual(100, b) }
+func BenchmarkBARKDual200(b *testing.B) { benchmarkBARKDual(200, b) }
+func BenchmarkBARKDual300(b *testing.B) { benchmarkBARKDual(300, b) }
+func BenchmarkBARKDual400(b *testing.B) { benchmarkBARKDual(400, b) }
+func BenchmarkBARKDual500(b *testing.B) { benchmarkBARKDual(500, b) }
+func BenchmarkBARKDual600(b *testing.B) { benchmarkBARKDual(600, b) }
+func BenchmarkBARKDual700(b *testing.B) { benchmarkBARKDual(700, b) }
+func BenchmarkBARKDual800(b *testing.B) { benchmarkBARKDual(800, b) }
+func BenchmarkBARKDual900(b *testing.B) { benchmarkBARKDual(900, b) }
 
-//func BenchmarkBARKLiteDual50(b *testing.B)  { benchmarkBARKLiteDual(50, b) }
-//func BenchmarkBARKLiteDual100(b *testing.B) { benchmarkBARKLiteDual(100, b) }
-//func BenchmarkBARKLiteDual200(b *testing.B) { benchmarkBARKLiteDual(200, b) }
-//func BenchmarkBARKLiteDual300(b *testing.B) { benchmarkBARKLiteDual(300, b) }
-//func BenchmarkBARKLiteDual400(b *testing.B) { benchmarkBARKLiteDual(400, b) }
-//func BenchmarkBARKLiteDual500(b *testing.B) { benchmarkBARKLiteDual(500, b) }
-//func BenchmarkBARKLiteDual600(b *testing.B) { benchmarkBARKLiteDual(600, b) }
-//func BenchmarkBARKLiteDual700(b *testing.B) { benchmarkBARKLiteDual(700, b) }
-//func BenchmarkBARKLiteDual800(b *testing.B) { benchmarkBARKLiteDual(800, b) }
-//func BenchmarkBARKLiteDual900(b *testing.B) { benchmarkBARKLiteDual(900, b) }
+func BenchmarkBARKLiteDual50(b *testing.B)  { benchmarkBARKLiteDual(50, b) }
+func BenchmarkBARKLiteDual100(b *testing.B) { benchmarkBARKLiteDual(100, b) }
+func BenchmarkBARKLiteDual200(b *testing.B) { benchmarkBARKLiteDual(200, b) }
+func BenchmarkBARKLiteDual300(b *testing.B) { benchmarkBARKLiteDual(300, b) }
+func BenchmarkBARKLiteDual400(b *testing.B) { benchmarkBARKLiteDual(400, b) }
+func BenchmarkBARKLiteDual500(b *testing.B) { benchmarkBARKLiteDual(500, b) }
+func BenchmarkBARKLiteDual600(b *testing.B) { benchmarkBARKLiteDual(600, b) }
+func BenchmarkBARKLiteDual700(b *testing.B) { benchmarkBARKLiteDual(700, b) }
+func BenchmarkBARKLiteDual800(b *testing.B) { benchmarkBARKLiteDual(800, b) }
+func BenchmarkBARKLiteDual900(b *testing.B) { benchmarkBARKLiteDual(900, b) }
