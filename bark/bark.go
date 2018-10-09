@@ -29,6 +29,11 @@ type BARK struct {
 	uni uni
 }
 
+// barkBlock bundles BARK plaintext material.
+type barkBlock struct {
+	State, Key []byte
+}
+
 type participant struct {
 	Hk               []byte   // hashing key
 	Sender, Receiver [][]byte // states
@@ -100,7 +105,11 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct [][]byte, err error) {
 	//fmt.Println("ka:", k)
 
 	//onion := append(k, s...)
-	onion := merge(s, k)
+	//onion := merge(s, k)
+	onion, err := json.Marshal(&barkBlock{State: s, Key: k})
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
 	i := 0
 	for j, s := range p.Sender {
@@ -179,9 +188,16 @@ func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
 	//p.Sender = append(p.Sender, onion[sessionKeySize:])
 	//k = onion[:sessionKeySize]
 	//fmt.Println("b:", onion)
-	l := split(onion)
-	p.Sender = append(p.Sender, l[0])
-	k = l[1]
+	var block barkBlock
+	if err := json.Unmarshal(onion, &block); err != nil {
+		return nil, nil, err
+	}
+
+	//l := split(onion)
+	//p.Sender = append(p.Sender, l[0])
+	p.Sender = append(p.Sender, block.State)
+	k = block.Key
+	//k = l[1]
 
 	for j := i; j <= i+n-1; j++ {
 		p.Receiver[j] = nil

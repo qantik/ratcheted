@@ -4,7 +4,6 @@
 package bark
 
 import (
-	"bytes"
 	"encoding/json"
 )
 
@@ -103,16 +102,4 @@ func (u *UNIARK) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 	//upd, pt = l[0], l[1]
 
 	return
-}
-
-func merge(lists ...[]byte) []byte {
-	m := lists[0]
-	for _, l := range lists[1:] {
-		m = append(m, append(sep, l...)...)
-	}
-	return m
-}
-
-func split(list []byte) [][]byte {
-	return bytes.SplitN(list, sep, 2)
 }
