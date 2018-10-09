@@ -21,7 +21,7 @@ func TestUNIARK(t *testing.T) {
 	ecdsa := signature.NewECDSA(c)
 	sc := &signcryption{ecies, ecdsa}
 
-	uni := NewUNIARK(sc)
+	uni := NewUni(sc)
 
 	s, r, err := uni.Init()
 	require.Nil(t, err)

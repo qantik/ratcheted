@@ -23,7 +23,7 @@ var (
 func barkSingle(n int, b *testing.B) {
 	require := require.New(b)
 
-	bark := NewBARK(NewUNIARK(&signcryption{ecies, ecdsa}))
+	bark := NewBARK(NewUni(&signcryption{ecies, ecdsa}))
 	pa, pb, err := bark.Init()
 	require.Nil(err)
 
@@ -73,7 +73,7 @@ func benchmarkBARKLiteSingle(i int, b *testing.B) {
 func barkDual(n int, b *testing.B) {
 	require := require.New(b)
 
-	bark := NewBARK(NewUNIARK(&signcryption{ecies, ecdsa}))
+	bark := NewBARK(NewUni(&signcryption{ecies, ecdsa}))
 	pa, pb, err := bark.Init()
 	require.Nil(err)
 

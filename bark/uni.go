@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 )
 
-type UNIARK struct {
+type Uni struct {
 	sc *signcryption
 }
 
@@ -19,16 +19,16 @@ type receiver struct {
 	SKR, PKS []byte
 }
 
-// uniarkBlock bundles the updated receiver state with a plaintext message.
-type uniarkBlock struct {
+// uniBlock bundles the updated receiver state with a plaintext message.
+type uniBlock struct {
 	R, Message []byte
 }
 
-func NewUNIARK(sc *signcryption) *UNIARK {
-	return &UNIARK{sc: sc}
+func NewUni(sc *signcryption) *Uni {
+	return &Uni{sc: sc}
 }
 
-func (u *UNIARK) Init() (s, r []byte, err error) {
+func (u Uni) Init() (s, r []byte, err error) {
 	sks, skr, err := u.sc.generateSignKeys()
 	if err != nil {
 		return nil, nil, err
@@ -54,7 +54,7 @@ func (u *UNIARK) Init() (s, r []byte, err error) {
 	return
 }
 
-func (u *UNIARK) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
+func (u Uni) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
 	var s sender
 	if err = json.Unmarshal(state, &s); err != nil {
 		return
@@ -66,7 +66,7 @@ func (u *UNIARK) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
 	}
 	upd = ss
 
-	block, err := json.Marshal(&uniarkBlock{R: rr, Message: pt})
+	block, err := json.Marshal(&uniBlock{R: rr, Message: pt})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,11 +75,10 @@ func (u *UNIARK) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
 	if err != nil {
 		return
 	}
-
 	return
 }
 
-func (u *UNIARK) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
+func (u Uni) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 	var r receiver
 	if err = json.Unmarshal(str, &r); err != nil {
 		return
@@ -90,14 +89,10 @@ func (u *UNIARK) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 		return
 	}
 
-	var block uniarkBlock
+	var block uniBlock
 	if err := json.Unmarshal(dec, &block); err != nil {
 		return nil, nil, err
 	}
 	upd, pt = block.R, block.Message
-
-	//l := split(dec)
-	//upd, pt = l[0], l[1]
-
 	return
 }
