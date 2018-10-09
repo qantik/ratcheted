@@ -48,7 +48,7 @@ func benchmarkBARKSingle(i int, b *testing.B) {
 func barkLiteSingle(n int, b *testing.B) {
 	require := require.New(b)
 
-	bark := NewBARK(NewLiteUniARCAD())
+	bark := NewBARK(NewLiteUni(encryption.NewGCM()))
 	pa, pb, err := bark.Init()
 	require.Nil(err)
 
@@ -105,7 +105,7 @@ func benchmarkBARKDual(i int, b *testing.B) {
 func barkLiteDual(n int, b *testing.B) {
 	require := require.New(b)
 
-	bark := NewBARK(NewLiteUniARCAD())
+	bark := NewBARK(NewLiteUni(encryption.NewGCM()))
 	pa, pb, err := bark.Init()
 	require.Nil(err)
 

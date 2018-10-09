@@ -8,9 +8,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/qantik/ratcheted/primitives/encryption"
 )
 
 func TestBARK(t *testing.T) {
+	require := require.New(t)
 	//c := elliptic.P256()
 
 	//ecies := NewECIES(c)
@@ -18,27 +21,27 @@ func TestBARK(t *testing.T) {
 	//sc := NewSigncryption(ecies, ecdsa)
 
 	//uni := NewUNIARK(sc)
-	uni := NewLiteUniARCAD()
+	uni := NewLiteUni(encryption.NewGCM())
 
 	bark := NewBARK(uni)
 
 	pa, pb, err := bark.Init()
-	require.Nil(t, err)
+	require.Nil(err)
 
 	for i := 0; i < 500; i++ {
 		pau, ka, ct, err := bark.Send(pa)
-		require.Nil(t, err)
+		require.Nil(err)
 
 		pbu, kb, err := bark.Receive(pb, ct)
-		require.Nil(t, err)
-		require.True(t, bytes.Equal(ka, kb))
+		require.Nil(err)
+		require.True(bytes.Equal(ka, kb))
 
 		pbu, ka, ct, err = bark.Send(pbu)
-		require.Nil(t, err)
+		require.Nil(err)
 
 		pau, kb, err = bark.Receive(pau, ct)
-		require.Nil(t, err)
-		require.True(t, bytes.Equal(ka, kb))
+		require.Nil(err)
+		require.True(bytes.Equal(ka, kb))
 
 		pa, pb = pau, pbu
 	}
@@ -59,7 +62,7 @@ func TestBARK1(t *testing.T) {
 	//sc := NewSigncryption(ecies, ecdsa)
 
 	//uni := NewUNIARK(sc)
-	uni := NewLiteUniARCAD()
+	uni := NewLiteUni(encryption.NewGCM())
 
 	bark := NewBARK(uni)
 

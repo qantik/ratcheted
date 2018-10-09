@@ -20,6 +20,11 @@ type receiver struct {
 	SKR, PKS []byte
 }
 
+// uniarkBlock bundles the updated receiver state with a plaintext message.
+type uniarkBlock struct {
+	R, Message []byte
+}
+
 func NewUNIARK(sc *signcryption) *UNIARK {
 	return &UNIARK{sc: sc}
 }
@@ -64,7 +69,12 @@ func (u *UNIARK) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
 	}
 	upd = ss
 
-	ct, err = u.sc.signcrypt(s.SKS, s.PKR, ad, merge(rr, pt))
+	block, err := json.Marshal(&uniarkBlock{R: rr, Message: pt})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ct, err = u.sc.signcrypt(s.SKS, s.PKR, ad, block)
 	if err != nil {
 		return
 	}
@@ -83,8 +93,14 @@ func (u *UNIARK) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 		return
 	}
 
-	l := split(dec)
-	upd, pt = l[0], l[1]
+	var block uniarkBlock
+	if err := json.Unmarshal(dec, &block); err != nil {
+		return nil, nil, err
+	}
+	upd, pt = block.R, block.Message
+
+	//l := split(dec)
+	//upd, pt = l[0], l[1]
 
 	return
 }

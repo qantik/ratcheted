@@ -8,22 +8,26 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/qantik/ratcheted/primitives/encryption"
 )
 
 func TestLiteUni(t *testing.T) {
-	lu := NewLiteUniARCAD()
+	require := require.New(t)
+
+	lu := NewLiteUni(encryption.NewGCM())
 
 	s, r, err := lu.Init()
-	require.Nil(t, err)
+	require.Nil(err)
 
 	pt := []byte{1, 2, 3}
 	ad := []byte{100, 200}
 
 	su, ct, err := lu.Send(s, ad, pt)
-	require.Nil(t, err)
+	require.Nil(err)
 
 	ru, pt1, err := lu.Receive(r, ad, ct)
-	require.Nil(t, err)
-	require.True(t, bytes.Equal(su, ru))
-	require.True(t, bytes.Equal(pt, pt1))
+	require.Nil(err)
+	require.True(bytes.Equal(su, ru))
+	require.True(bytes.Equal(pt, pt1))
 }
