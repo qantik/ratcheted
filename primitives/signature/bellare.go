@@ -19,7 +19,7 @@ const (
 )
 
 // Bellare implements the forward-secure digital signature schemes proposed
-// by Mihir Bellare and Sara Miner in their 1999 paper A Forward Secure Digital
+// by Mihir Bellare and Sara Miner in their 1999 paper A Forward-Secure Digital
 // Signature Scheme.
 type Bellare struct{}
 
