@@ -43,6 +43,11 @@ type bellareSignature struct {
 	J    int
 }
 
+// NewBellare creates a fresh Bellare protocol instance.
+func NewBellare() *Bellare {
+	return &Bellare{}
+}
+
 // Generate creates a Bellare public/private key pair.
 func (b Bellare) Generate() (pk, sk []byte, err error) {
 	var p *big.Int

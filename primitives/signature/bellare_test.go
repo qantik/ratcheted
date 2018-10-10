@@ -12,7 +12,7 @@ import (
 func TestBellare(t *testing.T) {
 	require := require.New(t)
 
-	b := Bellare{}
+	b := NewBellare()
 	pk, sk, err := b.Generate()
 	require.Nil(err)
 
