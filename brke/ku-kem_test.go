@@ -13,7 +13,7 @@ import (
 	"github.com/qantik/ratcheted/primitives/hibe"
 )
 
-func TestKEM(t *testing.T) {
+func TestKUKEM(t *testing.T) {
 	require := require.New(t)
 
 	kem := &kuKEM{hibe.NewGentry()}
