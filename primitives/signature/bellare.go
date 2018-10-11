@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	bellareSecurity  = 2048 // security parameter in bits.
-	bellareNumPoints = 10   // number of points in the keys.
-	bellareMaxPeriod = 100  // maximum value of allowed key evolutions.
+	bellareSecurity  = 512 // security parameter in bits.
+	bellareNumPoints = 10  // number of points in the keys.
+	bellareMaxPeriod = 100 // maximum value of allowed key evolutions.
 )
 
 // Bellare implements the forward-secure digital signature schemes proposed

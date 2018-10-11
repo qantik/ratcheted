@@ -124,15 +124,23 @@ func (s SCh) Send(user *User, ad, msg []byte) ([]byte, error) {
 	}
 
 	// Encrypt message and update kuPKE public key.
-	c, err := s.kuPKE.encrypt(user.ek, msg)
+	uek := user.ek
+	for i := user.ack + 1; i < user.s; i++ {
+		fmt.Println(i)
+		uek, err = s.kuPKE.updatePublicKey(uek, user.t[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	c, err := s.kuPKE.encrypt(uek, msg)
 	if err != nil {
 		return nil, err
 	}
-	ek, err := s.kuPKE.updatePublicKey(user.ek, l)
-	if err != nil {
-		return nil, err
-	}
-	user.ek = ek
+	//ek, err := s.kuPKE.updatePublicKey(user.ek, l)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//user.ek = ek
 
 	// Sign and marshal message.
 	sig, err := s.kuDSS.sign(user.sk, append(c, l...))
@@ -162,10 +170,14 @@ func (s SCh) Receive(user *User, ad, m []byte) ([]byte, error) {
 		return nil, err
 	}
 	if aux.S != user.r+1 || !bytes.Equal(aux.Tau, user.t[aux.R]) || !bytes.Equal(aux.T, user.tau) {
-		return nil, errors.New("user are out-of-sync")
+		return nil, errors.New("users are out-of-sync")
 	}
 
-	if err := s.kuDSS.verify(user.vk, append(msg.C, msg.Aux...), msg.Sig); err != nil {
+	uvk := user.vk
+	for i := user.ack + 1; i <= aux.R; i++ {
+		uvk, _ = s.kuDSS.updatePublicKey(uvk, user.t[i])
+	}
+	if err := s.kuDSS.verify(uvk, append(msg.C, msg.Aux...), msg.Sig); err != nil {
 		return nil, err
 	}
 
@@ -173,16 +185,10 @@ func (s SCh) Receive(user *User, ad, m []byte) ([]byte, error) {
 	user.ack = aux.R
 
 	// Decrypt ciphertext and update kuPKE private key.
-	fmt.Println(user.dk[aux.R])
-	pt, err := s.kuPKE.decrypt(user.dk[aux.R], msg.C)
+	pt, err := s.kuPKE.decrypt(user.dk[user.ack], msg.C)
 	if err != nil {
 		return nil, err
 	}
-	dks, err := s.kuPKE.updatePrivateKey(user.dk[aux.R], msg.Aux)
-	if err != nil {
-		return nil, err
-	}
-	user.dk[aux.R] = dks
 
 	// Delete outdated data.
 	for i := 0; i < user.ack; i++ {
@@ -197,6 +203,12 @@ func (s SCh) Receive(user *User, ad, m []byte) ([]byte, error) {
 	sks, err := s.kuDSS.updatePrivateKey(user.sk, user.tau)
 	if err != nil {
 		return nil, err
+	}
+	for i := user.ack; i <= user.s; i++ {
+		user.dk[i], err = s.kuPKE.updatePrivateKey(user.dk[i], user.tau)
+		if err != nil {
+			return nil, err
+		}
 	}
 	user.sk = sks
 	user.vk = aux.VK

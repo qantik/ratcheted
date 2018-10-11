@@ -21,17 +21,40 @@ func TestSCh(t *testing.T) {
 	msg := []byte("SCh")
 	ad := []byte("associated")
 
-	m, err := s.Send(ua, ad, msg)
-	require.Nil(err)
+	for i := 0; i < 10; i++ {
+		m, err := s.Send(ua, ad, msg)
+		require.Nil(err)
 
-	pt, err := s.Receive(ub, ad, m)
-	require.Nil(err)
-	require.True(bytes.Equal(msg, pt))
+		m1, err := s.Send(ua, ad, msg)
+		require.Nil(err)
 
-	m, err = s.Send(ua, ad, msg)
-	require.Nil(err)
+		m2, err := s.Send(ua, ad, msg)
+		require.Nil(err)
 
-	pt, err = s.Receive(ub, ad, m)
-	require.Nil(err)
-	require.True(bytes.Equal(msg, pt))
+		pt, err := s.Receive(ub, ad, m)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+
+		m, err = s.Send(ub, ad, msg)
+		require.Nil(err)
+
+		m3, err := s.Send(ub, ad, msg)
+		require.Nil(err)
+
+		pt, err = s.Receive(ua, ad, m)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+
+		pt, err = s.Receive(ua, ad, m3)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+
+		pt, err = s.Receive(ub, ad, m1)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+
+		pt, err = s.Receive(ub, ad, m2)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+	}
 }
