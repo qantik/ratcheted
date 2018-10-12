@@ -1,6 +1,12 @@
 // (c) 2018 EPFL
 // This code is licensed under MIT license (see LICENSE.txt for details)
 
+// Package sch implements the secure channel (SCh) protocol specified by Joseph Jaeger
+// and Igors Stepanovs in their paper Optimal Channel Security Against Fine-Grained
+// State Compromise: The Safety of Messaging (https://eprint.iacr.org/2018/553) first
+// published at CRYPTO-2018. The scheme relies on novel cryptgraphic primitives like
+// a key-updatable digital signature scheme and a key-updatable public-key encryption
+// scheme.
 package sch
 
 import (
@@ -9,7 +15,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/qantik/ratcheted/primitives/hibe"
 	"github.com/qantik/ratcheted/primitives/signature"
@@ -17,8 +22,16 @@ import (
 
 const hashingKeySize = 16 // size of the hashing key in bytes.
 
-// SCh designates the secure channel protocol defined by ku-DSS scheme
-// and a ku-PKE scheme.
+// ErrOutOfSync means that one of the parties is working with out-of-order data.
+// This can happen when a sent sequence of messages arrives in a different order
+// at the receiver.
+var ErrOutOfSync = errors.New("parties are out-of-sync")
+
+type ErrSignature struct{ error }
+
+func (e ErrSignature) Error() string { return e.Error() }
+
+// SCh designates the secure channel protocol defined by a ku-DSS scheme and a ku-PKE scheme.
 type SCh struct {
 	kuDSS *kuDSS
 	kuPKE *kuPKE
@@ -38,17 +51,17 @@ type User struct {
 	s, r, ack int // s, r and ack are the send, receive and acknowledge counters.
 }
 
-// Message bundles the ciphertext, the signature and auxiliary udpate data.
+// Message bundles the ciphertext, the signature and auxiliary update data.
 type Message struct {
-	C, Sig, Aux []byte
+	C   []byte // C is the ciphertext.
+	Sig []byte // Sig is the message signature.
+	Aux []byte // Aux contains auxiliary data that signed but not encrypted.
 }
 
-// auxiliary bundles data that is sent along a ciphertext.
+// auxiliary bundles signed auxiliary data that is sent alongside a ciphertext.
 type auxiliary struct {
-	VK, EK []byte
-	AD     []byte
-	Tau, T []byte
-	S, R   int
+	VK, EK, AD, Tau, T []byte
+	S, R               int
 }
 
 // NewSCh returns a fresh secure channel instance.
@@ -59,7 +72,7 @@ func NewSCh() *SCh {
 	}
 }
 
-// Init creates and returns two communicating parties.
+// Init creates and returns two User objects which can communicate with each other.
 func (s SCh) Init() (*User, *User, error) {
 	vkb, ska, err := s.kuDSS.generate()
 	if err != nil {
@@ -126,7 +139,6 @@ func (s SCh) Send(user *User, ad, msg []byte) ([]byte, error) {
 	// Encrypt message and update kuPKE public key.
 	uek := user.ek
 	for i := user.ack + 1; i < user.s; i++ {
-		fmt.Println(i)
 		uek, err = s.kuPKE.updatePublicKey(uek, user.t[i])
 		if err != nil {
 			return nil, err
@@ -136,16 +148,11 @@ func (s SCh) Send(user *User, ad, msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	//ek, err := s.kuPKE.updatePublicKey(user.ek, l)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//user.ek = ek
 
 	// Sign and marshal message.
 	sig, err := s.kuDSS.sign(user.sk, append(c, l...))
 	if err != nil {
-		return nil, err
+		return nil, &ErrSignature{err}
 	}
 	m, err := json.Marshal(&Message{C: c, Sig: sig, Aux: l})
 	if err != nil {
@@ -170,7 +177,7 @@ func (s SCh) Receive(user *User, ad, m []byte) ([]byte, error) {
 		return nil, err
 	}
 	if aux.S != user.r+1 || !bytes.Equal(aux.Tau, user.t[aux.R]) || !bytes.Equal(aux.T, user.tau) {
-		return nil, errors.New("users are out-of-sync")
+		return nil, ErrOutOfSync
 	}
 
 	uvk := user.vk
@@ -211,6 +218,7 @@ func (s SCh) Receive(user *User, ad, m []byte) ([]byte, error) {
 		}
 	}
 	user.sk = sks
+
 	user.vk = aux.VK
 	user.ek = aux.EK
 

@@ -37,6 +37,8 @@ func (k kuPKE) generate() (pk, sk []byte, err error) {
 		return nil, nil, err
 	}
 
+	// Extract a first entity since root PKG is not able to perform encryptions.
+	// This differs from the specification in the paper where the root PKGs is returned.
 	sk, err = k.hibe.Extract(root, []byte{})
 	if err != nil {
 		return
