@@ -6,7 +6,6 @@ package encryption
 import (
 	"bytes"
 	"crypto/rand"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -24,7 +23,6 @@ func TestGCM(t *testing.T) {
 	rand.Read(key[:])
 
 	ct, err := gcm.Encrypt(key[:], msg, ad)
-	fmt.Println(err)
 	require.Nil(err)
 
 	pt, err := gcm.Decrypt(key[:], ct, ad)
