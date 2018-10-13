@@ -11,6 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/hibe"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
@@ -173,11 +174,7 @@ func (b BRKE) Init() (*User, *User, error) {
 
 // oracle implements the random oracle specified in the paper by spliting a SHA512 digest.
 func oracle(Ks, ks, ts []byte) ([]byte, []byte, []byte) {
-	sha := sha512.New()
-	sha.Write(Ks)
-	sha.Write(ks)
-	sha.Write(ts)
-	sum := sha.Sum(nil)
+	sum := primitives.Digest(sha512.New(), Ks, ks, ts)
 
 	// TODO: Make this more elegant.
 	ko := sum[:sessionKeySize]

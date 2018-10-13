@@ -16,6 +16,7 @@ import (
 	"io"
 	"math/big"
 
+	"github.com/qantik/ratcheted/primitives"
 	"golang.org/x/crypto/hkdf"
 )
 
@@ -111,9 +112,7 @@ func (e ECIES) Encrypt(pk, msg []byte) ([]byte, error) {
 	cbc := cipher.NewCBCEncrypter(block, iv)
 	cbc.CryptBlocks(c[aes.BlockSize:], padded)
 
-	mac := hmac.New(sha256.New, km)
-	mac.Write(c)
-	d := mac.Sum(nil)
+	d := primitives.Digest(hmac.New(sha256.New, km), c)
 
 	ct := eciesCiphertext{Rx: Rx, Ry: Ry, C: c, D: d}
 	enc, err := json.Marshal(&ct)
@@ -149,9 +148,7 @@ func (e ECIES) Decrypt(sk, ct []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	mac := hmac.New(sha256.New, km)
-	mac.Write(ciphertext.C)
-	tau := mac.Sum(nil)
+	tau := primitives.Digest(hmac.New(sha256.New, km), ciphertext.C)
 	if !bytes.Equal(tau, ciphertext.D) {
 		return nil, errors.New("failed to verify mac")
 	}

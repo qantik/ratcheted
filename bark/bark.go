@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+
+	"github.com/qantik/ratcheted/primitives"
 )
 
 const (
@@ -138,9 +140,7 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct [][]byte, err error) {
 
 	ct = [][]byte{[]byte(strconv.Itoa(u - i)), p.Hsent, onion}
 
-	mac := hmac.New(sha256.New, p.Hk)
-	mac.Write(bytes.Join(ct, nil))
-	p.Hsent = mac.Sum(nil)
+	p.Hsent = primitives.Digest(hmac.New(sha256.New, p.Hk), ct...)
 
 	upd, err = json.Marshal(&p)
 	return
@@ -205,9 +205,7 @@ func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
 	//fmt.Println("TTTTTTTTTTTTT", i, n, len(upds), len(p.Receiver))
 	p.Receiver[i+n] = upds[i+n]
 
-	mac := hmac.New(sha256.New, p.Hk)
-	mac.Write(bytes.Join(ct, nil))
-	p.Hreceived = mac.Sum(nil)
+	p.Hreceived = primitives.Digest(hmac.New(sha256.New, p.Hk), ct...)
 
 	upd, err = json.Marshal(&p)
 	return

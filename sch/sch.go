@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/hibe"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
@@ -159,9 +160,7 @@ func (s SCh) Send(user *User, ad, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	sha := sha256.New()
-	sha.Write(append(user.hk, m...))
-	user.t = append(user.t, sha.Sum(nil))
+	user.t = append(user.t, primitives.Digest(sha256.New(), user.hk, m))
 	user.sk = sks
 
 	return m, nil
@@ -203,9 +202,7 @@ func (s SCh) Receive(user *User, ad, m []byte) ([]byte, error) {
 		user.dk[i] = nil
 	}
 
-	sha := sha256.New()
-	sha.Write(append(user.hk, m...))
-	user.tau = sha.Sum(nil)
+	user.tau = primitives.Digest(sha256.New(), user.hk, m)
 
 	sks, err := s.kuDSS.updatePrivateKey(user.sk, user.tau)
 	if err != nil {
@@ -218,7 +215,6 @@ func (s SCh) Receive(user *User, ad, m []byte) ([]byte, error) {
 		}
 	}
 	user.sk = sks
-
 	user.vk = aux.VK
 	user.ek = aux.EK
 

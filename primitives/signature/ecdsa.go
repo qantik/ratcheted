@@ -11,6 +11,8 @@ import (
 	"crypto/x509"
 	"errors"
 	"math/big"
+
+	"github.com/qantik/ratcheted/primitives"
 )
 
 // ECDSA designates the ECDSA scheme handler object.
@@ -48,11 +50,7 @@ func (e ECDSA) Sign(sk, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	sha := sha256.New()
-	sha.Write(msg)
-	digest := sha.Sum(nil)
-
-	r, s, err := ecdsa.Sign(rand.Reader, secret, digest)
+	r, s, err := ecdsa.Sign(rand.Reader, secret, primitives.Digest(sha256.New(), msg))
 	if err != nil {
 		return nil, err
 	}
@@ -74,13 +72,9 @@ func (e ECDSA) Verify(pk, msg, sig []byte) error {
 		return err
 	}
 
-	sha := sha256.New()
-	sha.Write(msg)
-	digest := sha.Sum(nil)
-
 	r := new(big.Int).SetBytes(sig[:e.signatureSize()/2])
 	s := new(big.Int).SetBytes(sig[e.signatureSize()/2:])
-	if !ecdsa.Verify(public.(*ecdsa.PublicKey), digest, r, s) {
+	if !ecdsa.Verify(public.(*ecdsa.PublicKey), primitives.Digest(sha256.New(), msg), r, s) {
 		return errors.New("unable to verify signature")
 	}
 	return nil

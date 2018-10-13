@@ -10,6 +10,8 @@ import (
 	"errors"
 	"math/big"
 	"strconv"
+
+	"github.com/qantik/ratcheted/primitives"
 )
 
 const (
@@ -123,12 +125,8 @@ func (b Bellare) Sign(sk, msg []byte) ([]byte, error) {
 	e := new(big.Int).Exp(big.NewInt(2), big.NewInt(bellareMaxPeriod+1-int64(private.J)), nil)
 	Y := new(big.Int).Exp(R, e, private.N)
 
-	// 512 bits should be less than the maximum number of allowed points in the keys.
-	sha := sha512.New()
-	sha.Write([]byte(strconv.Itoa(private.J)))
-	sha.Write(Y.Bytes())
-	sha.Write(msg)
-	c := new(big.Int).SetBytes(sha.Sum(nil))
+	digest := primitives.Digest(sha512.New(), []byte(strconv.Itoa(private.J)), Y.Bytes(), msg)
+	c := new(big.Int).SetBytes(digest)
 
 	P := big.NewInt(1)
 	for i := 0; i < bellareNumPoints; i++ {
@@ -152,11 +150,8 @@ func (b Bellare) Verify(pk, msg, sig []byte) error {
 		return err
 	}
 
-	sha := sha512.New()
-	sha.Write([]byte(strconv.Itoa(signature.J)))
-	sha.Write(signature.Y.Bytes())
-	sha.Write(msg)
-	c := new(big.Int).SetBytes(sha.Sum(nil))
+	digest := primitives.Digest(sha512.New(), []byte(strconv.Itoa(signature.J)), signature.Y.Bytes(), msg)
+	c := new(big.Int).SetBytes(digest)
 
 	e := new(big.Int).Exp(big.NewInt(2), big.NewInt(bellareMaxPeriod+1-int64(signature.J)), nil)
 	L := new(big.Int).Exp(signature.Z, e, public.N)

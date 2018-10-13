@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 
 	"github.com/Nik-U/pbc"
+	"github.com/qantik/ratcheted/primitives"
 )
 
 // maxDepth is the limit to how deep a Boneh hierarchy can reach.
@@ -54,11 +55,9 @@ func (b Boneh) Setup(seed []byte) (params, root []byte, err error) {
 	// In order to reuse the same seed for sampling multiple elements the seed is
 	// iteratively hashed.
 	hash := func(base []byte, n int) []byte {
-		sha := sha256.New()
 		digest := seed
 		for i := 0; i < n; i++ {
-			sha.Write(digest)
-			digest = sha.Sum(nil)
+			digest = primitives.Digest(sha256.New(), digest)
 		}
 		return digest
 	}
