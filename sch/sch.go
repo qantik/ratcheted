@@ -14,7 +14,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
+
+	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/hibe"
@@ -22,15 +23,6 @@ import (
 )
 
 const hashingKeySize = 16 // size of the hashing key in bytes.
-
-// ErrOutOfSync means that one of the parties is working with out-of-order data.
-// This can happen when a sent sequence of messages arrives in a different order
-// at the receiver.
-var ErrOutOfSync = errors.New("parties are out-of-sync")
-
-type ErrSignature struct{ error }
-
-func (e ErrSignature) Error() string { return e.Error() }
 
 // SCh designates the secure channel protocol defined by a ku-DSS scheme and a ku-PKE scheme.
 type SCh struct {
@@ -52,28 +44,32 @@ type User struct {
 	s, r, ack int // s, r and ack are the send, receive and acknowledge counters.
 }
 
-// Message bundles the ciphertext, the signature and auxiliary update data.
-type Message struct {
+// message bundles the ciphertext, the signature and auxiliary update data and is the object
+// sent from one user to another.
+type message struct {
 	C   []byte // C is the ciphertext.
 	Sig []byte // Sig is the message signature.
-	Aux []byte // Aux contains auxiliary data that signed but not encrypted.
+
+	Aux *aux   // Aux contains auxiliary data that signed but not encrypted.
+	L   []byte // L is the marshalled auxiliary data.
 }
 
-// auxiliary bundles signed auxiliary data that is sent alongside a ciphertext.
-type auxiliary struct {
-	VK, EK, AD, Tau, T []byte
+// aux bundles signed auxiliary data that is sent alongside a ciphertext.
+type aux struct {
+	Vk, Ek, Ad, Tau, T []byte
 	S, R               int
 }
 
-// NewSCh returns a fresh secure channel instance.
-func NewSCh() *SCh {
-	return &SCh{
-		kuDSS: &kuDSS{signature: signature.NewBellare()},
-		kuPKE: &kuPKE{hibe: hibe.NewGentry()},
-	}
+// NewSCh returns a fresh secure channel instance for a given forward-secure signature
+// scheme and hierarchical identity-based encryption protocol.
+func NewSCh(signature signature.ForwardSignature, hibe hibe.HIBE) *SCh {
+	return &SCh{kuDSS: &kuDSS{signature: signature}, kuPKE: &kuPKE{hibe: hibe}}
 }
 
 // Init creates and returns two User objects which can communicate with each other.
+// Note, that in case of an error during a send or receiver operation both user states
+// are considered corrupt thus requiring a fresh protocol initialization in order to
+// resume communicating.
 func (s SCh) Init() (*User, *User, error) {
 	vkb, ska, err := s.kuDSS.generate()
 	if err != nil {
@@ -97,126 +93,134 @@ func (s SCh) Init() (*User, *User, error) {
 	}
 
 	ua := &User{
-		vk: vka, sk: ska,
-		ek: eka, dk: [][]byte{dka},
-		hk:  hk[:],
+		vk: vka, sk: ska, ek: eka, dk: [][]byte{dka}, hk: hk[:],
 		tau: nil, t: [][]byte{nil},
 		s: 0, r: 0, ack: 0,
 	}
 	ub := &User{
-		vk: vkb, sk: skb,
-		ek: ekb, dk: [][]byte{dkb},
-		hk:  hk[:],
+		vk: vkb, sk: skb, ek: ekb, dk: [][]byte{dkb}, hk: hk[:],
 		tau: nil, t: [][]byte{nil},
 		s: 0, r: 0, ack: 0,
 	}
 	return ua, ub, nil
 }
 
-func (s SCh) Send(user *User, ad, msg []byte) ([]byte, error) {
+// Send encrypts and signs a given plaintext and associated data. It further advances
+// the sender state one step forward (ratchet). The function returns a message object
+// that contains the ciphertext, auxiliary data and a signature.
+func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 	user.s += 1
 
 	vks, sks, err := s.kuDSS.generate()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to generate ku-dss key pair")
 	}
 	eks, dks, err := s.kuPKE.generate()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to generate ku-pke key pair")
 	}
 	user.dk = append(user.dk, dks)
 
-	aux := auxiliary{
-		VK: vks, EK: eks,
-		AD:  ad,
-		Tau: user.tau, T: user.t[user.s-1],
+	// Auxiliary data is both included in both marshalled and unmarshalled form in the
+	// message sent such that the receiver only has to perform a single unmarshal operation.
+	aux := &aux{
+		Vk: vks, Ek: eks,
+		Ad: ad, Tau: user.tau, T: user.t[user.s-1],
 		S: user.s, R: user.r,
 	}
 	l, err := json.Marshal(&aux)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to marshal auxiliary data")
 	}
 
-	// Encrypt message and update kuPKE public key.
 	uek := user.ek
 	for i := user.ack + 1; i < user.s; i++ {
 		uek, err = s.kuPKE.updatePublicKey(uek, user.t[i])
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "unable to update ku-pke public key")
 		}
 	}
-	c, err := s.kuPKE.encrypt(uek, msg)
+	c, err := s.kuPKE.encrypt(uek, pt)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to encrypt message")
 	}
 
-	// Sign and marshal message.
+	// Sign the ciphertext and the marshalled auxiliary data before
+	// marshalling the resulting object.
 	sig, err := s.kuDSS.sign(user.sk, append(c, l...))
 	if err != nil {
-		return nil, &ErrSignature{err}
+		return nil, errors.Wrap(err, "unable to sign message")
 	}
-	m, err := json.Marshal(&Message{C: c, Sig: sig, Aux: l})
+	msg, err := json.Marshal(&message{C: c, Sig: sig, Aux: aux, L: l})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to marshal message")
 	}
 
-	user.t = append(user.t, primitives.Digest(sha256.New(), user.hk, m))
+	user.t = append(user.t, primitives.Digest(sha256.New(), user.hk, msg))
 	user.sk = sks
 
-	return m, nil
+	return msg, nil
 }
 
-func (s SCh) Receive(user *User, ad, m []byte) ([]byte, error) {
-	var msg Message
-	if err := json.Unmarshal(m, &msg); err != nil {
-		return nil, err
+// Receive decrypts a given message consisting of the actual ciphertext, signed auxiliary
+// data and a signature. A receive operation advances the receiver state of a user one
+// step forward (ratchted). The function returns a decrypted plaintext.
+func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
+	var msg message
+	if err := json.Unmarshal(ct, &msg); err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshal message")
 	}
-	var aux auxiliary
-	if err := json.Unmarshal(msg.Aux, &aux); err != nil {
-		return nil, err
-	}
-	if aux.S != user.r+1 || !bytes.Equal(aux.Tau, user.t[aux.R]) || !bytes.Equal(aux.T, user.tau) {
-		return nil, ErrOutOfSync
+
+	// Check whether users are still synchronized. The following three properties have to hold:
+	//   1. Sender sent counter must always be exactly be equal to receiver received counter + 1.
+	//   2. Sender and receiver transcripts must always match on the latest entries.
+	//   3. Associated data in the message must equal the local receiver ad.
+	if msg.Aux.S != user.r+1 {
+		return nil, errors.New("sent/receive counters are out-of-sync")
+	} else if !bytes.Equal(msg.Aux.Tau, user.t[msg.Aux.R]) || !bytes.Equal(msg.Aux.T, user.tau) {
+		return nil, errors.New("sender/receiver transcripts are out-of-sync")
+	} else if !bytes.Equal(msg.Aux.Ad, ad) {
+		return nil, errors.New("local and received associated data does not match")
 	}
 
 	uvk := user.vk
-	for i := user.ack + 1; i <= aux.R; i++ {
+	for i := user.ack + 1; i <= msg.Aux.R; i++ {
 		uvk, _ = s.kuDSS.updatePublicKey(uvk, user.t[i])
 	}
-	if err := s.kuDSS.verify(uvk, append(msg.C, msg.Aux...), msg.Sig); err != nil {
-		return nil, err
+	if err := s.kuDSS.verify(uvk, append(msg.C, msg.L...), msg.Sig); err != nil {
+		return nil, errors.Wrap(err, "unable to verify signature")
 	}
 
 	user.r += 1
-	user.ack = aux.R
+	user.ack = msg.Aux.R
 
-	// Decrypt ciphertext and update kuPKE private key.
 	pt, err := s.kuPKE.decrypt(user.dk[user.ack], msg.C)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to decrypt ciphertext")
 	}
 
-	// Delete outdated data.
+	// Delete outdated data. Data is considered outdated once a user has completed a
+	// successful round-trip cycle (send and receive).
 	for i := 0; i < user.ack; i++ {
 		user.t[i] = nil
 		user.dk[i] = nil
 	}
 
-	user.tau = primitives.Digest(sha256.New(), user.hk, m)
+	user.tau = primitives.Digest(sha256.New(), user.hk, ct)
 
 	sks, err := s.kuDSS.updatePrivateKey(user.sk, user.tau)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to update ku-dss private key")
 	}
 	for i := user.ack; i <= user.s; i++ {
 		user.dk[i], err = s.kuPKE.updatePrivateKey(user.dk[i], user.tau)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "unable to udpate ku-pke private key")
 		}
 	}
 	user.sk = sks
-	user.vk = aux.VK
-	user.ek = aux.EK
+	user.vk = msg.Aux.Vk
+	user.ek = msg.Aux.Ek
 
 	return pt, nil
 }

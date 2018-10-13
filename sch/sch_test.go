@@ -8,12 +8,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/qantik/ratcheted/primitives/hibe"
+	"github.com/qantik/ratcheted/primitives/signature"
 )
 
 func TestSCh_Synchronous(t *testing.T) {
 	require := require.New(t)
 
-	s := NewSCh()
+	s := NewSCh(signature.NewBellare(), hibe.NewGentry())
 
 	ua, ub, err := s.Init()
 	require.Nil(err)
@@ -41,7 +44,7 @@ func TestSCh_Synchronous(t *testing.T) {
 func TestSCh_Asynchronous(t *testing.T) {
 	require := require.New(t)
 
-	s := NewSCh()
+	s := NewSCh(signature.NewBellare(), hibe.NewGentry())
 
 	ua, ub, err := s.Init()
 	require.Nil(err)
