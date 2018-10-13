@@ -224,3 +224,15 @@ func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 
 	return pt, nil
 }
+
+// size returns the size of a user object in bytes.
+func (u User) size() int {
+	total := 12 + len(u.vk) + len(u.ek) + len(u.sk) + len(u.hk) + len(u.tau)
+	for _, d := range u.dk {
+		total += len(d)
+	}
+	for _, t := range u.t {
+		total += len(t)
+	}
+	return total
+}
