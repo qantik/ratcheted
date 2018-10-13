@@ -27,7 +27,6 @@ type uni interface {
 }
 
 type BARK struct {
-	//uniARK *UNIARK
 	uni uni
 }
 
@@ -104,10 +103,6 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct [][]byte, err error) {
 		return nil, nil, nil, err
 	}
 
-	//fmt.Println("ka:", k)
-
-	//onion := append(k, s...)
-	//onion := merge(s, k)
 	onion, err := json.Marshal(&barkBlock{State: s, Key: k})
 	if err != nil {
 		return nil, nil, nil, err
@@ -123,10 +118,7 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct [][]byte, err error) {
 
 	u := len(p.Sender) - 1
 	for j := u; j >= i; j-- {
-		//fmt.Println(i, j, u)
 		index := []byte(strconv.Itoa(u - j))
-		//fmt.Println("a:", string(p.Sender[j]), index, p.Hsent, string(onion))
-		//fmt.Println("ao:", onion)
 		sj, o, err := b.uni.Send(p.Sender[j], append(index, p.Hsent...), onion)
 		if err != nil {
 			return nil, nil, nil, err
@@ -164,7 +156,6 @@ func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
 	}
 
 	n, _ := strconv.Atoi(string(ct[0]))
-	//fmt.Println("-------------------", n, i, len(p.Receiver))
 	if i+n >= len(p.Receiver) {
 		return nil, nil, errors.New("participants are out of sync")
 	}
@@ -173,11 +164,8 @@ func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
 
 	upds := make([][]byte, i)
 	for j := i; j <= i+n; j++ {
-		//fmt.Println(i, j, n, len(p.Sender))
 		index := []byte(strconv.Itoa(i + n - j))
-		//fmt.Println("b:", string(p.Receiver[j]), index, p.Hreceived, string(onion))
 		upd, o, err := b.uni.Receive(p.Receiver[j], append(index, p.Hreceived...), onion)
-		//fmt.Println("kb:", o)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -185,24 +173,17 @@ func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
 		upds = append(upds, upd)
 	}
 
-	//p.Sender = append(p.Sender, onion[sessionKeySize:])
-	//k = onion[:sessionKeySize]
-	//fmt.Println("b:", onion)
 	var block barkBlock
 	if err := json.Unmarshal(onion, &block); err != nil {
 		return nil, nil, err
 	}
 
-	//l := split(onion)
-	//p.Sender = append(p.Sender, l[0])
 	p.Sender = append(p.Sender, block.State)
 	k = block.Key
-	//k = l[1]
 
 	for j := i; j <= i+n-1; j++ {
 		p.Receiver[j] = nil
 	}
-	//fmt.Println("TTTTTTTTTTTTT", i, n, len(upds), len(p.Receiver))
 	p.Receiver[i+n] = upds[i+n]
 
 	p.Hreceived = primitives.Digest(hmac.New(sha256.New, p.Hk), ct...)
