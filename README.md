@@ -14,6 +14,11 @@ For the `ratcheted` library reference, see [the documentation](https://godoc.org
 ```
 $ go get -u github.com/qantik/ratcheted
 $ cd ${GOPATH}/src/github.com/qantik/ratcheted
+
+# On Linux make sure that the pbc libary path is set.
+# export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib 
+
 $ dep ensure
 $ go test -v ./...
 ````
