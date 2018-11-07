@@ -1,6 +1,8 @@
 // (c) 2018 EPFL
 // This code is licensed under MIT license (see LICENSE.txt for details)
 
+// Package primitives bundles various cryptographic algorithms to enable modular
+// usage in the messaging protocols.
 package primitives
 
 import "hash"
