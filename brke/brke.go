@@ -23,7 +23,9 @@ const (
 )
 
 var (
-	// TODO: Better errors.
+	/*
+	   REMOVE ERROR MESSAGES. They're unnecessary, simply use inline errors.
+	*/
 	errInvalidSignature = "unable to verify signature"
 	errOutOfSync        = "communicating parties are out-of-sync"
 	errPRNG             = "error while polling random number generator"
