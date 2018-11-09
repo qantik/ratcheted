@@ -166,6 +166,48 @@ func (e ECIES) Decrypt(sk, ct []byte) ([]byte, error) {
 	return unpad(ciphertext.C), nil
 }
 
+// Encapsulate creates a fresh symmetric key and encapsulates it using ECIES.
+func (e ECIES) Encapsulate(pk []byte) (k, c []byte, err error) {
+	var public eciesPublicKey
+	if err := json.Unmarshal(pk, &public); err != nil {
+		return nil, nil, err
+	}
+
+	r, err := e.randomFieldScalar()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	Cx, Cy := e.curve.ScalarBaseMult(r.Bytes())
+	c = elliptic.Marshal(e.curve, Cx, Cy)
+	Px, _ := e.curve.ScalarMult(public.Kx, public.Ky, r.Bytes())
+
+	hkdf := hkdf.New(sha256.New, append(c, Px.Bytes()...), nil, nil)
+
+	k = make([]byte, 16)
+	_, err = io.ReadFull(hkdf, k)
+	return
+}
+
+// Decapsulate decrypts a ECIES ciphertext to extract the encapsulated symmetric key.
+func (e ECIES) Decapsulate(sk, c []byte) ([]byte, error) {
+	var private eciesPrivateKey
+	if err := json.Unmarshal(sk, &private); err != nil {
+		return nil, err
+	}
+
+	Cx, Cy := elliptic.Unmarshal(e.curve, c)
+	Qx, _ := e.curve.ScalarMult(Cx, Cy, private.K.Bytes())
+
+	hkdf := hkdf.New(sha256.New, append(c, Qx.Bytes()...), nil, nil)
+
+	k := make([]byte, 16)
+	if _, err := io.ReadFull(hkdf, k); err != nil {
+		return nil, err
+	}
+	return k, nil
+}
+
 // randomFieldElement returns a random group scalar.
 func (e ECIES) randomFieldScalar() (*big.Int, error) {
 	params := e.curve.Params()

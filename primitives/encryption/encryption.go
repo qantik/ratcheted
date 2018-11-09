@@ -21,3 +21,13 @@ type Authenticated interface {
 	// Decrypt deciphers and authenticates a ciphertext with associated data.
 	Decrypt(key, ct, ad []byte) ([]byte, error)
 }
+
+// Encapsulation defines a common interface for key-encapsulation mechanisms.
+type Encapsulation interface {
+	// Generate creates a public/private key pair.
+	Generate() (pk, sk []byte, err error)
+	// Encapsulate generates and encapsulates a fresh symmetric key.
+	Encapsulate(pk []byte) (k, c []byte, err error)
+	// Decapsulate decapsulates a symmetric key from a ciphertext.
+	Decapsulate(sk, ct []byte) ([]byte, error)
+}

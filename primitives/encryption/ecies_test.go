@@ -27,3 +27,18 @@ func TestECIES(t *testing.T) {
 	require.Nil(err)
 	require.True(bytes.Equal(msg, pt))
 }
+
+func TestEciesKEM(t *testing.T) {
+	require := require.New(t)
+
+	ecies := NewECIES(elliptic.P256())
+
+	pk, sk, err := ecies.Generate()
+	require.Nil(err)
+
+	ka, c, err := ecies.Encapsulate(pk)
+	require.Nil(err)
+	kb, err := ecies.Decapsulate(sk, c)
+	require.Nil(err)
+	require.True(bytes.Equal(ka, kb))
+}
