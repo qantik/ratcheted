@@ -11,6 +11,7 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/json"
 	"errors"
 	"io"
@@ -48,8 +49,8 @@ func NewECIES(curve elliptic.Curve) *ECIES {
 }
 
 // Generate creates a ECIES public/private key pair.
-func (e ECIES) Generate() (pk, sk []byte, err error) {
-	k, err := e.randomFieldScalar()
+func (e ECIES) Generate(seed []byte) (pk, sk []byte, err error) {
+	k, err := e.randomFieldScalar(primitives.Digest(sha512.New(), seed))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -76,7 +77,7 @@ func (e ECIES) Encrypt(pk, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	r, err := e.randomFieldScalar()
+	r, err := e.randomFieldScalar(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +174,7 @@ func (e ECIES) Encapsulate(pk []byte) (k, c []byte, err error) {
 		return nil, nil, err
 	}
 
-	r, err := e.randomFieldScalar()
+	r, err := e.randomFieldScalar(nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -209,11 +210,18 @@ func (e ECIES) Decapsulate(sk, c []byte) ([]byte, error) {
 }
 
 // randomFieldElement returns a random group scalar.
-func (e ECIES) randomFieldScalar() (*big.Int, error) {
+func (e ECIES) randomFieldScalar(seed []byte) (*big.Int, error) {
 	params := e.curve.Params()
 	b := make([]byte, params.BitSize/8+8)
 
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
+	var reader io.Reader
+	if seed == nil {
+		reader = rand.Reader
+	} else {
+		reader = bytes.NewReader(seed)
+	}
+
+	if _, err := io.ReadFull(reader, b); err != nil {
 		return nil, err
 	}
 

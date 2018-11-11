@@ -7,7 +7,7 @@ package encryption
 // Asymmetric defines a common interface for asymmetric encryption schemes.
 type Asymmetric interface {
 	// Generate creates a public/private key pair.
-	Generate() (pk, sk []byte, err error)
+	Generate(seed []byte) (pk, sk []byte, err error)
 	// Encrypt enciphers a message with a given public key.
 	Encrypt(pk, msg []byte) ([]byte, error)
 	// Decrypt deciphers a message with a given private key.
@@ -25,7 +25,7 @@ type Authenticated interface {
 // Encapsulation defines a common interface for key-encapsulation mechanisms.
 type Encapsulation interface {
 	// Generate creates a public/private key pair.
-	Generate() (pk, sk []byte, err error)
+	Generate(seed []byte) (pk, sk []byte, err error)
 	// Encapsulate generates and encapsulates a fresh symmetric key.
 	Encapsulate(pk []byte) (k, c []byte, err error)
 	// Decapsulate decapsulates a symmetric key from a ciphertext.

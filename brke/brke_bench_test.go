@@ -10,15 +10,18 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/hibe"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
+
+var curve = elliptic.P256()
 
 func brkeAlternating(n int, b *testing.B) {
 	require := require.New(b)
 
 	//brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
-	brke := NewBRKE(hibe.NewGentry(), signature.NewECDSA(elliptic.P256()))
+	brke := NewBRKE(hibe.NewGentry(), encryption.NewECIES(curve), signature.NewECDSA(curve))
 
 	ad := []byte{1, 2, 3}
 
@@ -52,7 +55,7 @@ func brkeUnidirectional(n int, b *testing.B) {
 	require := require.New(b)
 
 	//brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
-	brke := NewBRKE(hibe.NewGentry(), signature.NewECDSA(elliptic.P256()))
+	brke := NewBRKE(hibe.NewGentry(), encryption.NewECIES(curve), signature.NewECDSA(curve))
 
 	ad := []byte{1, 2, 3}
 
@@ -93,21 +96,23 @@ func benchmarkBRKEUnidirectional(i int, b *testing.B) {
 }
 
 func BenchmarkBRKEAlternating100(b *testing.B) { benchmarkBRKEAlternating(100, b) }
-func BenchmarkBRKEAlternating200(b *testing.B) { benchmarkBRKEAlternating(200, b) }
-func BenchmarkBRKEAlternating300(b *testing.B) { benchmarkBRKEAlternating(300, b) }
-func BenchmarkBRKEAlternating400(b *testing.B) { benchmarkBRKEAlternating(400, b) }
-func BenchmarkBRKEAlternating500(b *testing.B) { benchmarkBRKEAlternating(500, b) }
-func BenchmarkBRKEAlternating600(b *testing.B) { benchmarkBRKEAlternating(600, b) }
-func BenchmarkBRKEAlternating700(b *testing.B) { benchmarkBRKEAlternating(700, b) }
-func BenchmarkBRKEAlternating800(b *testing.B) { benchmarkBRKEAlternating(800, b) }
-func BenchmarkBRKEAlternating900(b *testing.B) { benchmarkBRKEAlternating(900, b) }
+
+//func BenchmarkBRKEAlternating200(b *testing.B) { benchmarkBRKEAlternating(200, b) }
+//func BenchmarkBRKEAlternating300(b *testing.B) { benchmarkBRKEAlternating(300, b) }
+//func BenchmarkBRKEAlternating400(b *testing.B) { benchmarkBRKEAlternating(400, b) }
+//func BenchmarkBRKEAlternating500(b *testing.B) { benchmarkBRKEAlternating(500, b) }
+//func BenchmarkBRKEAlternating600(b *testing.B) { benchmarkBRKEAlternating(600, b) }
+//func BenchmarkBRKEAlternating700(b *testing.B) { benchmarkBRKEAlternating(700, b) }
+//func BenchmarkBRKEAlternating800(b *testing.B) { benchmarkBRKEAlternating(800, b) }
+//func BenchmarkBRKEAlternating900(b *testing.B) { benchmarkBRKEAlternating(900, b) }
 
 func BenchmarkBRKEUnidirectional100(b *testing.B) { benchmarkBRKEUnidirectional(100, b) }
-func BenchmarkBRKEUnidirectional200(b *testing.B) { benchmarkBRKEUnidirectional(200, b) }
-func BenchmarkBRKEUnidirectional300(b *testing.B) { benchmarkBRKEUnidirectional(300, b) }
-func BenchmarkBRKEUnidirectional400(b *testing.B) { benchmarkBRKEUnidirectional(400, b) }
-func BenchmarkBRKEUnidirectional500(b *testing.B) { benchmarkBRKEUnidirectional(500, b) }
-func BenchmarkBRKEUnidirectional600(b *testing.B) { benchmarkBRKEUnidirectional(600, b) }
-func BenchmarkBRKEUnidirectional700(b *testing.B) { benchmarkBRKEUnidirectional(700, b) }
-func BenchmarkBRKEUnidirectional800(b *testing.B) { benchmarkBRKEUnidirectional(800, b) }
-func BenchmarkBRKEUnidirectional900(b *testing.B) { benchmarkBRKEUnidirectional(900, b) }
+
+//func BenchmarkBRKEUnidirectional200(b *testing.B) { benchmarkBRKEUnidirectional(200, b) }
+//func BenchmarkBRKEUnidirectional300(b *testing.B) { benchmarkBRKEUnidirectional(300, b) }
+//func BenchmarkBRKEUnidirectional400(b *testing.B) { benchmarkBRKEUnidirectional(400, b) }
+//func BenchmarkBRKEUnidirectional500(b *testing.B) { benchmarkBRKEUnidirectional(500, b) }
+//func BenchmarkBRKEUnidirectional600(b *testing.B) { benchmarkBRKEUnidirectional(600, b) }
+//func BenchmarkBRKEUnidirectional700(b *testing.B) { benchmarkBRKEUnidirectional(700, b) }
+//func BenchmarkBRKEUnidirectional800(b *testing.B) { benchmarkBRKEUnidirectional(800, b) }
+//func BenchmarkBRKEUnidirectional900(b *testing.B) { benchmarkBRKEUnidirectional(900, b) }

@@ -29,7 +29,7 @@ func (s signcryption) generateSignKeys() (sk, pk []byte, err error) {
 
 // generateCipherKeys creates a encryption public/private key pair.
 func (s signcryption) generateCipherKeys() (sk, pk []byte, err error) {
-	pk, sk, err = s.encryption.Generate()
+	pk, sk, err = s.encryption.Generate(nil)
 	return
 }
 

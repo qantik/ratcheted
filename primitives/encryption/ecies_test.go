@@ -6,6 +6,7 @@ package encryption
 import (
 	"bytes"
 	"crypto/elliptic"
+	"crypto/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,7 +17,7 @@ func TestECIES(t *testing.T) {
 
 	ecies := NewECIES(elliptic.P256())
 
-	pk, sk, err := ecies.Generate()
+	pk, sk, err := ecies.Generate(nil)
 	require.Nil(err)
 
 	msg := []byte("ecies")
@@ -33,7 +34,10 @@ func TestEciesKEM(t *testing.T) {
 
 	ecies := NewECIES(elliptic.P256())
 
-	pk, sk, err := ecies.Generate()
+	seed := make([]byte, 512)
+	rand.Read(seed)
+
+	pk, sk, err := ecies.Generate(seed)
 	require.Nil(err)
 
 	ka, c, err := ecies.Encapsulate(pk)
