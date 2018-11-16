@@ -62,30 +62,28 @@ func brkeUnidirectional(n int, b *testing.B) {
 	alice, bob, err := brke.Init()
 	require.Nil(err)
 
-	for i := 0; i < n/50; i++ {
-		var ks [25][]byte
-		var cs [25][][]byte
-		for j := 0; j < 25; j++ {
-			k, c, err := brke.Send(alice, ad)
-			require.Nil(err)
-			ks[j] = k
-			cs[j] = c
-		}
+	var ks [1000][]byte
+	var cs [1000][][]byte
+	for i := 0; i < n/2; i++ {
+		k, c, err := brke.Send(alice, ad)
+		require.Nil(err)
+		ks[i] = k
+		cs[i] = c
+	}
 
-		for j := 0; j < 25; j++ {
-			kb, c, err := brke.Send(bob, ad)
-			require.Nil(err)
+	for i := 0; i < n/2; i++ {
+		kb, c, err := brke.Send(bob, ad)
+		require.Nil(err)
 
-			ka, err := brke.Receive(alice, ad, c)
-			require.Nil(err)
-			require.True(bytes.Equal(ka, kb))
-		}
+		ka, err := brke.Receive(alice, ad, c)
+		require.Nil(err)
+		require.True(bytes.Equal(ka, kb))
+	}
 
-		for j := 0; j < 25; j++ {
-			k, err := brke.Receive(bob, ad, cs[j])
-			require.Nil(err)
-			require.True(bytes.Equal(ks[j], k))
-		}
+	for i := 0; i < n/2; i++ {
+		k, err := brke.Receive(bob, ad, cs[i])
+		require.Nil(err)
+		require.True(bytes.Equal(ks[i], k))
 	}
 }
 
@@ -96,23 +94,21 @@ func benchmarkBRKEUnidirectional(i int, b *testing.B) {
 }
 
 func BenchmarkBRKEAlternating100(b *testing.B) { benchmarkBRKEAlternating(100, b) }
-
-//func BenchmarkBRKEAlternating200(b *testing.B) { benchmarkBRKEAlternating(200, b) }
-//func BenchmarkBRKEAlternating300(b *testing.B) { benchmarkBRKEAlternating(300, b) }
-//func BenchmarkBRKEAlternating400(b *testing.B) { benchmarkBRKEAlternating(400, b) }
-//func BenchmarkBRKEAlternating500(b *testing.B) { benchmarkBRKEAlternating(500, b) }
-//func BenchmarkBRKEAlternating600(b *testing.B) { benchmarkBRKEAlternating(600, b) }
-//func BenchmarkBRKEAlternating700(b *testing.B) { benchmarkBRKEAlternating(700, b) }
-//func BenchmarkBRKEAlternating800(b *testing.B) { benchmarkBRKEAlternating(800, b) }
-//func BenchmarkBRKEAlternating900(b *testing.B) { benchmarkBRKEAlternating(900, b) }
+func BenchmarkBRKEAlternating200(b *testing.B) { benchmarkBRKEAlternating(200, b) }
+func BenchmarkBRKEAlternating300(b *testing.B) { benchmarkBRKEAlternating(300, b) }
+func BenchmarkBRKEAlternating400(b *testing.B) { benchmarkBRKEAlternating(400, b) }
+func BenchmarkBRKEAlternating500(b *testing.B) { benchmarkBRKEAlternating(500, b) }
+func BenchmarkBRKEAlternating600(b *testing.B) { benchmarkBRKEAlternating(600, b) }
+func BenchmarkBRKEAlternating700(b *testing.B) { benchmarkBRKEAlternating(700, b) }
+func BenchmarkBRKEAlternating800(b *testing.B) { benchmarkBRKEAlternating(800, b) }
+func BenchmarkBRKEAlternating900(b *testing.B) { benchmarkBRKEAlternating(900, b) }
 
 func BenchmarkBRKEUnidirectional100(b *testing.B) { benchmarkBRKEUnidirectional(100, b) }
-
-//func BenchmarkBRKEUnidirectional200(b *testing.B) { benchmarkBRKEUnidirectional(200, b) }
-//func BenchmarkBRKEUnidirectional300(b *testing.B) { benchmarkBRKEUnidirectional(300, b) }
-//func BenchmarkBRKEUnidirectional400(b *testing.B) { benchmarkBRKEUnidirectional(400, b) }
-//func BenchmarkBRKEUnidirectional500(b *testing.B) { benchmarkBRKEUnidirectional(500, b) }
-//func BenchmarkBRKEUnidirectional600(b *testing.B) { benchmarkBRKEUnidirectional(600, b) }
-//func BenchmarkBRKEUnidirectional700(b *testing.B) { benchmarkBRKEUnidirectional(700, b) }
-//func BenchmarkBRKEUnidirectional800(b *testing.B) { benchmarkBRKEUnidirectional(800, b) }
-//func BenchmarkBRKEUnidirectional900(b *testing.B) { benchmarkBRKEUnidirectional(900, b) }
+func BenchmarkBRKEUnidirectional200(b *testing.B) { benchmarkBRKEUnidirectional(200, b) }
+func BenchmarkBRKEUnidirectional300(b *testing.B) { benchmarkBRKEUnidirectional(300, b) }
+func BenchmarkBRKEUnidirectional400(b *testing.B) { benchmarkBRKEUnidirectional(400, b) }
+func BenchmarkBRKEUnidirectional500(b *testing.B) { benchmarkBRKEUnidirectional(500, b) }
+func BenchmarkBRKEUnidirectional600(b *testing.B) { benchmarkBRKEUnidirectional(600, b) }
+func BenchmarkBRKEUnidirectional700(b *testing.B) { benchmarkBRKEUnidirectional(700, b) }
+func BenchmarkBRKEUnidirectional800(b *testing.B) { benchmarkBRKEUnidirectional(800, b) }
+func BenchmarkBRKEUnidirectional900(b *testing.B) { benchmarkBRKEUnidirectional(900, b) }
