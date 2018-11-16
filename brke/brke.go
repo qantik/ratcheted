@@ -23,16 +23,6 @@ const (
 	sessionKeySize  = 16
 )
 
-var (
-	/*
-	   REMOVE ERROR MESSAGES. They're unnecessary, simply use inline errors.
-	*/
-	errInvalidSignature = "unable to verify signature"
-	errOutOfSync        = "communicating parties are out-of-sync"
-	errPRNG             = "error while polling random number generator"
-	errKUKEM            = "error while polling ku-kuKEM"
-)
-
 // BRKE designates the PT18 protocol object defined by a ku-KEM scheme and a
 // one-time signature algorithm.
 type BRKE struct {
@@ -106,40 +96,40 @@ func (b BRKE) Init() (*User, *User, error) {
 	// Generate two sets of signature key pairs.
 	vfka, sgka, err := b.signature.Generate()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, errPRNG)
+		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
 	vfkb, sgkb, err := b.signature.Generate()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, errPRNG)
+		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
 
 	// Generate two sets of key-updatable KEM key pairs.
 	var seed [seedSize]byte
 	if _, err := rand.Read(seed[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errPRNG)
+		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
 	pkaa, skaa, _ := b.kuKEM.generate(seed[:])
 	pka, ska, err := b.kem.Generate(seed[:])
 	if err != nil {
-		return nil, nil, errors.Wrap(err, errKUKEM)
+		return nil, nil, errors.Wrap(err, "error while generating kem keys")
 	}
 	if _, err := rand.Read(seed[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errPRNG)
+		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
 	pkbb, skbb, _ := b.kuKEM.generate(seed[:])
 	pkb, skb, err := b.kem.Generate(seed[:])
 	if err != nil {
-		return nil, nil, errors.Wrap(err, errKUKEM)
+		return nil, nil, errors.Wrap(err, "error while generating kem keys")
 	}
 
 	// Generate two chaining keys. Both users receive both of them.
 	var Ka [chainingKeySize]byte
 	var Kb [chainingKeySize]byte
 	if _, err := rand.Read(Ka[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errPRNG)
+		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
 	if _, err := rand.Read(Kb[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errPRNG)
+		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
 
 	// Create sub-states for user a.
@@ -197,15 +187,15 @@ func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	// the two public keys to the ciphertext.
 	vfks, sgks, err := b.signature.Generate()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, errPRNG)
+		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
 	var seed [seedSize]byte
 	if _, err := rand.Read(seed[:]); err != nil {
-		return nil, nil, errors.Wrap(err, errPRNG)
+		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
 	pks, sks, err := b.kuKEM.generate(seed[:])
 	if err != nil {
-		return nil, nil, errors.Wrap(err, errKUKEM)
+		return nil, nil, errors.Wrap(err, "error while generating kem keys")
 	}
 	user.r.E1 += 1
 	user.r.SK[user.r.E1] = sks
@@ -225,7 +215,7 @@ func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 			c1, c2, err = b.kuKEM.encrypt(user.s.PK[i])
 		}
 		if err != nil {
-			return nil, nil, errors.Wrap(err, errKUKEM)
+			return nil, nil, errors.Wrap(err, "error while encapsulating key")
 		}
 		ks, C = append(ks, c1...), append(C, c2)
 	}
@@ -235,7 +225,7 @@ func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	// Sign ciphertext and append it to the history.
 	sig, err := b.signature.Sign(user.r.sgk, append(ad, bytes.Join(C, nil)...))
 	if err != nil {
-		return nil, nil, errors.Wrap(err, errPRNG)
+		return nil, nil, errors.Wrap(err, "error while signing message")
 	}
 	C = append(C, sig)
 	user.r.L[user.r.E1] = append(ad, bytes.Join(C, nil)...)
@@ -249,7 +239,7 @@ func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 
 	pk, _, err := b.kem.Generate(coins)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, errKUKEM)
+		return nil, nil, errors.Wrap(err, "error while generating kem keys")
 	}
 	user.kems = pk
 	for i := 0; i < user.s.E1; i++ {
@@ -273,7 +263,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	sig := C[len(C)-1]
 	C = C[:len(C)-1]
 	if err := b.signature.Verify(user.s.vfk, append(ad, bytes.Join(C, nil)...), sig); err != nil {
-		return nil, errors.Wrap(err, errInvalidSignature)
+		return nil, errors.Wrap(err, "unable to verify signature")
 	}
 
 	// Unwind ciphertext and delete old ciphertext for out-dated r-epochs.
@@ -281,7 +271,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	C = C[3:]
 	rr, err := strconv.Atoi(string(r))
 	if err != nil || user.s.L[rr] == nil {
-		return nil, errors.New(errOutOfSync)
+		return nil, errors.New("users are out-of-sync")
 	}
 	for i := 0; i < rr; i++ {
 		user.s.L[i] = nil
@@ -291,7 +281,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	for i := rr + 1; i <= user.s.s; i++ {
 		pks, err = b.kuKEM.updatePublicKey(pks, user.s.L[i])
 		if err != nil {
-			panic(err)
+			return nil, errors.Wrap(err, "error while updating kem public key")
 		}
 	}
 	user.s.E1 += 1
@@ -302,7 +292,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	e, _ := strconv.Atoi(string(C[0]))
 	C = C[1:]
 	if e < user.r.E0 || e > user.r.E1 {
-		return nil, errors.New(errOutOfSync)
+		return nil, errors.New("users are out-of-sync")
 	}
 	for i := user.r.E0 + 1; i <= e; i++ {
 		user.r.t = append(user.r.t, user.r.L[i]...)
@@ -326,7 +316,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 			k, err = b.kuKEM.decrypt(user.r.SK[i], c)
 		}
 		if err != nil {
-			return nil, errors.Wrap(err, errKUKEM)
+			return nil, errors.Wrap(err, "error while decapsulating key")
 		}
 		ks = append(ks, k...)
 	}
@@ -338,7 +328,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 
 	_, sk, err := b.kem.Generate(coins)
 	if err != nil {
-		return nil, errors.Wrap(err, errKUKEM)
+		return nil, errors.Wrap(err, "error while genereting kem keys")
 	}
 	user.kemr = sk
 
@@ -350,7 +340,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	for i := e + 1; i <= user.r.E1; i++ {
 		s, err := b.kuKEM.updateSecretKey(user.r.SK[i], ts)
 		if err != nil {
-			return nil, errors.Wrap(err, errKUKEM)
+			return nil, errors.Wrap(err, "error while updating kem secret key")
 		}
 		user.r.SK[i] = s
 	}
