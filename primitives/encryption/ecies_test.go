@@ -22,9 +22,9 @@ func TestECIES(t *testing.T) {
 
 	msg := []byte("ecies")
 
-	ct, err := ecies.Encrypt(pk, msg)
+	ct, err := ecies.Encrypt(pk, msg, nil)
 	require.Nil(err)
-	pt, err := ecies.Decrypt(sk, ct)
+	pt, err := ecies.Decrypt(sk, ct, nil)
 	require.Nil(err)
 	require.True(bytes.Equal(msg, pt))
 }

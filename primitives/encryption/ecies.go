@@ -71,7 +71,7 @@ func (e ECIES) Generate(seed []byte) (pk, sk []byte, err error) {
 }
 
 // Encrypt enciphers a message with a given public key.
-func (e ECIES) Encrypt(pk, msg []byte) ([]byte, error) {
+func (e ECIES) Encrypt(pk, msg, ad []byte) ([]byte, error) {
 	var public eciesPublicKey
 	if err := json.Unmarshal(pk, &public); err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func (e ECIES) Encrypt(pk, msg []byte) ([]byte, error) {
 }
 
 // Decrypt deciphers a ciphertex with a given private key.
-func (e ECIES) Decrypt(sk, ct []byte) ([]byte, error) {
+func (e ECIES) Decrypt(sk, ct, ad []byte) ([]byte, error) {
 	var private eciesPrivateKey
 	if err := json.Unmarshal(sk, &private); err != nil {
 		return nil, err

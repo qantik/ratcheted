@@ -46,7 +46,7 @@ func (s signcryption) signcrypt(sks, pkr, ad, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	ct, err := s.encryption.Encrypt(pkr, b)
+	ct, err := s.encryption.Encrypt(pkr, b, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (s signcryption) signcrypt(sks, pkr, ad, msg []byte) ([]byte, error) {
 
 // unsigncrypt a ciphertext with associated data.
 func (s signcryption) unsigncrypt(skr, pks, ad, ct []byte) ([]byte, error) {
-	dec, err := s.encryption.Decrypt(pks, ct)
+	dec, err := s.encryption.Decrypt(pks, ct, nil)
 	if err != nil {
 		return nil, err
 	}
