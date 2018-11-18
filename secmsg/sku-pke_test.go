@@ -21,10 +21,10 @@ func TestSKUPKE(t *testing.T) {
 	pk, sk, err := skupke.generate()
 	require.Nil(err)
 
-	c1, c2, err := skupke.encrypt(pk, msg)
+	ct, err := skupke.encrypt(pk, msg)
 	require.Nil(err)
 
-	pt, err := skupke.decrypt(sk, c1, c2)
+	pt, err := skupke.decrypt(sk, ct)
 	require.Nil(err)
 	require.True(bytes.Equal(msg, pt))
 
@@ -36,10 +36,10 @@ func TestSKUPKE(t *testing.T) {
 	sk, err = skupke.updateSK(usk, sk)
 	require.Nil(err)
 
-	c1, c2, err = skupke.encrypt(pk, msg)
+	ct, err = skupke.encrypt(pk, msg)
 	require.Nil(err)
 
-	pt, err = skupke.decrypt(sk, c1, c2)
+	pt, err = skupke.decrypt(sk, ct)
 	require.Nil(err)
 	require.True(bytes.Equal(msg, pt))
 }

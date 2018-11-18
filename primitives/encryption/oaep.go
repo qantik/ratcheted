@@ -8,11 +8,14 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/binary"
+	"io"
+	mr "math/rand"
 
 	"github.com/pkg/errors"
 )
 
-var oaepKeySize = 2048
+var oaepKeySize = 2500
 
 // OAEP implements to RSA-OAEP encryption scheme based on SHA256.
 type OAEP struct{}
@@ -24,7 +27,15 @@ func NewOAEP() *OAEP {
 
 // Generate creates a fresh RSA-OAEP public/private key pair.
 func (o OAEP) Generate(seed []byte) (pk, sk []byte, err error) {
-	private, err := rsa.GenerateKey(rand.Reader, oaepKeySize)
+	var reader io.Reader
+	if seed == nil {
+		reader = rand.Reader
+	} else {
+		// TODO: Find a more secure way to have deterministic streams.
+		reader = mr.New(mr.NewSource(int64(binary.BigEndian.Uint64(seed))))
+	}
+
+	private, err := rsa.GenerateKey(reader, oaepKeySize)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to generate rsa-oaep key pair")
 	}

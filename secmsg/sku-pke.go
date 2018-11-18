@@ -7,6 +7,8 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha512"
+	"encoding/json"
+	"fmt"
 	"math/big"
 
 	"github.com/pkg/errors"
@@ -16,6 +18,11 @@ import (
 // skuPKE implements the secretly key-updatable encryption scheme.
 type skuPKE struct {
 	curve elliptic.Curve
+}
+
+// skuCiphertext bundles the two ciphertext parts.
+type skuCiphertext struct {
+	C1, C2 []byte
 }
 
 // generate creates a fresh sku-PKE key pair.
@@ -61,34 +68,46 @@ func (s skuPKE) updateSK(usk, sk []byte) ([]byte, error) {
 
 // encrypt enciphers a message with a given sku-pke public key. The message must not
 // exceed 512 bytes.
-func (s skuPKE) encrypt(pk, msg []byte) (c1, c2 []byte, err error) {
+func (s skuPKE) encrypt(pk, msg []byte) ([]byte, error) {
 	if len(msg) > 512 {
-		return nil, nil, errors.New("message exceeds maximal size of 512 bytes")
+		return nil, errors.New("message exceeds maximal size of 512 bytes")
 	}
 	pkx, pky := elliptic.Unmarshal(s.curve, pk)
 	if pkx == nil {
-		return nil, nil, errors.New("unable to unmarshal sku-PKE public key")
+		return nil, errors.New("unable to unmarshal sku-PKE public key")
 	}
 
 	gr, r, err := s.generate()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to create curve elements")
+		return nil, errors.Wrap(err, "unable to create curve elements")
 	}
 
 	hx, hy := s.curve.ScalarMult(pkx, pky, r)
 	h := primitives.Digest(sha512.New(), elliptic.Marshal(s.curve, hx, hy))
 
-	c1 = gr
-	c2 = make([]byte, len(msg))
+	for len(h) < len(msg) {
+		h = append(h, h...)
+	}
+
+	fmt.Println(len(msg), len(h))
+	c2 := make([]byte, len(msg))
 	for i := 0; i < len(msg); i++ {
 		c2[i] = msg[i] ^ h[i]
 	}
-	return
+	ct, err := json.Marshal(&skuCiphertext{C1: gr, C2: c2})
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to marshal ciphertext")
+	}
+	return ct, nil
 }
 
 // decrypt deciphers a ciphertext pair with a given sku-pke private key.
-func (s skuPKE) decrypt(sk, c1, c2 []byte) ([]byte, error) {
-	c1x, c1y := elliptic.Unmarshal(s.curve, c1)
+func (s skuPKE) decrypt(sk, ct []byte) ([]byte, error) {
+	var ciphertext skuCiphertext
+	if err := json.Unmarshal(ct, &ciphertext); err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshal ciphertext")
+	}
+	c1x, c1y := elliptic.Unmarshal(s.curve, ciphertext.C1)
 	if c1x == nil {
 		return nil, errors.New("unable to unmarshal sku-pke ciphertext")
 	}
@@ -96,9 +115,13 @@ func (s skuPKE) decrypt(sk, c1, c2 []byte) ([]byte, error) {
 	hx, hy := s.curve.ScalarMult(c1x, c1y, sk)
 	h := primitives.Digest(sha512.New(), elliptic.Marshal(s.curve, hx, hy))
 
-	msg := make([]byte, len(c2))
-	for i := 0; i < len(c2); i++ {
-		msg[i] = h[i] ^ c2[i]
+	for len(h) < len(ciphertext.C2) {
+		h = append(h, h...)
+	}
+
+	msg := make([]byte, len(ciphertext.C2))
+	for i := 0; i < len(ciphertext.C2); i++ {
+		msg[i] = h[i] ^ ciphertext.C2[i]
 	}
 	return msg, nil
 }
