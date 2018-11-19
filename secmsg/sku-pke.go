@@ -68,9 +68,9 @@ func (s skuPKE) updateSK(usk, sk []byte) ([]byte, error) {
 // encrypt enciphers a message with a given sku-pke public key. The message must not
 // exceed 512 bytes.
 func (s skuPKE) encrypt(pk, msg []byte) ([]byte, error) {
-	if len(msg) > 512 {
-		return nil, errors.New("message exceeds maximal size of 512 bytes")
-	}
+	//if len(msg) > 512 {
+	//	return nil, errors.New("message exceeds maximal size of 512 bytes")
+	//}
 	pkx, pky := elliptic.Unmarshal(s.curve, pk)
 	if pkx == nil {
 		return nil, errors.New("unable to unmarshal sku-PKE public key")

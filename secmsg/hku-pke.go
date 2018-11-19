@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -267,7 +266,6 @@ func (h hkuPKE) updateEK(sender, inf []byte) (upd []byte, err error) {
 	s.EkUpd = i.EkUpd
 
 	for l := i.R; l < s.S; l++ {
-		fmt.Println(l)
 		ek, err := h.sku.updatePK(s.Ue[l], s.EkUpd)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to update sku-PKE public key")
