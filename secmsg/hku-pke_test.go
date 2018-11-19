@@ -23,14 +23,47 @@ func TestHkuPKE(t *testing.T) {
 	s, r, err := hku.generate()
 	require.Nil(err)
 
-	for i := 0; i < 10; i++ {
-		ss, ct, err := hku.encrypt(s, msg, ad)
+	for i := 0; i < 3; i++ {
+		ss, ct1, err := hku.encrypt(s, msg, ad)
+		require.Nil(err)
+		ss, ct2, err := hku.encrypt(ss, msg, ad)
+		require.Nil(err)
+		ss, ct3, err := hku.encrypt(ss, msg, ad)
+		require.Nil(err)
+		ss, ct4, err := hku.encrypt(ss, msg, ad)
 		require.Nil(err)
 
-		rr, pt, err := hku.decrypt(r, ct, ad)
+		rr, pt, err := hku.decrypt(r, ct1, ad)
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
 
-		s, r = ss, rr
+		rrr, inf1, err := hku.updateDK(rr)
+		require.Nil(err)
+		rrr, inf2, err := hku.updateDK(rrr)
+		require.Nil(err)
+
+		ss, err = hku.updateEK(ss, inf1)
+		require.Nil(err)
+		ss, err = hku.updateEK(ss, inf2)
+		require.Nil(err)
+
+		rrr, pt, err = hku.decrypt(rrr, ct2, ad)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+		rrr, pt, err = hku.decrypt(rrr, ct3, ad)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+		rrr, pt, err = hku.decrypt(rrr, ct4, ad)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+
+		ss, ct, err := hku.encrypt(ss, msg, ad)
+		require.Nil(err)
+
+		rrr, pt, err = hku.decrypt(rrr, ct, ad)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+
+		s, r = ss, rrr
 	}
 }

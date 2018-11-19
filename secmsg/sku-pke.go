@@ -8,7 +8,6 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/json"
-	"fmt"
 	"math/big"
 
 	"github.com/pkg/errors"
@@ -89,7 +88,6 @@ func (s skuPKE) encrypt(pk, msg []byte) ([]byte, error) {
 		h = append(h, h...)
 	}
 
-	fmt.Println(len(msg), len(h))
 	c2 := make([]byte, len(msg))
 	for i := 0; i < len(msg); i++ {
 		c2[i] = msg[i] ^ h[i]

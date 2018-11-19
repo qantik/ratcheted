@@ -60,6 +60,13 @@ type hkuCiphertext struct {
 	J int    // J designates the healing period of the sender.
 }
 
+// hkuUpdInfo bundles update information upon a healing call from the receiver.
+type hkuUpdInfo struct {
+	EkUpd []byte // EkUpd is a fresh PKE public key.
+	EkEph []byte // EkEph is a fresh sku-PKE public key.
+	R     int    // R indicates after how many received message the healing applied.
+}
+
 // generate creates a fresh hkuPKE sender and receciver state.
 func (h hkuPKE) generate() (s, r []byte, err error) {
 	ekUpd, dkUpd, err := h.sku.generate()
@@ -73,7 +80,7 @@ func (h hkuPKE) generate() (s, r []byte, err error) {
 
 	sender := hkuSender{
 		EkUpd: ekUpd, EkEph: ekEph,
-		S: -1, J: 0,
+		S: 0, J: 0,
 		Ue: [][]byte{}, Trace: []byte{},
 	}
 	s, err = json.Marshal(&sender)
@@ -82,7 +89,7 @@ func (h hkuPKE) generate() (s, r []byte, err error) {
 	}
 	receiver := hkuReceiver{
 		DkUpd: [][]byte{dkUpd}, DkEph: [][]byte{dkEph},
-		R: -1, I: 0,
+		R: 0, I: 0,
 		Trace: []byte{},
 	}
 	r, err = json.Marshal(&receiver)
@@ -98,7 +105,6 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	if err := json.Unmarshal(sender, &s); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to unmarshal hkuPKE sender state")
 	}
-	s.S++
 
 	// generate update information
 	ue, ud, err := h.sku.updateGen()
@@ -121,7 +127,6 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to skuPKE encrypt message")
 	}
-	fmt.Println("sfasdf", len(c))
 	c, err = h.pke.Encrypt(s.EkEph, c, ad)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to PKE encrypt ciphertext")
@@ -135,7 +140,6 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	s.Trace = primitives.Digest(sha256.New(), s.Trace, c, []byte(strconv.Itoa(s.J)), ad)
 
 	// update public keys
-	fmt.Println(len(s.Ue), s.S)
 	ekUpd, err := h.sku.updatePK(s.Ue[s.S], s.EkUpd)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to update skuPKE public key")
@@ -147,6 +151,7 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	}
 	s.EkUpd = ekUpd
 	s.EkEph = ekEph
+	s.S++
 
 	upd, err = json.Marshal(&s)
 	if err != nil {
@@ -212,4 +217,66 @@ func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 		return nil, nil, errors.Wrap(err, "unable to marshal hkuPKE receiver state")
 	}
 	return upd, message.Msg, nil
+}
+
+// updateDK initiates a receiver healing that creates new key pairs.
+func (h hkuPKE) updateDK(receiver []byte) (upd, inf []byte, err error) {
+	var r hkuReceiver
+	if err := json.Unmarshal(receiver, &r); err != nil {
+		return nil, nil, errors.Wrap(err, "unable to unmarshal hkuPKE receiver state")
+	}
+	r.I++
+
+	ekUpd, dkUpd, err := h.sku.generate()
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "unable to create skuPKE states")
+	}
+	ekEph, dkEph, err := h.pke.Generate(nil)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "unable to create PKE states")
+	}
+	r.DkUpd = append(r.DkUpd, dkUpd)
+	r.DkEph = append(r.DkEph, dkEph)
+
+	inf, err = json.Marshal(&hkuUpdInfo{EkUpd: ekUpd, EkEph: ekEph, R: r.R})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "unable to marshal update information")
+	}
+	upd, err = json.Marshal(&r)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "unable to marshal hkuPKE receiver state")
+	}
+	return
+}
+
+// updateEK updates the sender state with fresh public keys with the given update info.
+func (h hkuPKE) updateEK(sender, inf []byte) (upd []byte, err error) {
+	var s hkuSender
+	if err := json.Unmarshal(sender, &s); err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshal hkuPKE sender state")
+	}
+	var i hkuUpdInfo
+	if err := json.Unmarshal(inf, &i); err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshal hkuPKE update info")
+	}
+	s.J++
+
+	if i.R >= s.S {
+		s.EkEph = i.EkEph
+	}
+	s.EkUpd = i.EkUpd
+
+	for l := i.R; l < s.S; l++ {
+		fmt.Println(l)
+		ek, err := h.sku.updatePK(s.Ue[l], s.EkUpd)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to update sku-PKE public key")
+		}
+		s.EkUpd = ek
+	}
+	upd, err = json.Marshal(&s)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to marshal hku sender state")
+	}
+	return
 }
