@@ -6,8 +6,6 @@ package secmsg
 import (
 	"bytes"
 	"crypto/elliptic"
-	"crypto/rand"
-	"crypto/sha256"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,11 +17,13 @@ import (
 func secMsgAlternating(n int, b *testing.B) {
 	require := require.New(b)
 
-	hku := &hkuPKE{pke: encryption.NewECIES(elliptic.P256()), sku: &skuPKE{elliptic.P256()}}
-	lamport := signature.NewLamport(rand.Reader, sha256.New)
-	kus := &kuSig{lamport}
+	curve := elliptic.P256()
+	ecdsa := signature.NewECDSA(curve)
 
-	sec := &SecMsg{hku: hku, kus: kus, sig: lamport}
+	hku := &hkuPKE{pke: encryption.NewECIES(curve), sku: &skuPKE{curve}}
+	kus := &kuSig{ecdsa}
+
+	sec := &SecMsg{hku: hku, kus: kus, sig: ecdsa}
 
 	msg := []byte("secmsg")
 
@@ -56,11 +56,13 @@ func benchmarkSecMsgAlternating(i int, b *testing.B) {
 func secMsgUnidirectional(n int, b *testing.B) {
 	require := require.New(b)
 
-	hku := &hkuPKE{pke: encryption.NewECIES(elliptic.P256()), sku: &skuPKE{elliptic.P256()}}
-	lamport := signature.NewLamport(rand.Reader, sha256.New)
-	kus := &kuSig{lamport}
+	curve := elliptic.P256()
+	ecdsa := signature.NewECDSA(curve)
 
-	sec := &SecMsg{hku: hku, kus: kus, sig: lamport}
+	hku := &hkuPKE{pke: encryption.NewECIES(curve), sku: &skuPKE{curve}}
+	kus := &kuSig{ecdsa}
+
+	sec := &SecMsg{hku: hku, kus: kus, sig: ecdsa}
 
 	msg := []byte("secmsg")
 
