@@ -164,7 +164,7 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 
 // Receive decrypts a given message consisting of the actual ciphertext, signed auxiliary
 // data and a signature. A receive operation advances the receiver state of a user one
-// step forward (ratchted). The function returns a decrypted plaintext.
+// step forward (ratchet). The function returns a decrypted plaintext.
 func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 	var msg message
 	if err := json.Unmarshal(ct, &msg); err != nil {

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSKUPKE(t *testing.T) {
+func TestSkuPKE(t *testing.T) {
 	require := require.New(t)
 
 	skupke := &skuPKE{elliptic.P256()}

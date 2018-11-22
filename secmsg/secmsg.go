@@ -1,6 +1,11 @@
 // (c) 2018 EPFL
 // This code is licensed under MIT license (see LICENSE.txt for details)
 
+// Package secmsg implements the secure messaging protocol specified by Daniel Jost,
+// Ueli Maurer and Marta Mularczyk in their paper Efficient Ratcheting: Almost-Optimal
+// Guarantees for Secure Messaging (https://eprint.iacr.org/2018/954). The scheme
+// relies on a novel healable key-updating public key encryption scheme, a key-updatable
+// signature scheme and an ordinary one-time signature.
 package secmsg
 
 import (
@@ -9,32 +14,40 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
+
 	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
 
+// SecMsg designates a secure messaging protocol instance.
 type SecMsg struct {
-	hku *hkuPKE
-	kus *kuSig
-	sig signature.Signature
+	hku *hkuPKE             // hku is healable key-updatable public-key encryption scheme.
+	kus *kuSig              // kus is the key-updatable signature scheme.
+	sig signature.Signature // sig is a plain ots signature scheme.
 }
 
+// User designates a participant in the protocol that can both send and receive
+// messages. It has to be passed as an argument to both the send and receive routines.
 type User struct {
-	ek, dk       []byte
-	vkUpd, skUpd []byte
-	vkEph, skEph []byte
-	vk           [][]byte
+	ek, dk       []byte   // ek, dk are the hku-PKE public/private keys.
+	vkUpd, skUpd []byte   // vkUpd, skUpd are the kus public/private keys.
+	vkEph, skEph []byte   // vkEph, skEph are the ots public/private keys.
+	vk           [][]byte // vk is an array ots public keys used for asynchronous traffic.
 
+	// s, r are the number of sent (s), received (r) messages. sAck is the counterpart's
+	// send epoch of the last received message.
 	s, sAck, r int
 
-	trace []byte
-	trans [][]byte
+	trace []byte   // trace is the chain hash of all received ciphertexts.
+	trans [][]byte // trans is an array of all hashed ciphertexts (transcript).
 }
 
+// message groups the actual plaintext the ephemeral ots private key for encryption.
 type message struct {
 	Msg, SkEph []byte
 }
 
+// ciphertext group the actual ciphertext and auxiliary information for authentication.
 type ciphertext struct {
 	C []byte
 
@@ -45,6 +58,10 @@ type ciphertext struct {
 	SigUpd, SigEph []byte
 }
 
+// Init creates and returns two User objects which can communicate with each other.
+// Note, that in case of an error during a send or receiver operation both user states
+// are considered corrupt thus requiring a fresh protocol initialization in order to
+// resume communicating.
 func (s SecMsg) Init() (*User, *User, error) {
 	// create hku-pke key pairs
 	eka, dka, err := s.hku.generate()
@@ -93,12 +110,14 @@ func (s SecMsg) Init() (*User, *User, error) {
 	return alice, bob, nil
 }
 
+// Send encrypts and signs a given plaintext. It further advances the sender state
+// one step forward (ratchet). The function returns a message object that contains
+// the ciphertext and auxiliary authenticated data.
 func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 	vkEph1, skEph1, err := s.sig.Generate()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to generate ots keys")
 	}
-	//fmt.Println(primitives.Digest(sha256.New(), vkEph1), primitives.Digest(sha256.New(), skEph1))
 	vkEph2, skEph2, err := s.sig.Generate()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to generate ots keys")
@@ -124,7 +143,6 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to ku-Sig sign ciphertext")
 	}
-	//fmt.Println("sign", primitives.Digest(sha256.New(), user.skEph))
 	sigEph, err := s.sig.Sign(user.skEph, append(data, user.trace...))
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to ots sign ciphertext")
@@ -140,7 +158,6 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 
 	h := primitives.Digest(sha256.New(), user.trans[user.s-1], data)
 	user.trans = append(user.trans, h)
-	//fmt.Println("snd", h)
 
 	c, err = json.Marshal(&ciphertext{
 		C: c, Upd: upd, VkEph: vkEph2, R: user.r,
@@ -152,6 +169,9 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 	return c, nil
 }
 
+// Receive decrypts a given ciphertext holding the plaintext and the ephemeral ots
+// private key. A receive operation advances the receiver state of a user one step
+// forward (ratchet) using the authenticated data sent along the ciphertext.
 func (s SecMsg) Receive(user *User, ct []byte) ([]byte, error) {
 	var c ciphertext
 	if err := json.Unmarshal(ct, &c); err != nil {
@@ -174,7 +194,6 @@ func (s SecMsg) Receive(user *User, ct []byte) ([]byte, error) {
 		sha256.New(),
 		c.C, c.Upd, c.VkEph, []byte(strconv.Itoa(c.R)),
 	)
-	//fmt.Println("rece", primitives.Digest(sha256.New(), vk))
 	if err := s.sig.Verify(vk, append(data, user.trans[c.R]...), c.SigEph); err != nil {
 		return nil, errors.Wrap(err, "unable to verify ots signature")
 	}
@@ -205,7 +224,6 @@ func (s SecMsg) Receive(user *User, ct []byte) ([]byte, error) {
 	user.sAck = c.R
 	user.r++
 	user.trace = primitives.Digest(sha256.New(), user.trace, data)
-	//fmt.Println("rec", user.trace)
 
 	return msg.Msg, nil
 }
