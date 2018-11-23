@@ -5,6 +5,7 @@ package dratch
 
 import (
 	"bytes"
+	"crypto/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,10 @@ func TestHDKF(t *testing.T) {
 	msg := []byte("fs-aead")
 	ad := []byte("associated-data")
 
-	s, r, err := fs.generate()
+	k := make([]byte, 16)
+	rand.Read(k)
+
+	s, r, err := fs.generate(k)
 	require.Nil(err)
 
 	for i := 0; i < 10; i++ {

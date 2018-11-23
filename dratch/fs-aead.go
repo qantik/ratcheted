@@ -41,16 +41,12 @@ type fsaCiphertext struct {
 }
 
 // generate creates a fresh FS-AEAD sender and receiver states.
-func (f fsAEAD) generate() (s, r []byte, err error) {
-	k, err := f.pp.generate()
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to create fs-aead state")
-	}
-	s, err = json.Marshal(&fsaSender{W: k, I: 0})
+func (f fsAEAD) generate(key []byte) (s, r []byte, err error) {
+	s, err = json.Marshal(&fsaSender{W: key, I: 0})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to marshal fs-aead sender state")
 	}
-	r, err = json.Marshal(&fsaReceiver{W: k, I: 0, D: map[int][]byte{}})
+	r, err = json.Marshal(&fsaReceiver{W: key, I: 0, D: map[int][]byte{}})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to marshal fs-aead receiver state")
 	}
