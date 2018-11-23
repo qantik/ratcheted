@@ -35,6 +35,12 @@ type barkBlock struct {
 	State, Key []byte
 }
 
+type barkCiphertext struct {
+	I     []byte
+	Hs    []byte
+	Onion []byte
+}
+
 type participant struct {
 	Hk               []byte   // hashing key
 	Sender, Receiver [][]byte // states
@@ -85,7 +91,7 @@ func (b BARK) Init() ([]byte, []byte, error) {
 	return p1, p2, nil
 }
 
-func (b BARK) Send(state []byte) (upd, k []byte, ct [][]byte, err error) {
+func (b BARK) Send(state []byte) (upd, k []byte, ct []byte, err error) {
 	var p participant
 	if err = json.Unmarshal(state, &p); err != nil {
 		return
@@ -130,20 +136,27 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct [][]byte, err error) {
 		}
 	}
 
-	ct = [][]byte{[]byte(strconv.Itoa(u - i)), p.Hsent, onion}
+	//ct = [][]byte{[]byte(strconv.Itoa(u - i)), p.Hsent, onion}
+	ct, _ = json.Marshal(&barkCiphertext{
+		I:  []byte(strconv.Itoa(u - i)),
+		Hs: p.Hsent, Onion: onion,
+	})
 
-	p.Hsent = primitives.Digest(hmac.New(sha256.New, p.Hk), ct...)
+	p.Hsent = primitives.Digest(hmac.New(sha256.New, p.Hk), ct)
 
 	upd, err = json.Marshal(&p)
 	return
 }
 
-func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
+func (b BARK) Receive(state []byte, ct []byte) (upd, k []byte, err error) {
 	var p participant
 	if err = json.Unmarshal(state, &p); err != nil {
 		return
 	}
-	if !bytes.Equal(ct[1], p.Hreceived) {
+	var c barkCiphertext
+	json.Unmarshal(ct, &c)
+
+	if !bytes.Equal(c.Hs, p.Hreceived) {
 		return nil, nil, errors.New("Hsent != Hreceived")
 	}
 
@@ -155,12 +168,12 @@ func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
 		}
 	}
 
-	n, _ := strconv.Atoi(string(ct[0]))
+	n, _ := strconv.Atoi(string(c.I))
 	if i+n >= len(p.Receiver) {
 		return nil, nil, errors.New("participants are out of sync")
 	}
 
-	onion := ct[2]
+	onion := c.Onion
 
 	upds := make([][]byte, i)
 	for j := i; j <= i+n; j++ {
@@ -186,7 +199,7 @@ func (b BARK) Receive(state []byte, ct [][]byte) (upd, k []byte, err error) {
 	}
 	p.Receiver[i+n] = upds[i+n]
 
-	p.Hreceived = primitives.Digest(hmac.New(sha256.New, p.Hk), ct...)
+	p.Hreceived = primitives.Digest(hmac.New(sha256.New, p.Hk), ct)
 
 	upd, err = json.Marshal(&p)
 	return
