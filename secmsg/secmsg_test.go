@@ -30,26 +30,51 @@ func TestSecMsg(t *testing.T) {
 	alice, bob, err := sec.Init()
 	require.Nil(err)
 
-	for i := 0; i < 10; i++ {
+	n := 10
+
+	var cts [1000][]byte
+	for i := 0; i < n/2; i++ {
 		ct, err := sec.Send(alice, msg)
 		require.Nil(err)
 
-		ct1, err := sec.Send(alice, msg)
+		cts[i] = ct
+	}
+
+	for i := 0; i < n/2; i++ {
+		ct, err := sec.Send(bob, msg)
 		require.Nil(err)
 
-		pt, err := sec.Receive(bob, ct)
-		require.Nil(err)
-		require.True(bytes.Equal(msg, pt))
-
-		ct, err = sec.Send(bob, msg)
-		require.Nil(err)
-
-		pt, err = sec.Receive(alice, ct)
-		require.Nil(err)
-		require.True(bytes.Equal(msg, pt))
-
-		pt, err = sec.Receive(bob, ct1)
+		pt, err := sec.Receive(alice, ct)
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
 	}
+
+	for i := 0; i < n/2; i++ {
+		pt, err := sec.Receive(bob, cts[i])
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+	}
+
+	//for i := 0; i < 10; i++ {
+	//	ct, err := sec.Send(alice, msg)
+	//	require.Nil(err)
+
+	//	ct1, err := sec.Send(alice, msg)
+	//	require.Nil(err)
+
+	//	pt, err := sec.Receive(bob, ct)
+	//	require.Nil(err)
+	//	require.True(bytes.Equal(msg, pt))
+
+	//	ct, err = sec.Send(bob, msg)
+	//	require.Nil(err)
+
+	//	pt, err = sec.Receive(alice, ct)
+	//	require.Nil(err)
+	//	require.True(bytes.Equal(msg, pt))
+
+	//	pt, err = sec.Receive(bob, ct1)
+	//	require.Nil(err)
+	//	require.True(bytes.Equal(msg, pt))
+	//}
 }

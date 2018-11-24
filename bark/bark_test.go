@@ -27,30 +27,81 @@ func TestBARK(t *testing.T) {
 	//uni := NewLiteUni(encryption.NewGCM())
 
 	bark := NewBARK(uni)
-
+	n := 20
 	pa, pb, err := bark.Init()
 	require.Nil(err)
 
-	for j := 0; j < 100; j++ {
+	var ks, cts [1000][]byte
+	for i := 0; i < n/2; i++ {
 		pau, ka, ct, err := bark.Send(pa)
 		require.Nil(err)
 
-		pbu, kb, err := bark.Receive(pb, ct)
+		cts[i] = ct
+		ks[i] = ka
+		pa = pau
+	}
+
+	for i := 0; i < n/2; i++ {
+		pbu, kb, ct, err := bark.Send(pb)
+		require.Nil(err)
+
+		pau, ka, err := bark.Receive(pa, ct)
 		require.Nil(err)
 		require.True(bytes.Equal(ka, kb))
 
 		pa, pb = pau, pbu
 	}
 
-	for j := 0; j < 100; j++ {
-		pbu, ka, ct, err := bark.Send(pb)
+	for i := 0; i < n/2; i++ {
+		pbu, kb, err := bark.Receive(pb, cts[i])
 		require.Nil(err)
+		require.True(bytes.Equal(ks[i], kb))
 
-		pau, kb, err := bark.Receive(pa, ct)
-		require.Nil(err)
-		require.True(bytes.Equal(ka, kb))
-
-		pa, pb = pau, pbu
-
+		pb = pbu
 	}
+
+	//for i := 0; i < n; i++ {
+	//	if i%6 == 0 {
+	//		pbu, ka, ct, err := bark.Send(pb)
+	//		require.Nil(err)
+
+	//		pau, kb, err := bark.Receive(pa, ct)
+	//		require.Nil(err)
+	//		require.True(bytes.Equal(ka, kb))
+
+	//		pa, pb = pau, pbu
+	//	} else {
+	//		pau, ka, ct, err := bark.Send(pa)
+	//		require.Nil(err)
+
+	//		pbu, kb, err := bark.Receive(pb, ct)
+	//		require.Nil(err)
+	//		require.True(bytes.Equal(kb, ka))
+
+	//		pa, pb = pau, pbu
+	//	}
+	//}
+
+	//for j := 0; j < 100; j++ {
+	//	pau, ka, ct, err := bark.Send(pa)
+	//	require.Nil(err)
+
+	//	pbu, kb, err := bark.Receive(pb, ct)
+	//	require.Nil(err)
+	//	require.True(bytes.Equal(ka, kb))
+
+	//	pa, pb = pau, pbu
+	//}
+
+	//for j := 0; j < 100; j++ {
+	//	pbu, ka, ct, err := bark.Send(pb)
+	//	require.Nil(err)
+
+	//	pau, kb, err := bark.Receive(pa, ct)
+	//	require.Nil(err)
+	//	require.True(bytes.Equal(ka, kb))
+
+	//	pa, pb = pau, pbu
+
+	//}
 }

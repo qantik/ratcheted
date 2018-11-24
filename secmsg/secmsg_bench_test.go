@@ -98,24 +98,29 @@ func benchmarkSecMsgUnidirectional(i int, b *testing.B) {
 	}
 }
 
-func BenchmarkSecMsgAlternating50(b *testing.B)  { benchmarkSecMsgAlternating(50, b) }
-func BenchmarkSecMsgAlternating100(b *testing.B) { benchmarkSecMsgAlternating(100, b) }
-func BenchmarkSecMsgAlternating200(b *testing.B) { benchmarkSecMsgAlternating(200, b) }
-func BenchmarkSecMsgAlternating300(b *testing.B) { benchmarkSecMsgAlternating(300, b) }
-func BenchmarkSecMsgAlternating400(b *testing.B) { benchmarkSecMsgAlternating(400, b) }
-func BenchmarkSecMsgAlternating500(b *testing.B) { benchmarkSecMsgAlternating(500, b) }
-func BenchmarkSecMsgAlternating600(b *testing.B) { benchmarkSecMsgAlternating(600, b) }
-func BenchmarkSecMsgAlternating700(b *testing.B) { benchmarkSecMsgAlternating(700, b) }
-func BenchmarkSecMsgAlternating800(b *testing.B) { benchmarkSecMsgAlternating(800, b) }
-func BenchmarkSecMsgAlternating900(b *testing.B) { benchmarkSecMsgAlternating(900, b) }
+//func BenchmarkSecMsgAlternating50(b *testing.B)  { benchmarkSecMsgAlternating(50, b) }
+//func BenchmarkSecMsgAlternating100(b *testing.B) { benchmarkSecMsgAlternating(100, b) }
+//func BenchmarkSecMsgAlternating200(b *testing.B) { benchmarkSecMsgAlternating(200, b) }
+//func BenchmarkSecMsgAlternating300(b *testing.B) { benchmarkSecMsgAlternating(300, b) }
+//func BenchmarkSecMsgAlternating400(b *testing.B) { benchmarkSecMsgAlternating(400, b) }
+//func BenchmarkSecMsgAlternating500(b *testing.B) { benchmarkSecMsgAlternating(500, b) }
+//func BenchmarkSecMsgAlternating600(b *testing.B) { benchmarkSecMsgAlternating(600, b) }
+//func BenchmarkSecMsgAlternating700(b *testing.B) { benchmarkSecMsgAlternating(700, b) }
+//func BenchmarkSecMsgAlternating800(b *testing.B) { benchmarkSecMsgAlternating(800, b) }
+//func BenchmarkSecMsgAlternating900(b *testing.B) { benchmarkSecMsgAlternating(900, b) }
 
-func BenchmarkSecMsgUnidirectional50(b *testing.B)  { benchmarkSecMsgUnidirectional(50, b) }
-func BenchmarkSecMsgUnidirectional100(b *testing.B) { benchmarkSecMsgUnidirectional(100, b) }
-func BenchmarkSecMsgUnidirectional200(b *testing.B) { benchmarkSecMsgUnidirectional(200, b) }
-func BenchmarkSecMsgUnidirectional300(b *testing.B) { benchmarkSecMsgUnidirectional(300, b) }
-func BenchmarkSecMsgUnidirectional400(b *testing.B) { benchmarkSecMsgUnidirectional(400, b) }
-func BenchmarkSecMsgUnidirectional500(b *testing.B) { benchmarkSecMsgUnidirectional(500, b) }
-func BenchmarkSecMsgUnidirectional600(b *testing.B) { benchmarkSecMsgUnidirectional(600, b) }
-func BenchmarkSecMsgUnidirectional700(b *testing.B) { benchmarkSecMsgUnidirectional(700, b) }
-func BenchmarkSecMsgUnidirectional800(b *testing.B) { benchmarkSecMsgUnidirectional(800, b) }
-func BenchmarkSecMsgUnidirectional900(b *testing.B) { benchmarkSecMsgUnidirectional(900, b) }
+func BenchmarkSecMsgUnidirectional50(b *testing.B) { benchmarkSecMsgUnidirectional(10, b) }
+
+func BenchmarkSecMsgUnidirectional100(b *testing.B) { benchmarkSecMsgUnidirectional(20, b) }
+
+//func BenchmarkSecMsgUnidirectional200(b *testing.B) { benchmarkSecMsgUnidirectional(30, b) }
+
+//func BenchmarkSecMsgUnidirectional300(b *testing.B) { benchmarkSecMsgUnidirectional(300, b) }
+//
+//func BenchmarkSecMsgUnidirectional400(b *testing.B) { benchmarkSecMsgUnidirectional(400, b) }
+//func BenchmarkSecMsgUnidirectional500(b *testing.B) { benchmarkSecMsgUnidirectional(500, b) }
+//func BenchmarkSecMsgUnidirectional600(b *testing.B) { benchmarkSecMsgUnidirectional(600, b) }
+//
+//func BenchmarkSecMsgUnidirectional700(b *testing.B) { benchmarkSecMsgUnidirectional(700, b) }
+//func BenchmarkSecMsgUnidirectional800(b *testing.B) { benchmarkSecMsgUnidirectional(800, b) }
+//func BenchmarkSecMsgUnidirectional900(b *testing.B) { benchmarkSecMsgUnidirectional(900, b) }
