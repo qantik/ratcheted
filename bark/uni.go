@@ -4,7 +4,9 @@
 package bark
 
 import (
-	"encoding/json"
+	"github.com/pkg/errors"
+
+	"github.com/qantik/ratcheted/primitives"
 )
 
 type Uni struct {
@@ -31,57 +33,57 @@ func NewUni(sc *signcryption) *Uni {
 func (u Uni) Init() (s, r []byte, err error) {
 	sks, skr, err := u.sc.generateSignKeys()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "unable to generate signcryption signature keys")
 	}
 
 	pks, pkr, err := u.sc.generateCipherKeys()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "unable to generate signcryption cipher keys")
 	}
 
-	sender := &sender{SKS: sks, PKR: pkr}
-	s, err = json.Marshal(sender)
+	s, err = primitives.Encode(sender{SKS: sks, PKR: pkr})
 	if err != nil {
-		return
+		return nil, nil, errors.Wrap(err, "unable to encode uni-bark sender")
 	}
-
-	receiver := &receiver{SKR: skr, PKS: pks}
-	r, err = json.Marshal(receiver)
+	r, err = primitives.Encode(receiver{SKR: skr, PKS: pks})
 	if err != nil {
-		return
+		return nil, nil, errors.Wrap(err, "unable to encode uni-bark receiver")
 	}
-
 	return
 }
 
-func (u Uni) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
+func (u Uni) Send(state, ad, pt []byte, simple bool) (upd, ct []byte, err error) {
 	var s sender
-	if err = json.Unmarshal(state, &s); err != nil {
-		return
+	if err := primitives.Decode(state, &s); err != nil {
+		return nil, nil, errors.Wrap(err, "unable to decode uni-bark sender state")
 	}
 
-	ss, rr, err := u.Init()
-	if err != nil {
-		return nil, nil, err
+	// Only create new uni-bark state for the inner-most onion layer.
+	var us, ur []byte
+	if !simple {
+		us, ur, err = u.Init()
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "unable to create new uni-bark instance")
+		}
 	}
-	upd = ss
+	upd = us
 
-	block, err := json.Marshal(&uniBlock{R: rr, Message: pt})
+	block, err := primitives.Encode(uniBlock{R: ur, Message: pt})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "unable to encode uni-bark message")
 	}
 
 	ct, err = u.sc.signcrypt(s.SKS, s.PKR, ad, block)
 	if err != nil {
-		return
+		return nil, nil, errors.Wrap(err, "unable to signcrypt uni-bark message")
 	}
 	return
 }
 
 func (u Uni) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 	var r receiver
-	if err = json.Unmarshal(str, &r); err != nil {
-		return
+	if err := primitives.Decode(str, &r); err != nil {
+		return nil, nil, errors.Wrap(err, "unable to decode uni-bark receiver state")
 	}
 
 	dec, err := u.sc.unsigncrypt(r.SKR, r.PKS, ad, ct)
@@ -90,8 +92,8 @@ func (u Uni) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 	}
 
 	var block uniBlock
-	if err := json.Unmarshal(dec, &block); err != nil {
-		return nil, nil, err
+	if err := primitives.Decode(dec, &block); err != nil {
+		return nil, nil, errors.Wrap(err, "unable to decode uni-bark message")
 	}
 	upd, pt = block.R, block.Message
 	return

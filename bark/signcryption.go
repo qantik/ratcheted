@@ -4,8 +4,7 @@
 package bark
 
 import (
-	"encoding/json"
-
+	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
@@ -41,7 +40,8 @@ func (s signcryption) signcrypt(sks, pkr, ad, msg []byte) ([]byte, error) {
 	}
 
 	block := signcryptionBlock{AD: ad, Message: msg, Signature: sig}
-	b, err := json.Marshal(&block)
+	//b, err := json.Marshal(&block)
+	b, err := primitives.Encode(&block)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,8 @@ func (s signcryption) unsigncrypt(skr, pks, ad, ct []byte) ([]byte, error) {
 	}
 
 	var b signcryptionBlock
-	if err := json.Unmarshal(dec, &b); err != nil {
+	if err := primitives.Decode(dec, &b); err != nil {
+		//if err := json.Unmarshal(dec, &b); err != nil {
 		return nil, err
 	}
 

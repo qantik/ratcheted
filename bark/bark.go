@@ -9,8 +9,9 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"strconv"
+
+	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
 )
@@ -22,7 +23,7 @@ const (
 
 type uni interface {
 	Init() ([]byte, []byte, error)
-	Send(state, ad, pt []byte) ([]byte, []byte, error)
+	Send(state, ad, pt []byte, simple bool) ([]byte, []byte, error)
 	Receive(state, ad, ct []byte) ([]byte, []byte, error)
 }
 
@@ -91,7 +92,7 @@ func (b BARK) Init() ([]byte, []byte, error) {
 	return p1, p2, nil
 }
 
-func (b BARK) Send(state []byte) (upd, k []byte, ct []byte, err error) {
+func (b BARK) Send(state []byte) (upd, k, ct []byte, err error) {
 	var p participant
 	if err = json.Unmarshal(state, &p); err != nil {
 		return
@@ -101,7 +102,6 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct []byte, err error) {
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
 	p.Receiver = append(p.Receiver, r)
 
 	k = make([]byte, sessionKeySize)
@@ -109,9 +109,9 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct []byte, err error) {
 		return nil, nil, nil, err
 	}
 
-	onion, err := json.Marshal(&barkBlock{State: s, Key: k})
+	onion, err := primitives.Encode(&barkBlock{State: s, Key: k})
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, errors.Wrap(err, "unable to encode bark message")
 	}
 
 	i := 0
@@ -121,11 +121,10 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct []byte, err error) {
 			break
 		}
 	}
-
 	u := len(p.Sender) - 1
 	for j := u; j >= i; j-- {
 		index := []byte(strconv.Itoa(u - j))
-		sj, o, err := b.uni.Send(p.Sender[j], append(index, p.Hsent...), onion)
+		sj, o, err := b.uni.Send(p.Sender[j], append(index, p.Hsent...), onion, j < u)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -136,15 +135,16 @@ func (b BARK) Send(state []byte) (upd, k []byte, ct []byte, err error) {
 		}
 	}
 
-	//ct = [][]byte{[]byte(strconv.Itoa(u - i)), p.Hsent, onion}
-	ct, _ = json.Marshal(&barkCiphertext{
+	ct, err = primitives.Encode(barkCiphertext{
 		I:  []byte(strconv.Itoa(u - i)),
 		Hs: p.Hsent, Onion: onion,
 	})
-
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "unable to encode bark ciphertext")
+	}
 	p.Hsent = primitives.Digest(hmac.New(sha256.New, p.Hk), ct)
-
 	upd, err = json.Marshal(&p)
+
 	return
 }
 
@@ -154,8 +154,9 @@ func (b BARK) Receive(state []byte, ct []byte) (upd, k []byte, err error) {
 		return
 	}
 	var c barkCiphertext
-	json.Unmarshal(ct, &c)
-
+	if err := primitives.Decode(ct, &c); err != nil {
+		return nil, nil, errors.Wrap(err, "unable to decode bark ciphertext")
+	}
 	if !bytes.Equal(c.Hs, p.Hreceived) {
 		return nil, nil, errors.New("Hsent != Hreceived")
 	}
@@ -187,7 +188,7 @@ func (b BARK) Receive(state []byte, ct []byte) (upd, k []byte, err error) {
 	}
 
 	var block barkBlock
-	if err := json.Unmarshal(onion, &block); err != nil {
+	if err := primitives.Decode(onion, &block); err != nil {
 		return nil, nil, err
 	}
 
