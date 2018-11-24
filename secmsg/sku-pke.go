@@ -7,10 +7,10 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha512"
-	"encoding/json"
 	"math/big"
 
 	"github.com/pkg/errors"
+
 	"github.com/qantik/ratcheted/primitives"
 )
 
@@ -92,9 +92,9 @@ func (s skuPKE) encrypt(pk, msg []byte) ([]byte, error) {
 	for i := 0; i < len(msg); i++ {
 		c2[i] = msg[i] ^ h[i]
 	}
-	ct, err := json.Marshal(&skuCiphertext{C1: gr, C2: c2})
+	ct, err := primitives.Encode(&skuCiphertext{C1: gr, C2: c2})
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to marshal ciphertext")
+		return nil, errors.Wrap(err, "unable to encode ciphertext")
 	}
 	return ct, nil
 }
@@ -102,8 +102,8 @@ func (s skuPKE) encrypt(pk, msg []byte) ([]byte, error) {
 // decrypt deciphers a ciphertext pair with a given sku-pke private key.
 func (s skuPKE) decrypt(sk, ct []byte) ([]byte, error) {
 	var ciphertext skuCiphertext
-	if err := json.Unmarshal(ct, &ciphertext); err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal ciphertext")
+	if err := primitives.Decode(ct, &ciphertext); err != nil {
+		return nil, errors.Wrap(err, "unable to decode ciphertext")
 	}
 	c1x, c1y := elliptic.Unmarshal(s.curve, ciphertext.C1)
 	if c1x == nil {

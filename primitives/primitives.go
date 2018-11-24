@@ -5,7 +5,11 @@
 // usage in the messaging protocols.
 package primitives
 
-import "hash"
+import (
+	"bytes"
+	"encoding/gob"
+	"hash"
+)
 
 // Digest applies the hash function f on the provided data.
 func Digest(f hash.Hash, data ...[]byte) []byte {
@@ -14,4 +18,24 @@ func Digest(f hash.Hash, data ...[]byte) []byte {
 		f.Write(d)
 	}
 	return f.Sum(nil)
+}
+
+// Encode gob encodes a given structure.
+func Encode(obj interface{}) ([]byte, error) {
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
+	if err := enc.Encode(obj); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
+
+// Decode gob decodes a given byte array into an object.
+func Decode(data []byte, obj interface{}) error {
+	buffer := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buffer)
+	if err := dec.Decode(obj); err != nil {
+		return err
+	}
+	return nil
 }

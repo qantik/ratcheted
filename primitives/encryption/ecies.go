@@ -12,13 +12,14 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
-	"encoding/json"
+	"encoding/gob"
 	"errors"
 	"io"
 	"math/big"
 
-	"github.com/qantik/ratcheted/primitives"
 	"golang.org/x/crypto/hkdf"
+
+	"github.com/qantik/ratcheted/primitives"
 )
 
 // ECIES implements the Elliptic Curve Integrated Encryption Scheme on a given curve using
@@ -58,12 +59,12 @@ func (e ECIES) Generate(seed []byte) (pk, sk []byte, err error) {
 	Kx, Ky := e.curve.ScalarBaseMult(k.Bytes())
 
 	public := &eciesPublicKey{Kx: Kx, Ky: Ky}
-	pk, err = json.Marshal(public)
+	pk, err = primitives.Encode(public)
 	if err != nil {
 		return
 	}
 	private := &eciesPrivateKey{K: k}
-	sk, err = json.Marshal(private)
+	sk, err = primitives.Encode(private)
 	if err != nil {
 		return
 	}
@@ -73,7 +74,7 @@ func (e ECIES) Generate(seed []byte) (pk, sk []byte, err error) {
 // Encrypt enciphers a message with a given public key.
 func (e ECIES) Encrypt(pk, msg, ad []byte) ([]byte, error) {
 	var public eciesPublicKey
-	if err := json.Unmarshal(pk, &public); err != nil {
+	if err := primitives.Decode(pk, &public); err != nil {
 		return nil, err
 	}
 
@@ -115,22 +116,31 @@ func (e ECIES) Encrypt(pk, msg, ad []byte) ([]byte, error) {
 
 	d := primitives.Digest(hmac.New(sha256.New, km), c)
 
+	var buffer bytes.Buffer
+	eenc := gob.NewEncoder(&buffer)
+
 	ct := eciesCiphertext{Rx: Rx, Ry: Ry, C: c, D: d}
-	enc, err := json.Marshal(&ct)
+	//enc, err := primitives.Encode(&ct)
+	err = eenc.Encode(&ct)
 	if err != nil {
 		return nil, err
 	}
+	enc := buffer.Bytes()
 	return enc, nil
 }
 
 // Decrypt deciphers a ciphertex with a given private key.
 func (e ECIES) Decrypt(sk, ct, ad []byte) ([]byte, error) {
 	var private eciesPrivateKey
-	if err := json.Unmarshal(sk, &private); err != nil {
+	if err := primitives.Decode(sk, &private); err != nil {
 		return nil, err
 	}
 	var ciphertext eciesCiphertext
-	if err := json.Unmarshal(ct, &ciphertext); err != nil {
+	buffer := bytes.NewBuffer(ct)
+	dec := gob.NewDecoder(buffer)
+
+	if err := dec.Decode(&ciphertext); err != nil {
+		//if err := primitives.Decode(ct, &ciphertext); err != nil {
 		return nil, err
 	}
 
@@ -170,7 +180,7 @@ func (e ECIES) Decrypt(sk, ct, ad []byte) ([]byte, error) {
 // Encapsulate creates a fresh symmetric key and encapsulates it using ECIES.
 func (e ECIES) Encapsulate(pk []byte) (k, c []byte, err error) {
 	var public eciesPublicKey
-	if err := json.Unmarshal(pk, &public); err != nil {
+	if err := primitives.Decode(pk, &public); err != nil {
 		return nil, nil, err
 	}
 
@@ -193,7 +203,7 @@ func (e ECIES) Encapsulate(pk []byte) (k, c []byte, err error) {
 // Decapsulate decrypts a ECIES ciphertext to extract the encapsulated symmetric key.
 func (e ECIES) Decapsulate(sk, c []byte) ([]byte, error) {
 	var private eciesPrivateKey
-	if err := json.Unmarshal(sk, &private); err != nil {
+	if err := primitives.Decode(sk, &private); err != nil {
 		return nil, err
 	}
 

@@ -4,11 +4,11 @@
 package secmsg
 
 import (
-	"encoding/json"
 	"strconv"
 
 	"github.com/pkg/errors"
 
+	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
 
@@ -43,13 +43,13 @@ func (k kuSig) generate() (pk, sk []byte, err error) {
 		return nil, nil, errors.Wrap(err, "unable to generate ots key pair")
 	}
 
-	pk, err = json.Marshal(&kuSigPublicKey{PK: fpk, R: 0})
+	pk, err = primitives.Encode(&kuSigPublicKey{PK: fpk, R: 0})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to marshal ku-sig public key")
+		return nil, nil, errors.Wrap(err, "unable to encode ku-sig public key")
 	}
-	sk, err = json.Marshal(&kuSigPrivateKey{SK: fsk, S: 0})
+	sk, err = primitives.Encode(&kuSigPrivateKey{SK: fsk, S: 0})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to marshal ku-sig private key")
+		return nil, nil, errors.Wrap(err, "unable to encode ku-sig private key")
 	}
 	return
 }
@@ -58,8 +58,8 @@ func (k kuSig) generate() (pk, sk []byte, err error) {
 // OTS public key. It returns this bundle and the corresponding updated ku-Sig private key.
 func (k kuSig) sign(sk, msg []byte) (upd, bundle []byte, err error) {
 	var private kuSigPrivateKey
-	if err := json.Unmarshal(sk, &private); err != nil {
-		return nil, nil, errors.Wrap(err, "unable to unmarshal ku-sig private key")
+	if err := primitives.Decode(sk, &private); err != nil {
+		return nil, nil, errors.Wrap(err, "unable to decode ku-sig private key")
 	}
 
 	fpk, fsk, err := k.signature.Generate()
@@ -76,13 +76,13 @@ func (k kuSig) sign(sk, msg []byte) (upd, bundle []byte, err error) {
 	private.SK = fsk
 	private.S++
 
-	bundle, err = json.Marshal(&kuSigBundle{Sig: sig, PK: fpk})
+	bundle, err = primitives.Encode(&kuSigBundle{Sig: sig, PK: fpk})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to marshal ku-sig bundle")
+		return nil, nil, errors.Wrap(err, "unable to encode ku-sig bundle")
 	}
-	upd, err = json.Marshal(&private)
+	upd, err = primitives.Encode(&private)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to marshal updated ku-sig private key")
+		return nil, nil, errors.Wrap(err, "unable to encode updated ku-sig private key")
 	}
 	return
 }
@@ -90,12 +90,12 @@ func (k kuSig) sign(sk, msg []byte) (upd, bundle []byte, err error) {
 // verify checks the signature of msg and updates the ku-sig public key.
 func (k kuSig) verify(pk, msg, bdl []byte) ([]byte, error) {
 	var public kuSigPublicKey
-	if err := json.Unmarshal(pk, &public); err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal ku-sig public key")
+	if err := primitives.Decode(pk, &public); err != nil {
+		return nil, errors.Wrap(err, "unable to decode ku-sig public key")
 	}
 	var bundle kuSigBundle
-	if err := json.Unmarshal(bdl, &bundle); err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal ku-sig bundle")
+	if err := primitives.Decode(bdl, &bundle); err != nil {
+		return nil, errors.Wrap(err, "unable to decode ku-sig bundle")
 	}
 
 	data := append(bundle.PK, append([]byte(strconv.Itoa(public.R+1)), msg...)...)
@@ -106,9 +106,9 @@ func (k kuSig) verify(pk, msg, bdl []byte) ([]byte, error) {
 	public.PK = bundle.PK
 	public.R++
 
-	upd, err := json.Marshal(&public)
+	upd, err := primitives.Encode(&public)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to marshal updated ku-sig public key")
+		return nil, errors.Wrap(err, "unable to encode updated ku-sig public key")
 	}
 	return upd, nil
 }
