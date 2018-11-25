@@ -5,8 +5,9 @@ package bark
 
 import (
 	"crypto/rand"
-	"encoding/json"
 
+	"github.com/pkg/errors"
+	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/encryption"
 )
 
@@ -42,15 +43,17 @@ func (l LiteUni) Init() (s, r []byte, err error) {
 }
 
 // Send creates a new state and encrypts it for transmission to another participant.
-func (l LiteUni) Send(state, ad, pt []byte) (upd, ct []byte, err error) {
-	upd = make([]byte, liteUniKeySize)
-	if _, err := rand.Read(upd); err != nil {
-		return nil, nil, err
+func (l LiteUni) Send(state, ad, pt []byte, simple bool) (upd, ct []byte, err error) {
+	if !simple {
+		upd = make([]byte, liteUniKeySize)
+		if _, err := rand.Read(upd); err != nil {
+			return nil, nil, err
+		}
 	}
 
-	block, err := json.Marshal(&liteUniBlock{Key: upd, Message: pt})
+	block, err := primitives.Encode(&liteUniBlock{Key: upd, Message: pt})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "unable to encode lite-bark message")
 	}
 
 	ct, err = l.encryption.Encrypt(state, block, ad)
@@ -65,8 +68,8 @@ func (l LiteUni) Receive(state, ad, ct []byte) (upd, pt []byte, err error) {
 	}
 
 	var block liteUniBlock
-	if err := json.Unmarshal(dec, &block); err != nil {
-		return nil, nil, err
+	if err := primitives.Decode(dec, &block); err != nil {
+		return nil, nil, errors.Wrap(err, "unable to decode lite-bark message")
 	}
 	upd, pt = block.Key, block.Message
 	return

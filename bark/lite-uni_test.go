@@ -20,10 +20,10 @@ func TestLiteUni(t *testing.T) {
 	s, r, err := lu.Init()
 	require.Nil(err)
 
-	pt := []byte{1, 2, 3}
-	ad := []byte{100, 200}
+	pt := []byte("lite-bark")
+	ad := []byte("associated-data")
 
-	su, ct, err := lu.Send(s, ad, pt)
+	su, ct, err := lu.Send(s, ad, pt, false)
 	require.Nil(err)
 
 	ru, pt1, err := lu.Receive(r, ad, ct)
