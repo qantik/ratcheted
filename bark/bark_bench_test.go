@@ -18,101 +18,138 @@ var (
 	curve = elliptic.P256()
 	ecies = encryption.NewECIES(curve)
 	ecdsa = signature.NewECDSA(curve)
+	gcm   = encryption.NewGCM()
+
+	bark     = NewBARK(NewUni(&signcryption{ecies, ecdsa}))
+	liteBARK = NewBARK(NewLiteUni(gcm))
 )
 
-func barkAlternating(n int, b *testing.B) {
+func alt(bark *BARK, n int, b *testing.B) {
 	require := require.New(b)
 
-	//bark := NewBARK(NewUni(&signcryption{ecies, ecdsa}))
-	uni := NewLiteUni(encryption.NewGCM())
-	bark := NewBARK(uni)
-
-	pa, pb, err := bark.Init()
+	alice, bob, err := bark.Init()
 	require.Nil(err)
 
 	for i := 0; i < n/2; i++ {
-		pau, ka, ct, err := bark.Send(pa)
+		ka, ct, err := bark.Send(alice)
 		require.Nil(err)
 
-		pbu, kb, err := bark.Receive(pb, ct)
-		require.Nil(err)
-		require.True(bytes.Equal(ka, kb))
-
-		pbu, ka, ct, err = bark.Send(pbu)
-		require.Nil(err)
-
-		pau, kb, err = bark.Receive(pau, ct)
+		kb, err := bark.Receive(bob, ct)
 		require.Nil(err)
 		require.True(bytes.Equal(ka, kb))
 
-		pa, pb = pau, pbu
+		ka, ct, err = bark.Send(bob)
+		require.Nil(err)
+
+		kb, err = bark.Receive(alice, ct)
+		require.Nil(err)
+		require.True(bytes.Equal(ka, kb))
 	}
 }
 
-func benchmarkBARKAlternating(i int, b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		barkAlternating(i, b)
-	}
-}
-
-func barkUnidirectional(n int, b *testing.B) {
+func deferredUni(bark *BARK, n int, b *testing.B) {
 	require := require.New(b)
 
-	bark := NewBARK(NewUni(&signcryption{ecies, ecdsa}))
-	//uni := NewLiteUni(encryption.NewGCM())
-	//bark := NewBARK(uni)
-
-	pa, pb, err := bark.Init()
+	alice, bob, err := bark.Init()
 	require.Nil(err)
 
-	for i := 0; i < n; i++ {
-		if n%11 != 0 {
-			pau, ka, ct, err := bark.Send(pa)
-			require.Nil(err)
+	var ks, cts [1000][]byte
+	for i := 0; i < n/2; i++ {
+		ka, ct, err := bark.Send(alice)
+		require.Nil(err)
 
-			pbu, kb, err := bark.Receive(pb, ct)
-			require.Nil(err)
-			require.True(bytes.Equal(ka, kb))
+		ks[i] = ka
+		cts[i] = ct
+	}
 
-			pa, pb = pau, pbu
+	for i := 0; i < n/2; i++ {
+		ka, ct, err := bark.Send(bob)
+		require.Nil(err)
 
-		} else {
-			pbu, ka, ct, err := bark.Send(pb)
-			require.Nil(err)
+		kb, err := bark.Receive(alice, ct)
+		require.Nil(err)
+		require.True(bytes.Equal(ka, kb))
+	}
 
-			pau, kb, err := bark.Receive(pa, ct)
-			require.Nil(err)
-			require.True(bytes.Equal(ka, kb))
-
-			pa, pb = pau, pbu
-		}
+	for i := 0; i < n/2; i++ {
+		kb, err := bark.Receive(bob, cts[i])
+		require.Nil(err)
+		require.True(bytes.Equal(ks[i], kb))
 	}
 }
 
-func benchmarkBARKUnidirectional(i int, b *testing.B) {
+func uni(bark *BARK, n int, b *testing.B) {
+	require := require.New(b)
+
+	alice, bob, err := bark.Init()
+	require.Nil(err)
+
+	for i := 0; i < n/2; i++ {
+		ka, ct, err := bark.Send(alice)
+		require.Nil(err)
+
+		kb, err := bark.Receive(bob, ct)
+		require.Nil(err)
+		require.True(bytes.Equal(ka, kb))
+	}
+
+	for i := 0; i < n/2; i++ {
+		ka, ct, err := bark.Send(bob)
+		require.Nil(err)
+
+		kb, err := bark.Receive(alice, ct)
+		require.Nil(err)
+		require.True(bytes.Equal(ka, kb))
+	}
+}
+
+func benchmarkAlt(bark *BARK, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		barkUnidirectional(i, b)
+		alt(bark, i, b)
 	}
 }
 
-func BenchmarkBARKAlternating50(b *testing.B)  { benchmarkBARKAlternating(50, b) }
-func BenchmarkBARKAlternating100(b *testing.B) { benchmarkBARKAlternating(100, b) }
-func BenchmarkBARKAlternating200(b *testing.B) { benchmarkBARKAlternating(200, b) }
-func BenchmarkBARKAlternating300(b *testing.B) { benchmarkBARKAlternating(300, b) }
-func BenchmarkBARKAlternating400(b *testing.B) { benchmarkBARKAlternating(400, b) }
-func BenchmarkBARKAlternating500(b *testing.B) { benchmarkBARKAlternating(500, b) }
-func BenchmarkBARKAlternating600(b *testing.B) { benchmarkBARKAlternating(600, b) }
-func BenchmarkBARKAlternating700(b *testing.B) { benchmarkBARKAlternating(700, b) }
-func BenchmarkBARKAlternating800(b *testing.B) { benchmarkBARKAlternating(800, b) }
-func BenchmarkBARKAlternating900(b *testing.B) { benchmarkBARKAlternating(900, b) }
+func benchmarkUni(bark *BARK, i int, b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		uni(bark, i, b)
+	}
+}
 
-func BenchmarkBARKUnidirectional50(b *testing.B)  { benchmarkBARKUnidirectional(50, b) }
-func BenchmarkBARKUnidirectional100(b *testing.B) { benchmarkBARKUnidirectional(100, b) }
-func BenchmarkBARKUnidirectional200(b *testing.B) { benchmarkBARKUnidirectional(200, b) }
-func BenchmarkBARKUnidirectional300(b *testing.B) { benchmarkBARKUnidirectional(300, b) }
-func BenchmarkBARKUnidirectional400(b *testing.B) { benchmarkBARKUnidirectional(400, b) }
-func BenchmarkBARKUnidirectional500(b *testing.B) { benchmarkBARKUnidirectional(500, b) }
-func BenchmarkBARKUnidirectional600(b *testing.B) { benchmarkBARKUnidirectional(600, b) }
-func BenchmarkBARKUnidirectional700(b *testing.B) { benchmarkBARKUnidirectional(700, b) }
-func BenchmarkBARKUnidirectional800(b *testing.B) { benchmarkBARKUnidirectional(800, b) }
-func BenchmarkBARKUnidirectional900(b *testing.B) { benchmarkBARKUnidirectional(900, b) }
+func benchmarkDeferredUni(bark *BARK, i int, b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		deferredUni(bark, i, b)
+	}
+}
+
+func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(bark, 50, b) }
+func BenchmarkAlt100(b *testing.B) { benchmarkAlt(bark, 100, b) }
+func BenchmarkAlt200(b *testing.B) { benchmarkAlt(bark, 200, b) }
+func BenchmarkAlt300(b *testing.B) { benchmarkAlt(bark, 300, b) }
+func BenchmarkAlt400(b *testing.B) { benchmarkAlt(bark, 400, b) }
+func BenchmarkAlt500(b *testing.B) { benchmarkAlt(bark, 500, b) }
+func BenchmarkAlt600(b *testing.B) { benchmarkAlt(bark, 600, b) }
+func BenchmarkAlt700(b *testing.B) { benchmarkAlt(bark, 700, b) }
+func BenchmarkAlt800(b *testing.B) { benchmarkAlt(bark, 800, b) }
+func BenchmarkAlt900(b *testing.B) { benchmarkAlt(bark, 900, b) }
+
+func BenchmarkUni50(b *testing.B)  { benchmarkUni(bark, 50, b) }
+func BenchmarkUni100(b *testing.B) { benchmarkUni(bark, 100, b) }
+func BenchmarkUni200(b *testing.B) { benchmarkUni(bark, 200, b) }
+func BenchmarkUni300(b *testing.B) { benchmarkUni(bark, 300, b) }
+func BenchmarkUni400(b *testing.B) { benchmarkUni(bark, 400, b) }
+func BenchmarkUni500(b *testing.B) { benchmarkUni(bark, 500, b) }
+func BenchmarkUni600(b *testing.B) { benchmarkUni(bark, 600, b) }
+func BenchmarkUni700(b *testing.B) { benchmarkUni(bark, 700, b) }
+func BenchmarkUni800(b *testing.B) { benchmarkUni(bark, 800, b) }
+func BenchmarkUni900(b *testing.B) { benchmarkUni(bark, 900, b) }
+
+func BenchmarkDeferredUni50(b *testing.B)  { benchmarkDeferredUni(bark, 50, b) }
+func BenchmarkDeferredUni100(b *testing.B) { benchmarkDeferredUni(bark, 100, b) }
+func BenchmarkDeferredUni200(b *testing.B) { benchmarkDeferredUni(bark, 200, b) }
+func BenchmarkDeferredUni300(b *testing.B) { benchmarkDeferredUni(bark, 300, b) }
+func BenchmarkDeferredUni400(b *testing.B) { benchmarkDeferredUni(bark, 400, b) }
+func BenchmarkDeferredUni500(b *testing.B) { benchmarkDeferredUni(bark, 500, b) }
+func BenchmarkDeferredUni600(b *testing.B) { benchmarkDeferredUni(bark, 600, b) }
+func BenchmarkDeferredUni700(b *testing.B) { benchmarkDeferredUni(bark, 700, b) }
+func BenchmarkDeferredUni800(b *testing.B) { benchmarkDeferredUni(bark, 800, b) }
+func BenchmarkDeferredUni900(b *testing.B) { benchmarkDeferredUni(bark, 900, b) }

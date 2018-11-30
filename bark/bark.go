@@ -8,7 +8,6 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/json"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -21,14 +20,14 @@ const (
 	sessionKeySize = 16
 )
 
-type uni interface {
+type lite interface {
 	Init() ([]byte, []byte, error)
 	Send(state, ad, pt []byte, simple bool) ([]byte, []byte, error)
 	Receive(state, ad, ct []byte) ([]byte, []byte, error)
 }
 
 type BARK struct {
-	uni uni
+	uni lite
 }
 
 // barkBlock bundles BARK plaintext material.
@@ -42,18 +41,18 @@ type barkCiphertext struct {
 	Onion []byte
 }
 
-type participant struct {
+type User struct {
 	Hk               []byte   // hashing key
 	Sender, Receiver [][]byte // states
 	Hsent            []byte   // iterated hash of sent messages
 	Hreceived        []byte   // iterated hash received messages
 }
 
-func NewBARK(uni uni) *BARK {
+func NewBARK(uni lite) *BARK {
 	return &BARK{uni: uni}
 }
 
-func (b BARK) Init() ([]byte, []byte, error) {
+func (b BARK) Init() (alice, bob *User, err error) {
 	sa, ra, err := b.uni.Init()
 	if err != nil {
 		return nil, nil, err
@@ -69,100 +68,81 @@ func (b BARK) Init() ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 
-	pa := participant{
+	alice = &User{
 		Hk:     hk,
 		Sender: [][]byte{sa}, Receiver: [][]byte{rb},
 		Hsent: []byte{}, Hreceived: []byte{},
 	}
-	p1, err := json.Marshal(&pa)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pb := participant{
+	bob = &User{
 		Hk:     hk,
 		Sender: [][]byte{sb}, Receiver: [][]byte{ra},
 		Hsent: []byte{}, Hreceived: []byte{},
 	}
-	p2, err := json.Marshal(&pb)
+	return
+}
+
+func (b BARK) Send(user *User) (k, ct []byte, err error) {
+	s, r, err := b.uni.Init()
 	if err != nil {
 		return nil, nil, err
 	}
-
-	return p1, p2, nil
-}
-
-func (b BARK) Send(state []byte) (upd, k, ct []byte, err error) {
-	var p participant
-	if err = json.Unmarshal(state, &p); err != nil {
-		return
-	}
-
-	s, r, err := b.uni.Init()
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	p.Receiver = append(p.Receiver, r)
+	user.Receiver = append(user.Receiver, r)
 
 	k = make([]byte, sessionKeySize)
 	if _, err := rand.Read(k); err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	onion, err := primitives.Encode(&barkBlock{State: s, Key: k})
 	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "unable to encode bark message")
+		return nil, nil, errors.Wrap(err, "unable to encode bark message")
 	}
 
 	i := 0
-	for j, s := range p.Sender {
+	for j, s := range user.Sender {
 		if s != nil {
 			i = j
 			break
 		}
 	}
-	u := len(p.Sender) - 1
+
+	u := len(user.Sender) - 1
 	for j := u; j >= i; j-- {
 		index := []byte(strconv.Itoa(u - j))
-		sj, o, err := b.uni.Send(p.Sender[j], append(index, p.Hsent...), onion, j < u)
+		sj, o, err := b.uni.Send(user.Sender[j], append(index, user.Hsent...), onion, j < u)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, err
 		}
-		p.Sender[j], onion = sj, o
+		user.Sender[j], onion = sj, o
 
 		if j < u {
-			p.Sender[j] = nil
+			user.Sender[j] = nil
 		}
 	}
 
 	ct, err = primitives.Encode(barkCiphertext{
 		I:  []byte(strconv.Itoa(u - i)),
-		Hs: p.Hsent, Onion: onion,
+		Hs: user.Hsent, Onion: onion,
 	})
 	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "unable to encode bark ciphertext")
+		return nil, nil, errors.Wrap(err, "unable to encode bark ciphertext")
 	}
-	p.Hsent = primitives.Digest(hmac.New(sha256.New, p.Hk), ct)
-	upd, err = json.Marshal(&p)
+	user.Hsent = primitives.Digest(hmac.New(sha256.New, user.Hk), ct)
 
 	return
 }
 
-func (b BARK) Receive(state []byte, ct []byte) (upd, k []byte, err error) {
-	var p participant
-	if err = json.Unmarshal(state, &p); err != nil {
-		return
-	}
+func (b BARK) Receive(user *User, ct []byte) (k []byte, err error) {
 	var c barkCiphertext
 	if err := primitives.Decode(ct, &c); err != nil {
-		return nil, nil, errors.Wrap(err, "unable to decode bark ciphertext")
+		return nil, errors.Wrap(err, "unable to decode bark ciphertext")
 	}
-	if !bytes.Equal(c.Hs, p.Hreceived) {
-		return nil, nil, errors.New("Hsent != Hreceived")
+	if !bytes.Equal(c.Hs, user.Hreceived) {
+		return nil, errors.New("Hsent != Hreceived")
 	}
 
 	i := 0
-	for j, s := range p.Receiver {
+	for j, s := range user.Receiver {
 		if s != nil {
 			i = j
 			break
@@ -170,38 +150,36 @@ func (b BARK) Receive(state []byte, ct []byte) (upd, k []byte, err error) {
 	}
 
 	n, _ := strconv.Atoi(string(c.I))
-	if i+n >= len(p.Receiver) {
-		return nil, nil, errors.New("participants are out of sync")
+	if i+n >= len(user.Receiver) {
+		return nil, errors.New("participants are out of sync")
 	}
 
 	onion := c.Onion
 
-	upds := make([][]byte, i)
+	var upds []byte
 	for j := i; j <= i+n; j++ {
 		index := []byte(strconv.Itoa(i + n - j))
-		upd, o, err := b.uni.Receive(p.Receiver[j], append(index, p.Hreceived...), onion)
+		upd, o, err := b.uni.Receive(user.Receiver[j], append(index, user.Hreceived...), onion)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		onion = o
-		upds = append(upds, upd)
+		upds = upd
 	}
 
 	var block barkBlock
 	if err := primitives.Decode(onion, &block); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-
-	p.Sender = append(p.Sender, block.State)
 	k = block.Key
 
+	user.Sender = append(user.Sender, block.State)
+
 	for j := i; j <= i+n-1; j++ {
-		p.Receiver[j] = nil
+		user.Receiver[j] = nil
 	}
-	p.Receiver[i+n] = upds[i+n]
+	user.Receiver[i+n] = upds
+	user.Hreceived = primitives.Digest(hmac.New(sha256.New, user.Hk), ct)
 
-	p.Hreceived = primitives.Digest(hmac.New(sha256.New, p.Hk), ct)
-
-	upd, err = json.Marshal(&p)
 	return
 }

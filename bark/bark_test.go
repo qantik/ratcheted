@@ -18,25 +18,22 @@ func TestBARK(t *testing.T) {
 	uni := NewLiteUni(encryption.NewGCM())
 	bark := NewBARK(uni)
 
-	pa, pb, err := bark.Init()
+	alice, bob, err := bark.Init()
 	require.Nil(err)
 
 	for i := 0; i < 10; i++ {
-
-		pau, ka, ct, err := bark.Send(pa)
+		ka, ct, err := bark.Send(alice)
 		require.Nil(err)
 
-		pbu, kb, err := bark.Receive(pb, ct)
-		require.Nil(err)
-		require.True(bytes.Equal(ka, kb))
-
-		pbu, ka, ct, err = bark.Send(pbu)
-		require.Nil(err)
-
-		pau, kb, err = bark.Receive(pau, ct)
+		kb, err := bark.Receive(bob, ct)
 		require.Nil(err)
 		require.True(bytes.Equal(ka, kb))
 
-		pa, pb = pau, pbu
+		ka, ct, err = bark.Send(bob)
+		require.Nil(err)
+
+		kb, err = bark.Receive(alice, ct)
+		require.Nil(err)
+		require.True(bytes.Equal(ka, kb))
 	}
 }
