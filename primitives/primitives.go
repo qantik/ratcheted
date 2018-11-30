@@ -39,3 +39,12 @@ func Decode(data []byte, obj interface{}) error {
 	}
 	return nil
 }
+
+// Concat joins multiple bytes arrays.
+func Concat(data ...[]byte) []byte {
+	var res []byte
+	for _, d := range data {
+		res = append(res, d...)
+	}
+	return res
+}
