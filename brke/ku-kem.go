@@ -4,8 +4,7 @@
 package brke
 
 import (
-	"encoding/json"
-
+	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/hibe"
 )
 
@@ -35,19 +34,19 @@ func (k kuKEM) generate(seed []byte) (pk, sk []byte, err error) {
 		return
 	}
 
-	pk, err = json.Marshal(&kuKEMPublicKey{PK: params, A: [][]byte{[]byte{}}})
+	pk, err = primitives.Encode(&kuKEMPublicKey{PK: params, A: [][]byte{[]byte{}}})
 	return
 }
 
 // updatePublicKey updates the ku-KEM public key.
 func (k kuKEM) updatePublicKey(pk, ad []byte) ([]byte, error) {
 	var p kuKEMPublicKey
-	if err := json.Unmarshal(pk, &p); err != nil {
+	if err := primitives.Decode(pk, &p); err != nil {
 		return nil, err
 	}
 
 	p.A = append(p.A, ad)
-	return json.Marshal(&p)
+	return primitives.Encode(&p)
 }
 
 // updateSecretKey updates the ku-KEM secret key.
@@ -58,7 +57,7 @@ func (k kuKEM) updateSecretKey(sk []byte, ad []byte) ([]byte, error) {
 // encrypt generates a new key and encapsulate it in a ciphertext.
 func (k kuKEM) encrypt(pk []byte) ([]byte, []byte, error) {
 	var p kuKEMPublicKey
-	if err := json.Unmarshal(pk, &p); err != nil {
+	if err := primitives.Decode(pk, &p); err != nil {
 		return nil, nil, err
 	}
 

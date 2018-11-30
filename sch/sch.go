@@ -13,7 +13,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/json"
 
 	"github.com/pkg/errors"
 
@@ -128,7 +127,7 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 		Ad: ad, Tau: user.tau, T: user.t[user.s-1],
 		S: user.s, R: user.r,
 	}
-	l, err := json.Marshal(&aux)
+	l, err := primitives.Encode(&aux)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to marshal auxiliary data")
 	}
@@ -151,9 +150,9 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to sign message")
 	}
-	msg, err := json.Marshal(&message{C: c, Sig: sig, Aux: aux, L: l})
+	msg, err := primitives.Encode(&message{C: c, Sig: sig, Aux: aux, L: l})
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to marshal message")
+		return nil, errors.Wrap(err, "unable to decode message")
 	}
 
 	user.t = append(user.t, primitives.Digest(sha256.New(), user.hk, msg))
@@ -167,8 +166,8 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 // step forward (ratchet). The function returns a decrypted plaintext.
 func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 	var msg message
-	if err := json.Unmarshal(ct, &msg); err != nil {
-		return nil, errors.Wrap(err, "unable to unmarshal message")
+	if err := primitives.Decode(ct, &msg); err != nil {
+		return nil, errors.Wrap(err, "unable to decode message")
 	}
 
 	// Check whether users are still synchronized. The following three properties have to hold:

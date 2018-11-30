@@ -4,9 +4,9 @@
 package sch
 
 import (
-	"encoding/json"
 	"errors"
 
+	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
 
@@ -47,31 +47,31 @@ func (k kuDSS) generate() (pk, sk []byte, err error) {
 		return nil, nil, err
 	}
 
-	pk, err = json.Marshal(&kuDSSPublicKey{VK: fpk, Delta: [][]byte{}, I: 0})
+	pk, err = primitives.Encode(&kuDSSPublicKey{VK: fpk, Delta: [][]byte{}, I: 0})
 	if err != nil {
 		return
 	}
-	sk, err = json.Marshal(&kuDSSPrivateKey{SK: fsk, Sigma: [][]byte{}, I: 0})
+	sk, err = primitives.Encode(&kuDSSPrivateKey{SK: fsk, Sigma: [][]byte{}, I: 0})
 	return
 }
 
 // updatePublicKey evolves the public key into the next protocol period.
 func (k kuDSS) updatePublicKey(pk, delta []byte) ([]byte, error) {
 	var public kuDSSPublicKey
-	if err := json.Unmarshal(pk, &public); err != nil {
+	if err := primitives.Decode(pk, &public); err != nil {
 		return nil, err
 	}
 
 	public.Delta = append(public.Delta, delta)
 	public.I += 1
 
-	return json.Marshal(&public)
+	return primitives.Encode(&public)
 }
 
 // updatePrivateKey evolves the private key into the next protocol period.
 func (k kuDSS) updatePrivateKey(sk, delta []byte) ([]byte, error) {
 	var private kuDSSPrivateKey
-	if err := json.Unmarshal(sk, &private); err != nil {
+	if err := primitives.Decode(sk, &private); err != nil {
 		return nil, err
 	}
 
@@ -88,13 +88,13 @@ func (k kuDSS) updatePrivateKey(sk, delta []byte) ([]byte, error) {
 	private.SK = upd
 	private.I += 1
 
-	return json.Marshal(&private)
+	return primitives.Encode(&private)
 }
 
 // sign creates a signature of a message with a given private key.
 func (k kuDSS) sign(sk, msg []byte) ([]byte, error) {
 	var private kuDSSPrivateKey
-	if err := json.Unmarshal(sk, &private); err != nil {
+	if err := primitives.Decode(sk, &private); err != nil {
 		return nil, err
 	}
 
@@ -103,17 +103,17 @@ func (k kuDSS) sign(sk, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return json.Marshal(&kuDSSSignature{Signature: sig, Sigma: private.Sigma, I: private.I})
+	return primitives.Encode(&kuDSSSignature{Signature: sig, Sigma: private.Sigma, I: private.I})
 }
 
 // verify checks the validity of a signature.
 func (k kuDSS) verify(pk, msg, sig []byte) error {
 	var public kuDSSPublicKey
-	if err := json.Unmarshal(pk, &public); err != nil {
+	if err := primitives.Decode(pk, &public); err != nil {
 		return err
 	}
 	var signature kuDSSSignature
-	if err := json.Unmarshal(sig, &signature); err != nil {
+	if err := primitives.Decode(sig, &signature); err != nil {
 		return err
 	}
 
