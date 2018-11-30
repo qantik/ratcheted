@@ -13,7 +13,7 @@ import (
 	"github.com/qantik/ratcheted/primitives/encryption"
 )
 
-func TestHDKF(t *testing.T) {
+func TestFSA(t *testing.T) {
 	require := require.New(t)
 
 	fs := fsAEAD{aead: encryption.NewGCM(), pp: &prfPRNG{}}

@@ -4,11 +4,12 @@
 package dratch
 
 import (
-	"fmt"
+	"bytes"
 	"testing"
 
-	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/stretchr/testify/require"
+
+	"github.com/qantik/ratcheted/primitives/encryption"
 )
 
 func TestDRatch(t *testing.T) {
@@ -16,7 +17,36 @@ func TestDRatch(t *testing.T) {
 
 	dr := NewDRatch(encryption.NewGCM())
 
-	a, b, err := dr.Init()
+	msg := []byte("dratch")
+
+	alice, bob, err := dr.Init()
 	require.Nil(err)
-	fmt.Println(a, b)
+
+	for i := 0; i < 10; i++ {
+		ct1, err := dr.Send(alice, msg)
+		require.Nil(err)
+		ct2, err := dr.Send(alice, msg)
+		require.Nil(err)
+		ct3, err := dr.Send(alice, msg)
+		require.Nil(err)
+
+		pt2, err := dr.Receive(bob, ct2)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt2))
+
+		ct, err := dr.Send(bob, msg)
+		require.Nil(err)
+
+		pt, err := dr.Receive(alice, ct)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+
+		pt1, err := dr.Receive(bob, ct1)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt1))
+
+		pt3, err := dr.Receive(bob, ct3)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt3))
+	}
 }
