@@ -6,9 +6,9 @@ package hibe
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/json"
 
 	"github.com/Nik-U/pbc"
+	"github.com/qantik/ratcheted/primitives"
 )
 
 // Gentry designates a Gentry-Silverberg protocol instance.
@@ -56,7 +56,7 @@ func (g Gentry) Setup(seed []byte) (params, root []byte, err error) {
 	Q0 := pairing.NewG1().MulZn(P0, s0)
 
 	p := &gentryParams{P0: P0, Q0: Q0}
-	params, err = p.MarshalJSON()
+	params, err = p.GobEncode()
 	if err != nil {
 		return
 	}
@@ -67,14 +67,14 @@ func (g Gentry) Setup(seed []byte) (params, root []byte, err error) {
 		P0: P0, St: s0, S: pairing.NewG1().Set1(),
 		Q: []*pbc.Element{},
 	}
-	root, err = r.MarshalJSON()
+	root, err = r.GobEncode()
 	return
 }
 
 // Extract generates a fresh child entity specified by id from an ancestor entity.
 func (g Gentry) Extract(ancestor []byte, id []byte) ([]byte, error) {
 	var e gentryEntity
-	if err := e.UnmarshalJSON(ancestor); err != nil {
+	if err := e.GobDecode(ancestor); err != nil {
 		return nil, err
 	}
 
@@ -93,14 +93,14 @@ func (g Gentry) Extract(ancestor []byte, id []byte) ([]byte, error) {
 		P0: e.P0, St: St, S: S,
 		Q: Q,
 	}
-	return child.MarshalJSON()
+	return child.GobEncode()
 }
 
 // Encrypt encrypts a message for a given id. Note, that the ciphertext is split
 // into two parts to simplify the integration in other protocols.
 func (g Gentry) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err error) {
 	var p gentryParams
-	if err = json.Unmarshal(params, &p); err != nil {
+	if err = p.GobDecode(params); err != nil {
 		return
 	}
 
@@ -124,19 +124,19 @@ func (g Gentry) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err
 		ct.U[i] = pairing.NewG1().MulZn(P[i-1], r)
 	}
 
-	c2, err = ct.MarshalJSON()
+	c2, err = ct.GobEncode()
 	return
 }
 
 // Decrypt decrypts a given ciphertext using the secret key material of an entity.
 func (g Gentry) Decrypt(entity, c1, c2 []byte) ([]byte, error) {
 	var e gentryEntity
-	if err := e.UnmarshalJSON(entity); err != nil {
+	if err := e.GobDecode(entity); err != nil {
 		return nil, err
 	}
 
 	var c gentryCiphertext
-	if err := c.UnmarshalJSON(c2); err != nil {
+	if err := c.GobDecode(c2); err != nil {
 		return nil, err
 	}
 
@@ -169,13 +169,13 @@ type gentryParamsPacket struct {
 	P0, Q0 []byte
 }
 
-func (p gentryParams) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&gentryParamsPacket{P0: p.P0.Bytes(), Q0: p.Q0.Bytes()})
+func (p gentryParams) GobEncode() ([]byte, error) {
+	return primitives.Encode(&gentryParamsPacket{P0: p.P0.Bytes(), Q0: p.Q0.Bytes()})
 }
 
-func (p *gentryParams) UnmarshalJSON(data []byte) error {
+func (p *gentryParams) GobDecode(data []byte) error {
 	var packet gentryParamsPacket
-	if err := json.Unmarshal(data, &packet); err != nil {
+	if err := primitives.Decode(data, &packet); err != nil {
 		return err
 	}
 	p.P0 = pairing.NewG1().SetBytes(packet.P0)
@@ -190,17 +190,17 @@ type gentryEntityPacket struct {
 	Q         [][]byte
 }
 
-func (e gentryEntity) MarshalJSON() ([]byte, error) {
+func (e gentryEntity) GobEncode() ([]byte, error) {
 	packet := gentryEntityPacket{ID: e.ID, P0: e.P0.Bytes(), St: e.St.Bytes(), S: e.S.Bytes()}
 	for _, q := range e.Q {
 		packet.Q = append(packet.Q, q.Bytes())
 	}
-	return json.Marshal(&packet)
+	return primitives.Encode(&packet)
 }
 
-func (e *gentryEntity) UnmarshalJSON(data []byte) error {
+func (e *gentryEntity) GobDecode(data []byte) error {
 	var packet gentryEntityPacket
-	if err := json.Unmarshal(data, &packet); err != nil {
+	if err := primitives.Decode(data, &packet); err != nil {
 		return err
 	}
 
@@ -219,7 +219,7 @@ type gentryCiphertextPacket struct {
 	U [][]byte
 }
 
-func (c gentryCiphertext) MarshalJSON() ([]byte, error) {
+func (c gentryCiphertext) GobEncode() ([]byte, error) {
 	packet := &gentryCiphertextPacket{}
 	for _, u := range c.U {
 		if u != nil {
@@ -228,12 +228,12 @@ func (c gentryCiphertext) MarshalJSON() ([]byte, error) {
 			packet.U = append(packet.U, nil)
 		}
 	}
-	return json.Marshal(&packet)
+	return primitives.Encode(&packet)
 }
 
-func (c *gentryCiphertext) UnmarshalJSON(data []byte) error {
+func (c *gentryCiphertext) GobDecode(data []byte) error {
 	var packet gentryCiphertextPacket
-	if err := json.Unmarshal(data, &packet); err != nil {
+	if err := primitives.Decode(data, &packet); err != nil {
 		return err
 	}
 
