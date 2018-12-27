@@ -1,3 +1,12 @@
 .DS_Store
 
 vendor/
+
+# Latex output files.
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.pdf
+*.toc
