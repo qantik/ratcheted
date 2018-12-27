@@ -22,3 +22,7 @@ $ cd ${GOPATH}/src/github.com/qantik/ratcheted
 $ dep ensure
 $ go test -v ./...
 ````
+
+## Report/Slides
+The `report` and `slides` directories contain the `TeX` sources
+for the project write-up and the accompanying slides. 
