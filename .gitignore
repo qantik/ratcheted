@@ -6,6 +6,7 @@ vendor/
 *.aux
 *.bbl
 *.blg
+*.lof
 *.log
 *.out
 *.pdf
