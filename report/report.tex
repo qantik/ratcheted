@@ -5,6 +5,9 @@
 \usepackage{amssymb,amsmath,array}
 \usepackage{varwidth,algpseudocode}
 
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows,calc,intersections}
+
 % Color citation, references and links.
 \usepackage{url,hyperref}
 \hypersetup{
@@ -41,7 +44,7 @@ order to mitigate these risks. Akin to its mechanical equivalent the
 states are continuously moved forward (updated) without the
 possibility of going backwards, i.e.~it should be impossible to
 recover past states from the current one.
-\begin{figure}[H]
+\begin{figure}[h]
   \centering
   \includegraphics[scale=0.1]{figures/ratchet-icon.eps}
   \caption{Symbolic Ratchet Wheel}
@@ -120,7 +123,14 @@ delayed to a point where there are already new messages in the channel
 travelling in the opposite direction. Note that this does not imply
 that messages may be dropped or received in a different order than
 they were initially sent in, this will be important later on when
-the actual protocols are described. Figure % TODO: insert figure here
+the actual protocols are described.
+\begin{figure}[ht]
+  \centering
+  \input{figures/traffic.tikz} 
+  \caption{Example of Ratcheted Traffic}
+  \label{fig:traffic}
+\end{figure}
+Figure~\ref{fig:traffic}
 shows an example asynchronous traffic transcript. The initial states
 of Alice and Bob are created and distributed by a trusted party, these
 states are updated with each send or receive operation. In the case
@@ -172,9 +182,10 @@ distinguish some key from random in the KIND game or decide
 which one of two chosen messages corresponds to a given ciphertext
 in the CIND game.
 
-\begin{figure}[H]
+\begin{figure}[ht]
   \centering
-  \scalebox{0.9}{%
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.8}{%
     \fbox{%
       \algrenewcommand\textproc{}
       \algrenewcommand\algorithmicprocedure{\textbf{Game}}
@@ -190,6 +201,9 @@ in the CIND game.
       \end{minipage}
 
       \vline
+
+      \algrenewcommand\textproc{}
+      \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
 
       \begin{minipage}{.5\linewidth}
         \begin{algorithmic}[1]
@@ -215,11 +229,12 @@ in the CIND game.
 
 Figure~\ref{fig:kind} depicts a generic KIND game where \texttt{RATCH} denotes
 the send or receive procedures for both Alice and Bob, at will callable by the
-adversary. We can similarly define the CIND game.
+adversary. We can similarly define the CIND game in figure~\ref{fig:cind}.
 
-\begin{figure}[H]
+\begin{figure}[ht]
   \centering
-  \scalebox{0.9}{%
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.8}{%
     \fbox{%
       \algrenewcommand\textproc{}
       \algrenewcommand\algorithmicprocedure{\textbf{Game}}
@@ -235,6 +250,9 @@ adversary. We can similarly define the CIND game.
       \end{minipage}
 
       \vline
+
+      \algrenewcommand\textproc{}
+      \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
 
       \begin{minipage}{.5\linewidth}
         \begin{algorithmic}[1]
@@ -255,7 +273,7 @@ adversary. We can similarly define the CIND game.
   \label{fig:cind}
 \end{figure}
 
-It is important to note that the way the above games are defined is
+It is important to note that the way the games are defined is
 not sufficient since there exist trivial strategies that make an adversary
 succeed. If for example Bob's state is exposed right before he
 receives a message then an adversary can easily recover the plaintext
@@ -279,7 +297,7 @@ and some time complexity as
 \section{A Brief History of Ratcheted Protocols}
 \label{sec:brief-hist-ratch}
 
-As already pointed out the formal analysis of Signal marked the
+As already pointed out the formal analysis of Signal in 2017 marked the
 starting point for a slew of ratcheted messaging and key-agreement
 protocols. The first protocol was proposed by Bellare et
 al.~\cite{bellare2017ratcheted} which established a secure key
@@ -312,9 +330,265 @@ a different order that than they were initially sent in.
 In the following sections we will look more closely into all
 above described protocols except~\cite{bellare2017ratcheted}.
 
-\section[Poettering and Stepanovs]
-{Poettering and Stepanovs~\cite{jaeger2018optimal}}
-\label{sec:poettering-stepanovs}
+\section[Poettering and Rösler]
+{Poettering and Rösler~\cite{poettering2018towards}}
+\label{sec:poettering-roesler}
+
+This key-agreement protocol was released in the paper
+\textit{Asynchronous Ratcheted Key Exchange} in May 2018.
+The fact that sets this protocol, and the protocol in the following
+section, apart from the others is the notion of \textit{fine-grained}
+post-compromise security, meaning that there still remain some
+security guarantees concerning the message that directly follows a
+state compromise. This kind of security is not supported in
+the other protocols where such a message can be fully deciphered
+or forged by the adversary. It thus excludes fewer trivial attacks
+from their security game, however it does not allow the leakage
+or adversarial choice of randomness. The authors conjecture that
+fine-grained post-compromise security marks the lower bound
+of how many trivial attacks a ratcheted protocol may exclude, hence
+the security level achieved in their protocol is optimal.
+Surprisingly enough, some heavyweight primitives are required
+to reach this lower bound at the cost of an extensive decline
+in performance as we will see in the next chapter.
+
+\subsection{Primitives}
+\label{sec:primitives}
+
+The protocol proposes a new cryptographic primitive that extends the
+functionality of an ordinary key-encapsulation mechanism with an
+key update algorithm.
+\begin{itemize}
+\item \textbf{Key-Updatable Key-Encapsulation Mechanism (ku-KEM).} The primitive
+  consists of four procedures, a initial key generation algorithm ($\t{gen}_\t{K}$), an
+  key-encapsulation procedure (enc), a corresponding decapsulation procedure (dec) and
+  an update procedure for both the public and secret key. Let $\mathcal{PK}$ be
+  the public key domain, $\mathcal{SK}$ the secret key domain and $\mathcal{AD}$ the
+  associated data domain. We have the following correctness notion, for all
+  $(sk_0, pk_0) \in \t{gen}$ and $ad_1,...,ad_n \in \mathcal{AD}$, if
+  $sk_i = \t{up}(sk_{i-1},ad_i) \in \mathcal{SK}$ and
+  $pk_i = \t{up}(pk_{i-1},ad_i) \in \mathcal{PK}$ for all $i$, then for all
+  $(k,c) \in \t{enc}(pk_n)$ we have $\t{dec}(sk_n,c)=k$.
+\end{itemize}
+In security terms a ku-KEM should satisfy the guarantees of regular
+key-encapsulation mechanisms plus some kind of forward security that
+protects past keys from state exposures. A ku-KEM can be constructed
+out of any hierarchical identity-based encryption scheme
+(HIBE)~\cite{gentry2002hierarchical}. Contrary to an ordinate
+identity-based encryption scheme where there is a single central
+authority handing out secret keys to the users, a HIBE consists
+of hierarchical tree structure of many authorities on different levels
+such that an authority can access the keys distributed by its children
+but its own keys remain inaccessible to any authority on a lower level.
+As with ordinary IBE schemes HIBE schemes are usually based on pairing- or
+lattice-based cryptography which is far more inefficient than
+regular public-key cryptography on elliptic curves.
+Next to a HIBE, the protocol requires some other, more standard, primitives.
+\begin{itemize}
+\item \textbf{One-Time Signature Scheme (OTS).} It consists of three procedures, a initial
+  key generation algorithm $\t{gen}_\t{S} \rightarrow \mathcal{SK} \times \mathcal{VK}$,
+  a signature algorithm $\t{sgn}: \mathcal{SK} \times \mathcal{M} \rightarrow \Sigma$
+  and its corresponding verification algorithm
+  $\t{vfy}: \mathcal{VK} \times \mathcal{M} \times \Sigma \rightarrow \{\t{T,F}\}$ with
+  $\mathcal{M}$ being the message domain,
+  $\mathcal{SK}$ the signing key domain, $\mathcal{VK}$ the verification key domain and
+  $\Sigma$ the signature domain.
+  We have the following correctness notion, for all $(sgk,vfk) \in \t{gen}_\t{S}$ and
+  $m \in \mathcal{M}$ and $\sigma \in \t{sgn}(sgk,m)$ we have $\t{T} = \t{vfy}(vfk,m,\sigma)$.
+  We further require strong unforgeability as the security level.
+\item \textbf{Random Oracle}. As the protocol is secure in the random oracle H it demands
+  a random oracle function H. In practice, H is replaced by a standard hash function.
+\end{itemize}
+
+\subsection{Construction}
+\label{sec:construction}
+
+Poettering and Rösler give three separate constructions in their article.
+A unidirectional protocol (URKE), a sesquidirectional construction (SRKE) in which
+Bob can reply without establishing a key, finally both URKE and SRKE
+are used to create a bidirectional asynchronous key-exchange protocol (BRKE)
+with optimal security. The construction is quite involved with long
+procedures, figure~\ref{fig:brke} prunes out some parts not necessary for the
+analysis of the benchmarks in the next chapter.
+
+% TODO: Complete algorithm.
+
+\begin{figure}[H]
+  \centering
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.9}{%
+    \fbox{%
+      \algrenewcommand\textproc{}
+      \algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+      \begin{minipage}{.5\linewidth}
+        \begin{algorithmic}[1]
+          \Procedure{init}{}
+          \For{$u \in \{A,B\}$}
+            \State $(sgk_u, vfk_u) \gets \t{gen}_\t{S}$
+            \State $(sk_u, pk_u) \gets \t{gen}_\t{K}$
+            \State random $K_u \in \{0,1\}^{|\mathcal{K}|}$
+            \State $(E^\vdash,E^\dashv) \gets 0; \ (s,r) \gets 0$
+            \State $PK_u[0] \gets pk_u; \ SK_u[0] \gets sk_u$
+            \State $S_u \gets (PK_{\bar{u}},E,s,vfk_{\bar{u}},K_{\bar{u}})$
+            \State $R_u \gets (SK_u,E,r,sgk_u,K_u)$
+            \State $ST_u \gets (R_u,S_u)$
+          \EndFor
+          \State \Return $(ST_A,ST_B)$
+          \EndProcedure
+        \end{algorithmic}
+      \end{minipage}
+
+      \vline
+
+      \algrenewcommand\textproc{}
+      \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
+
+      \begin{minipage}{.5\linewidth}
+        \begin{algorithmic}[1]
+          \Procedure{RATCH'}{$\t{P},m_0,m_1$}
+          \State \Return \Call{RATCH}{$\t{P},m_b$}
+          \EndProcedure
+
+          \item[] % Blank line.
+
+          \Procedure{EXP}{$\t{P}$}
+          \State \Return $\t{st}_\t{P}$ 
+          \EndProcedure
+       \end{algorithmic}
+     \end{minipage}%
+    }
+  }
+  \caption{Bidirectional Asynchronous Key-Exchange Protocol (BRKE)}
+  \label{fig:brke}
+\end{figure}
+
+An important concept in the above protocols is the notion epochs
+controlled by the $E_S^\vdash,E_S^\dashv$ and $E_R^\vdash,E_R^\dashv$
+variables in the state of each user. They basically determine
+the complexity of the send and receive procedures due to their
+control of the loop bounds.
+
+% TODO Explain epochs.
+
+\section[Jaeger and Stepanovs]{Jaeger and Stepanovs~\cite{jaeger2018optimal}}
+\label{sec:jaeger-stepanovs}
+
+This secure messaging protocol was published in the paper
+\textit{Optimal Channel Security Against Fine-Grained State Compromise: The Safety of Messaging}
+in June 2018 and targets similar a security level as the protocol by
+Poettering and Rösler although aiming at secure communication instead
+of key-exchange and with considering the leakage of randomness.
+
+\subsection{Primitives}
+\label{sec:primitives-1}
+
+The protocol, again as in the Poettering and Rösler case, uses a HIBE to construct
+one of two novel primitives.
+\begin{itemize}
+\item \textbf{Key-Updatable Public-Key Encryption Scheme (ku-PKE).} The primitive
+  consists of five routines. A key generation algorithm
+  $\t{PKE.Kg} \rightarrow \mathcal{DK} \times \mathcal{EK}$, an encryption
+  procedure $\t{PKE.Enc}: \mathcal{EK} \times \mathcal{M} \rightarrow \mathcal{C}$,
+  a corresponding decryption function
+  $\t{PKE.Dec}: \mathcal{DK} \times \mathcal{C} \rightarrow \mathcal{M}$ and
+  a public-key and private-key update algorithms
+  $\t{PKE.UpdEk}: \mathcal{EK} \times \Delta \rightarrow \mathcal{EK}$,
+  $\t{PKE.UpdDk}: \mathcal{DK} \times \Delta \rightarrow \mathcal{DK}$, where
+  $\mathcal{EK}$ denotes the encryption key domain, $\mathcal{DK}$ the
+  decryption key domain, $\mathcal{M}, \mathcal{C}$ the message and
+  ciphertext domain respectively. We have the following correctness notion, for all
+  $(dk_0, ek_0) \in \t{gen}$ and $\delta_1,...,\delta_n \in \Delta$, if
+  $dk_i = \t{PKE.UpdDk}(dk_{i-1},\delta_i)$ and
+  $ek_i = \t{PKE.UpdEk}(ek_{i-1},\delta_i)$ for all $i$, then for all
+  $c \in \t{enc}(ek_n,m)$ we have $\t{dec}(dk_n,c)=m$.
+\end{itemize}
+
+The construction of a ku-PKE is trivially performed out of a HIBE thus if
+the HIBE is IND-CCA secure so is the ku-PKE. Furthermore, as with the
+ku-KEM, we expect forward security in the case of exposures.
+Jaeger and Stepanovs define a second novel primitive for use in the final protocol.
+\begin{itemize}
+\item \textbf{Key-Updatable Digital Signature Scheme (ku-DSS).} The primitive
+  consists of five routines. A key generation algorithm
+  $\t{DSS.Kg} \rightarrow \mathcal{SK} \times \mathcal{VK}$, a signing routine
+  $\t{DSS.Sign}: \mathcal{SK} \times \mathcal{M} \rightarrow \Sigma$, its
+  corresponding verification function
+  $\t{DSS.Vrfy}: \mathcal{VK} \times \mathcal{M} \times \Sigma \rightarrow \{\t{T,F}\}$ and
+  two public/private-key update routines
+  $\t{DSS.UpdVk}: \mathcal{VK} \times \Delta \rightarrow \mathcal{VK}$ and
+  $\t{DSS.UpdSk}: \mathcal{SK} \times \Delta \rightarrow \mathcal{SK}$, where
+  $\mathcal{VK}$ is the signing key domain, $\mathcal{SK}$ the verification key
+  domain and $\mathcal{M}, \Sigma$ are the message and signature domains.
+\end{itemize}
+
+In order to construct a ku-DSS we need a forward-secure signature scheme. As
+security level we require unforgeability as well as forward-secrecy under
+exposures. 
+
+\subsection{Construction}
+\label{sec:construction-1}
+
+Figure contains the full secure channel protocol (SCh) based on a collision-resistant
+hash function H, a key-updatable public-key encryption scheme PKE and
+a key-updatable digital signature scheme.
+
+% TODO: Complete algorithm.
+
+\begin{figure}[H]
+  \centering
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.9}{%
+    \fbox{%
+      \algrenewcommand\textproc{}
+      \algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+      \begin{minipage}{.5\linewidth}
+        \begin{algorithmic}[1]
+          \Procedure{init}{}
+          \For{$u \in \{A,B\}$}
+            \State $(sgk_u, vfk_u) \gets \t{gen}_\t{S}$
+            \State $(sk_u, pk_u) \gets \t{gen}_\t{K}$
+            \State random $K_u \in \{0,1\}^{|\mathcal{K}|}$
+            \State $(E^\vdash,E^\dashv) \gets 0; \ (s,r) \gets 0$
+            \State $PK_u[0] \gets pk_u; \ SK_u[0] \gets sk_u$
+            \State $S_u \gets (PK_{\bar{u}},E,s,vfk_{\bar{u}},K_{\bar{u}})$
+            \State $R_u \gets (SK_u,E,r,sgk_u,K_u)$
+            \State $ST_u \gets (R_u,S_u)$
+          \EndFor
+          \State \Return $(ST_A,ST_B)$
+          \EndProcedure
+        \end{algorithmic}
+      \end{minipage}
+
+      \vline
+
+      \algrenewcommand\textproc{}
+      \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
+
+      \begin{minipage}{.5\linewidth}
+        \begin{algorithmic}[1]
+          \Procedure{RATCH'}{$\t{P},m_0,m_1$}
+          \State \Return \Call{RATCH}{$\t{P},m_b$}
+          \EndProcedure
+
+          \item[] % Blank line.
+
+          \Procedure{EXP}{$\t{P}$}
+          \State \Return $\t{st}_\t{P}$ 
+          \EndProcedure
+       \end{algorithmic}
+     \end{minipage}%
+    }
+  }
+  \caption{Secure Channel Protocol (SCh)}
+  \label{fig:secure-channel}
+\end{figure}
+
+\section[Durak and Vaudenay]
+{Durak and Vaudenay~\cite{durak2018bidirectional}}
+\label{sec:durak-vaudenay}
+
 
 
 \chapter{Benchmarks}

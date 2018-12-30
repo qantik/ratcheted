@@ -1,0 +1,37 @@
+\begin{tikzpicture}[
+  box/.style={rectangle,draw,inner sep=5pt,minimum height=1cm,minimum width=2cm,thick},
+  node distance=2cm,
+  ->,>=stealth',
+  scale=0.55, every node/.style={scale=0.55}
+]
+
+  % Box t0
+  \node [box] (t0) {Send};
+  \node [coordinate,right of=t0,node distance=1cm] (tl0) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t0,node distance=1cm] (ta0) {};
+  \node [left=2cm of ta0] (taa0) {$k_0$};
+  \path (ta0) edge[dotted] node [] {} (taa0);
+  \node [coordinate,below left=-0.125cm and 0cm of t0,node distance=1cm] (tb0) {};
+  \node [left=2cm of tb0] (tbb0) {$m_0$};
+  \path (tbb0) edge[dotted] node [] {} (tb0);
+
+
+  \node [box,below of=t0] (t1) {Send};
+  \node [box,below of=t1] (t2) {Receive};
+  \node [box,below of=t2] (t3) {Send};
+  \node [box,below of=t3] (t4) {Receive};
+
+  \node [box,right of=t0,node distance=6cm] (t5) {Send};
+  \node [box,below of=t5] (t6) {Send};
+  \node [box,below of=t6] (t7) {Send};
+  \node [box,below of=t7] (t8) {Receive};
+  \node [box,below of=t8] (t9) {Send};
+  \node [box,below of=t9] (t10) {Receive};
+  \node [box,below of=t10] (t11) {Receive};
+
+  \node [coordinate,left of=t8,node distance=1cm] (tl8) {};
+  \path (tl0) edge[] node [] {} (tl8);
+
+  \node [above=0.25cm of t0] (alice) {\bfseries{A}};
+  \node [above=0.25cm of t5] (bob) {\bfseries{B}};
+\end{tikzpicture}
