@@ -3,7 +3,7 @@
 \usepackage{scrhack}
 \usepackage{graphicx,xcolor,float}
 \usepackage{amssymb,amsmath,array}
-\usepackage{varwidth,algpseudocode}
+\usepackage{setspace,algpseudocode}
 
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows,calc,intersections}
@@ -47,9 +47,10 @@ recover past states from the current one.
 \begin{figure}[h]
   \centering
   \includegraphics[scale=0.1]{figures/ratchet-icon.eps}
-  \caption{Symbolic Ratchet Wheel}
+  \caption[Symbolic Ratchet Wheel]{Symbolic Ratchet Wheel\footnotemark}
   \label{fig:ratchet-wheel}
 \end{figure}
+\footnotetext{\url{https://www.iconfinder.com/icons/328526}}
 This further implies that
 past message remain secure even in the presence of and adversary who
 can expose the state of a participant. The literature labels protocols
@@ -105,7 +106,7 @@ the LASEC laboratory.
 As laid out in the introduction the Signal~\cite{perrin2016double}
 protocol created and deployed well before the establishment of a
 serious secure messaging definition thus it is lacking any form of
-security proof. The subsequent analysis in 2007~\cite{cohn2017formal}
+formal security proof. The subsequent analysis in 2017~\cite{cohn2017formal}
 was then more concerned with proving the security of specific Signal
 instances than treating the general case of securing
 messaging. Formally, ratcheted messaging attempts to satisfy some
@@ -130,20 +131,18 @@ the actual protocols are described.
   \caption{Example of Ratcheted Traffic}
   \label{fig:traffic}
 \end{figure}
-Figure~\ref{fig:traffic}
-shows an example asynchronous traffic transcript. The initial states
-of Alice and Bob are created and distributed by a trusted party, these
-states are updated with each send or receive operation. In the case
-of a key-agreement protocol the update information corresponding to
-the created key of the sender should generate the same key at
-the receiver when the update message is received. Analogous,
-for a messaging protocol where a encrypted message should be
-correctly deciphered by the receiver upon arrival. In figure
-% TODO: insert figure here
-for example the message sent by Alice at time $t_0$ is only
-received by Bob at time $t_8$ but should nonetheless produce
-a correct key or plaintext regardless of the messages sent
-by Bob in the meantime that updated Bob's state.
+Figure~\ref{fig:traffic} shows an example asynchronous traffic
+transcript. The initial states of Alice and Bob are created and
+distributed by a trusted party, these states are updated with each
+send or receive operation. In the case of a key-agreement protocol the
+update information corresponding to the created key of the sender
+should generate the same key at the receiver when the update message
+is received. Analogous, for a messaging protocol where a encrypted
+message should be correctly deciphered by the receiver upon
+arrival. In figure for example the message sent by Alice at time $t_0$
+is only received by Bob at time $t_8$ but should nonetheless produce a
+correct key or plaintext regardless of the messages sent by Bob in the
+meantime that updated Bob's state.
 
 \section{Ratchet Security}
 \label{sec:ratchet-security}
@@ -172,15 +171,15 @@ of ratcheted key-agreement or messaging protocols.
 The adversary in ratcheted protocols is quite powerful and can be both
 passive and to a certain extend active. This means he has access to
 the full message transcript, can expose the states of both
-participants, corrupt the states or impersonate users and even choose
-the randomness used by the participants. As it is usual in such cases
-we assess the advantage of any adversary as part of some key (KIND) or
-ciphertext (CIND) indistinguishability game where the adversarial
-algorithm $\mathcal{A}$ has access to the send and receive procedures
-of both Alice and Bob can expose their states and in the end tries to
-distinguish some key from random in the KIND game or decide
-which one of two chosen messages corresponds to a given ciphertext
-in the CIND game.
+participants, corrupt the states or impersonate users and in some
+cases even choose the randomness used by the participants. As it is
+usual in such cases we assess the advantage of any adversary as part
+of some key (KIND) or ciphertext (CIND) indistinguishability game
+where the adversarial algorithm $\mathcal{A}$ has access to the send
+and receive procedures of both Alice and Bob can expose their states
+and in the end tries to distinguish some key from random in the KIND
+game or decide which one of two chosen messages corresponds to a given
+ciphertext in the CIND game.
 
 \begin{figure}[ht]
   \centering
@@ -588,6 +587,403 @@ a key-updatable digital signature scheme.
 \section[Durak and Vaudenay]
 {Durak and Vaudenay~\cite{durak2018bidirectional}}
 \label{sec:durak-vaudenay}
+
+This key-agreement protocol was published in the paper
+\textit{Bidirectional Asynchronous Ratcheted Key Agreement without
+Key-Update Primitives}, short BARK, in September 2018. It was the first approach to
+create a simple but efficient protocol without the use of slow,
+hand-tailored primitives at the cost of not supporting fine-grained
+post-compromise security. Furthermore, the protocol explicitly spells
+out the trivial attacks, although disallowing more than the previous
+two protocols, and bundles them in form a \textit{cleanness-predicate}
+which greatly simplifies the security games and its accompanying
+security proofs. The authors also introduce a new notion called
+recover security stating that if one participant is compromised he
+looses authenticity for a short while in which an adversary can
+impersonate the victim until he recovers from the leakage. Clearly, if
+the victim simply recovers from the exposure both the participants may
+never detect that there was an active impersonation attack in place,
+the protocol thus advocates to detect such forgeries right after a
+state exposure and immediately cut the communication as a
+consequence. Such recover security can easily be achieved with a
+collision resistant hash function that chain hashes the entire
+communication transcript. As the cherry on cake the papers shows that
+a weaker unidirectional version of the protocol already implies
+public-key cryptography which essentially shatters any hopes of
+achieving similar levels of security with symmetric primitives.
+
+\subsection{Primitives}
+\label{sec:primitives-2}
+
+As already indicated the protocol does not deploy any intricate
+cryptographic primitives. Next to the hash function combines a
+public-key encryption scheme and a digital signature scheme to
+a signcryption algorithm.
+\begin{itemize}
+\item \textbf{Signcryption Scheme (SC).} This primitive consists of four routines,
+  two key generation algorithms one creating the PKE keys
+  $\t{Gen}_\t{R} \rightarrow \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{R}$ and
+  similarly for the creation of the DSS keys
+  $\t{Gen}_\t{S} \rightarrow \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{S}$ where
+  $(\mathcal{PK}_\t{R},\mathcal{SK}_\t{R})$ are the PKE key domains and
+  $(\mathcal{PK}_\t{S},\mathcal{SK}_\t{S})$ are the DSS key domains. Furthermore,
+  there is an encryption procedure
+  $\t{Enc}: \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{R} \times
+   \rightarrow \mathcal{C}$ and its corresponding
+  decryption function
+  $\t{Dec}: \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{S}
+  \mathcal{C} \times \mathcal{AD} \rightarrow \mathcal{M}$ with $\mathcal{AD}$
+  being the associated data domain and $(\mathcal{M}, \mathcal{C})$ being
+  the message and ciphertext domain respectively. We have the following
+  correctness notion, for all $m \in \mathcal{M}$, $ad \in \mathcal{AD}$,
+  $(sk_R,pk_R) \in \t{Gen}_\t{R}$ and $(sk_S,pk_S) \in \t{Gen}_\t{S}$ it
+  holds that $\t{Dec}(sk_R,pk_S,ad,\t{Enc}(sk_S,pk_R,ad,m)) = m$.
+\end{itemize}
+
+A signcryption scheme can be constructed by naively chaining a DSS and PKE scheme
+such that $\t{Enc}(sk_S,pk_R,ad,m) = \t{PKE.Enc}(pk_R,m || \t{DSS.Sign}(sk_S,ad || m))$.
+The BARK protocol demands that the PKE cryptosystem is IND-CCA secure and the
+DSS scheme is EF-OTCMA secure.
+
+\subsection{Construction}
+\label{sec:construction-2}
+
+Similar to the protocol by Poettering and Rösler the BARK protocol is
+constructed via a smaller unidirectional protocol. Figure~\ref{fig:uni-arcad}
+shows the unidirectional ARCAD messaging protocol that is KIND-secure but
+does not offer recover security. The composition of two uniARCAD yields
+the full BARK protocol as shown in figure~\ref{fig:bark}
+
+\begin{figure}[ht]
+  \centering
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.9}{%
+    \fbox{%
+      \algrenewcommand\textproc{}
+      \algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+      \begin{minipage}{.5\linewidth}
+        \begin{algorithmic}[1]
+          \Procedure{uniARCAD.Init}{$1^\lambda$}
+          \State $(\t{sk}_\t{S},\t{pk}_\t{S}) \gets$ \Call{$\t{Gen}_\t{S}$}{$1^\lambda$}
+          \State $(\t{sk}_\t{R},\t{pk}_\t{R}) \gets$ \Call{$\t{Gen}_\t{R}$}{$1^\lambda$}
+
+          \State $\t{st}_\t{S} \gets (\t{sk}_\t{S},\t{pk}_\t{R})$ 
+          \State $\t{st}_\t{S} \gets (\t{sk}_\t{R},\t{pk}_\t{S})$ 
+
+          \State \Return $(\t{st}_\t{S},\t{st}_\t{R})$
+          \EndProcedure
+
+          \item[]
+
+          \Procedure{uniARCAD.Receive}{$\t{st}_\t{R}, \t{ad}, \t{ct}$}
+          \State $(\t{sk}_\t{R},\t{pk}_\t{S}) \gets \t{st}_\t{R}$ 
+          \State $\t{pt}' \gets$ \Call{Dec}{$\t{sk}_\t{R},\t{pk}_\t{S},\t{ad},\t{ct}$}
+          \If{$\t{pt}' = \perp$}
+          \State \Return $(\t{false}, \t{st}_\t{R}, \perp)$
+          \EndIf
+          \State $(\t{pt},\t{st}_\t{R}') \gets \t{pt}'$
+          \State \Return $(\t{true},\t{st}_\t{R}, \t{pt})$
+          \EndProcedure
+         
+        \end{algorithmic}
+      \end{minipage}
+
+      \begin{minipage}{.5\linewidth}
+        \begin{algorithmic}[1]
+          \Procedure{uniARCAD.Send}{$\t{st}_\t{S}, \t{ad}, \t{pt}, \t{flag}$}
+          \State $(\t{sk}_\t{S},\t{pk}_\t{R}) \gets \t{st}_\t{S}$ 
+          \If{$\t{flag} = \t{true}$}
+          \State $(\t{sk}_\t{S}',\t{pk}_\t{S}') \gets$ \Call{SC.Gen}{$1^\lambda$}
+          \State $(\t{sk}_\t{R}',\t{pk}_\t{R}') \gets$ \Call{SC.Gen}{$1^\lambda$}
+          \State $\t{st}_\t{S}' \gets (\t{sk}_\t{S}',\t{pk}_\t{R}')$
+          \State $\t{st}_\t{R}' \gets (\t{sk}_\t{R}',\t{pk}_\t{S}')$
+          \Else
+          \State $(\t{sk}_\t{S}',\t{pk}_\t{R}') \gets (\perp,\perp)$
+          \EndIf
+          \State $\t{pt}' \gets (\t{st}_\t{R}', \t{pt})$
+          \State $\t{ct} \gets$ \Call{Enc}{$\t{sk}_\t{S},\t{pk}_\t{R}, \t{ad}, \t{pt}'$}
+          \State \Return $(\t{st}_\t{S}', \t{ct})$
+          \EndProcedure
+          
+        \end{algorithmic}
+      \end{minipage}%
+    }
+  }
+  \caption{Unidirectional ARCAD Protocol}
+  \label{fig:uni-arcad}
+\end{figure}
+
+Contrarily to the other protocols BARK is quite self-explanatory. It
+operates on the basis of onion encryptions where repeated unidirectional
+traffic builds up an chain of receiving states that have to traversed once
+a response is received since the outgoing messages contained
+the sender states which are used to encrypt said response.
+Also note that the creation of new sending and receiving states
+is not necessary in but the inner most layer of the onion hence
+there is a flag passed to \texttt{uniARCAD.Send}. The
+\texttt{HSent} and \texttt{HReceived} chain-hash variables
+ensure the recover security.
+
+\begin{figure}[H]
+  \centering
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.9}{%
+    \fbox{%
+      \algrenewcommand\textproc{}
+      \algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+      \begin{minipage}{\linewidth}
+        \begin{algorithmic}[1]
+          \Procedure{BARK.Init}{$1^\lambda$}
+          \State $(\t{st}_\t{A,send},\t{st}_\t{B,rec}) \gets$ \Call{uniBARK.Init}{$1^\lambda$}
+          \State $(\t{st}_\t{B,send},\t{st}_\t{A,rec}) \gets$ \Call{uniBARK.Init}{$1^\lambda$}
+          \State $\t{hk} \gets$ \Call{H.Init}{$1^\lambda$}
+          \State $\t{st}_\t{A} \gets (\t{hk}, \t{st}_\t{A,send}, \t{st}_\t{A,rec},
+          \perp, \perp, 0, 10)$ 
+          \State $\t{st}_\t{B} \gets (\t{hk}, \t{st}_\t{B,send}, \t{st}_\t{B,rec},
+          \perp, \perp, 0, 10)$
+          \State \Return $(\t{st}_\t{A},\t{st}_\t{B})$
+          \EndProcedure
+          
+          \item[]
+          
+          \Procedure{BARK.Send}{$\t{st}_\t{P}, \t{ad}, \t{pt}$}
+          \State $(\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
+          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max}) \gets \t{st}_\t{P}$
+          
+          \If{$\t{rt} = \t{rt}_\t{max}$}
+          \State $(\t{st}_\t{S,new}, \t{st}_\t{P,rec}) \gets$
+          \Call{uniBARK.Init}{$1^\lambda$}
+          \State $\t{msg} \gets (\t{st}_\t{S,new}, \t{pt})$
+          \Else
+          \State $\t{msg} \gets (\perp, \t{pt})$
+          \EndIf
+          \State $(\t{st}_\t{P,send}, \t{ct'}) \gets$
+          \Call{uniBARK.Send}{$\t{st}_\t{P,send}, \t{ad}, \t{msg}, \t{rt} = \t{rt}_\t{max}$}
+         
+          \State $\t{ct} \gets (\t{Hsent}, \t{ct'}, \t{rt}_\t{S} = \t{rt}_\t{max})$ 
+          \State $\t{Hsent} \gets$ \Call{H.Eval}{$\t{hk}, (\t{ad}, \t{ct})$}
+          
+          \State $\t{st}_\t{P} \gets (\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
+          \t{Hsent}, \t{Hreceived}, \t{rt} + 1 \mod \t{rt}_\t{max}, \t{rt}_\t{max})$
+          \State \Return $(\t{st}_\t{P}, \t{ct})$
+          \EndProcedure
+          
+          \item[] % blank line
+          
+          \Procedure{BARK.Receive}{$\t{st}_\t{P}, \t{ad}, \t{ct}$}
+          \State $(\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
+          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max}) \gets \t{st}_\t{P}$
+          \State $(\t{h}, \t{ct'}, \t{rt}_\t{S}) \gets \t{ct}$
+          \If{$\t{Hreceived} \neq \t{h}$} \State \Return $(\t{false}, \t{st}_\t{P})$
+          \EndIf
+          
+          \State $(\t{acc}, \t{st}_\t{P,rec}, \t{msg}) \gets$
+          \Call{uniBARK.Receive}{$\t{st}_\t{P,rec}, \t{ad}, \t{ct'}, \t{rt}_\t{S} =
+          \t{rt}_\t{max}$}
+          \If{$\t{acc} = \t{false}$} \State \Return $(\t{false}, \t{st}_\t{P})$ \EndIf
+          
+          \If{$\t{rt}_\t{S} = \t{rt}_\t{max}$}
+          \State $(\t{st}_\t{P,send}, \t{pt}) \gets \t{msg}$
+          \Else
+          \State $(\perp, \t{pt}) \gets \t{msg}$
+          \EndIf
+          
+          \State $\t{Hreceived} \gets$ \Call{H.Eval}{$\t{hk}, (\t{ad}, \t{ct})$}
+          
+          \State $\t{st}_\t{P} \gets (\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
+          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max})$
+          \State \Return $(\t{true}, \t{st}_\t{P}, \t{pt})$
+          \EndProcedure
+        \end{algorithmic}
+      \end{minipage}
+    } 
+  }
+  \caption{BARK Protocol}
+  \label{fig:bark}
+\end{figure}
+
+\section[Jost, Maurer and Mularczyk]
+{Jost, Maurer and Mularczyk~\cite{jostefficient}}
+\label{sec:jost-maur-mularczyk}
+
+This secure messaging protocol was published in the paper
+\textit{Efficient Ratcheting: Almost-Optimal Guarantees for Secure Messaging}
+in early October 2018. It offers near-optimal security guarantees similar
+to the protocols by Poettering, Rösler and Jaeger, Stepanovs while
+deploying lighter primitives than the latter two. Effectively, the protocol
+only excludes some special cases of fine-grained post-compromise security
+thus offering a slightly higher security level than the protocol by
+Durak and Vaudenay. It also decouples the leakage of random coins
+from state exposures with all security proofs being in the random
+oracle model.
+
+\subsection{Primitives}
+\label{sec:primitives-3}
+
+The protocol proposes several novel cryptographic primitives that can all be
+mounted by regular public-key key cryptosystems to extend them
+with key-update routines.
+\begin{itemize}
+\item \textbf{Key-Updating Signature (KuSig).} This primitive consists of
+  three routines. A key generation algorithm
+  $\t{Gen} \rightarrow \mathcal{VK} \times \mathcal{SK}$, a signing function
+  $\t{Sign}: \mathcal{SK} \times \mathcal{M} \rightarrow \mathcal{SK} \times \Sigma$
+  and its corresponding verification procedure
+  $\t{Ver}: \mathcal{VK} \times \mathcal{M} \times \Sigma
+  \rightarrow \mathcal{VK} \times \{\t{T,F}\}$
+  where $\mathcal{VK}$ is the verification key domain, $\mathcal{SK}$ the signing
+  key domain and $\mathcal{M},\Sigma$ are the message and the signature domains
+  respectively. We have the following correctness notion,
+  if $(\t{vk}_0,\t{sk}_0) \leftarrow \t{Gen}$ then for any sequence of
+  messages $m_1,...,m_k \in \mathcal{M}$ and for all $i \in [k]$
+  such that $(\t{sk}_i,\sigma_i) \leftarrow \t{Sign}(\t{sk}_{i-1},m_i)$
+  and $(\t{vk}_i,v_i) \leftarrow \t{Ver}(\t{vk}_{i-1},\sigma_i)$ we have
+  that $v_i = \t{T}$.
+\end{itemize}
+
+As the security level we require resistance against universal forgeries
+with added forward security in case of state exposures.
+
+\begin{itemize}
+\item \textbf{Secretly Key-Updatable Public-Key Encryption (SkuPke).} This
+  primitive consists of six routines. A key generation algorithm
+  $\t{Gen} \rightarrow \mathcal{EK} \times \mathcal{DK}$, an encryption
+  routine $\t{Enc}: \mathcal{EK} \times \mathcal{M} \rightarrow \mathcal{C}$ and
+  its corresponding decryption function
+  $\t{Dec}: \mathcal{DK} \times \mathcal{C} \rightarrow \mathcal{M}$, where
+  $\mathcal{EK},\mathcal{DK}$ denote the encryption/decryption key domains
+  and $\mathcal{M},\mathcal{C}$ denote the message/ciphertext domains.
+  Furthermore, there is an algorithm that generates key update information
+  $\t{UpdateGen} \rightarrow \mathcal{UE} \times \mathcal{UD}$ with
+  $\mathcal{UE}$ being the public key update information domain and
+  $\mathcal{UD}$ being the secret key update information. This two
+  arguments can be fed into an encryption key update function
+  $\t{UpdateEk}: \mathcal{UE} \times \mathcal{EK} \rightarrow \mathcal{EK}$
+  and the respective decryption key update function
+  $\t{UpdateDk}: \mathcal{UD} \times \mathcal{DK} \rightarrow \mathcal{DK}$.
+  We have the following correctness notion. If $(\t{ek}_0,\t{dk}_0) \in \t{Gen}$ and
+  $(\t{ue}_1,\t{ud}_1),...,(\t{ue}_k,\t{ud}_k) \in \t{UpdateGen}$ then
+  for all $i \in [k]$ with $\t{ek}_i = \t{UpdateEk}(\t{ue}_i, \t{ek}_{i-1})$ and
+  $\t{dk}_i = \t{UpdateDk}(\t{ud}_i, \t{dk}_{i-1})$ and all $m \in \mathcal{M}$
+  it holds that $\t{Dec}(\t{dk}_i,\t{Enc}(\t{ek}_i, m)) = m$.
+\end{itemize}
+
+The intuition behind this primitive is that the key pair can be
+updated independently with update information not linked to any
+key where the update information for the encryption key can be freely
+exposed while the update information for the decryption should
+remain hidden and only change hands through a back-channel.
+This scheme can be constructed out of a vanilla components
+of the ElGamal cryptosystem. The SkuPke scheme serves to
+create another primitive.
+\begin{itemize}
+\item \textbf{Healable And Key-Updating Public-Key Encryption (HkuPke).} This
+  primitive consists of five routines. A key generation algorithm
+  $\t{Gen} \rightarrow \mathcal{EK} \times \mathcal{DK}$ and encryption/decryption
+  functions
+  $\t{Enc}: \mathcal{EK} \times \mathcal{M} \times \mathcal{AD} \rightarrow \mathcal{C}$,
+  $\t{Dec}: \mathcal{DK} \times \mathcal{C} \times \mathcal{AD} \rightarrow \mathcal{M}$
+  with $\mathcal{EK}$ being the encryption key domain, $\mathcal{DK}$ the decryption
+  key domain and $\mathcal{M},\mathcal{C},\mathcal{AD}$ are the message, ciphertext
+  and associated data domains. The scheme is completed with two key update
+  functions $\t{BcUpEk}: \mathcal{EK} \times \Delta \rightarrow \mathcal{EK}$ and
+  $\t{BcUpDk}: \mathcal{DK} \times \Delta \rightarrow \mathcal{DK}$ with
+  $\Delta$ being the update information domain.
+\end{itemize}
+
+The purpose of the HkuPke scheme is similar to the SkuPke scheme with the difference
+that we now still allow the decryption of message for any arbitrary sequence
+of \texttt{BcUpDk} calls where only a prefix of the used update information
+has been used in \texttt{BcUpEk} calls. The receiver can thus
+instigate key updates via a back-channel to start the healing process.
+
+\subsection{Construction}
+\label{sec:construction-3}
+
+\begin{figure}[ht]
+  \centering
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.9}{%
+    \fbox{%
+      \algrenewcommand\textproc{}
+      \algrenewcommand\algorithmicprocedure{\textbf{func}}
+      \begin{minipage}{\linewidth}
+        {\fontsize{8}{10}\selectfont
+        \begin{algorithmic}[1]
+          \Procedure{BARK.Init}{$1^\lambda$}
+          \State $(\t{st}_\t{A,send},\t{st}_\t{B,rec}) \gets$ \Call{uniBARK.Init}{$1^\lambda$}
+          \State $(\t{st}_\t{B,send},\t{st}_\t{A,rec}) \gets$ \Call{uniBARK.Init}{$1^\lambda$}
+          \State $\t{hk} \gets$ \Call{H.Init}{$1^\lambda$}
+          \State $\t{st}_\t{A} \gets (\t{hk}, \t{st}_\t{A,send}, \t{st}_\t{A,rec},
+          \perp, \perp, 0, 10)$ 
+          \State $\t{st}_\t{B} \gets (\t{hk}, \t{st}_\t{B,send}, \t{st}_\t{B,rec},
+          \perp, \perp, 0, 10)$
+          \State \Return $(\t{st}_\t{A},\t{st}_\t{B})$
+          \EndProcedure
+          
+          \item[]
+          
+          \Procedure{BARK.Send}{$\t{st}_\t{P}, \t{ad}, \t{pt}$}
+          \State $(\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
+          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max}) \gets \t{st}_\t{P}$
+          
+          \If{$\t{rt} = \t{rt}_\t{max}$}
+          \State $(\t{st}_\t{S,new}, \t{st}_\t{P,rec}) \gets$
+          \Call{uniBARK.Init}{$1^\lambda$}
+          \State $\t{msg} \gets (\t{st}_\t{S,new}, \t{pt})$
+          \Else
+          \State $\t{msg} \gets (\perp, \t{pt})$
+          \EndIf
+          \State $(\t{st}_\t{P,send}, \t{ct'}) \gets$
+          \Call{uniBARK.Send}{$\t{st}_\t{P,send}, \t{ad}, \t{msg}, \t{rt} = \t{rt}_\t{max}$}
+         
+          \State $\t{ct} \gets (\t{Hsent}, \t{ct'}, \t{rt}_\t{S} = \t{rt}_\t{max})$ 
+          \State $\t{Hsent} \gets$ \Call{H.Eval}{$\t{hk}, (\t{ad}, \t{ct})$}
+          
+          \State $\t{st}_\t{P} \gets (\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
+          \t{Hsent}, \t{Hreceived}, \t{rt} + 1 \mod \t{rt}_\t{max}, \t{rt}_\t{max})$
+          \State \Return $(\t{st}_\t{P}, \t{ct})$
+          \EndProcedure
+          
+          \item[] % blank line
+          
+          \Procedure{BARK.Receive}{$\t{st}_\t{P}, \t{ad}, \t{ct}$}
+          \State $(\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
+          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max}) \gets \t{st}_\t{P}$
+          \State $(\t{h}, \t{ct'}, \t{rt}_\t{S}) \gets \t{ct}$
+          \If{$\t{Hreceived} \neq \t{h}$} \State \Return $(\t{false}, \t{st}_\t{P})$
+          \EndIf
+          
+          \State $(\t{acc}, \t{st}_\t{P,rec}, \t{msg}) \gets$
+          \Call{uniBARK.Receive}{$\t{st}_\t{P,rec}, \t{ad}, \t{ct'}, \t{rt}_\t{S} =
+          \t{rt}_\t{max}$}
+          \If{$\t{acc} = \t{false}$} \State \Return $(\t{false}, \t{st}_\t{P})$ \EndIf
+          
+          \If{$\t{rt}_\t{S} = \t{rt}_\t{max}$}
+          \State $(\t{st}_\t{P,send}, \t{pt}) \gets \t{msg}$
+          \Else
+          \State $(\perp, \t{pt}) \gets \t{msg}$
+          \EndIf
+          
+          \State $\t{Hreceived} \gets$ \Call{H.Eval}{$\t{hk}, (\t{ad}, \t{ct})$}
+          
+          \State $\t{st}_\t{P} \gets (\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
+          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max})$
+          \State \Return $(\t{true}, \t{st}_\t{P}, \t{pt})$
+          \EndProcedure
+        \end{algorithmic}
+        }
+      \end{minipage}
+    } 
+  }
+  \caption{Secure Messaging Protocol}
+  \label{fig:secmsg}
+\end{figure}
+
+\section{Alwen, Coretti and Dodis}
+\label{sec:alwen-coretti-dodis}
 
 
 

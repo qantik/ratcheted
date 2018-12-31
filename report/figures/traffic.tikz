@@ -2,7 +2,7 @@
   box/.style={rectangle,draw,inner sep=5pt,minimum height=1cm,minimum width=2cm,thick},
   node distance=2cm,
   ->,>=stealth',
-  scale=0.55, every node/.style={scale=0.55}
+  scale=0.5, every node/.style={scale=0.5}
 ]
 
   % Box t0
@@ -15,13 +15,58 @@
   \node [left=2cm of tb0] (tbb0) {$m_0$};
   \path (tbb0) edge[dotted] node [] {} (tb0);
 
-
+  % Box t1
   \node [box,below of=t0] (t1) {Send};
-  \node [box,below of=t1] (t2) {Receive};
-  \node [box,below of=t2] (t3) {Send};
-  \node [box,below of=t3] (t4) {Receive};
+  \node [coordinate,right of=t1,node distance=1cm] (tl1) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t1,node distance=1cm] (ta1) {};
+  \node [left=2cm of ta1] (taa1) {$k_1$};
+  \path (ta1) edge[dotted] node [] {} (taa1);
+  \node [coordinate,below left=-0.125cm and 0cm of t1,node distance=1cm] (tb1) {};
+  \node [left=2cm of tb1] (tbb1) {$m_1$};
+  \path (tbb1) edge[dotted] node [] {} (tb1);
 
+  % Box t2
+  \node [box,below of=t1] (t2) {Receive};
+  \node [coordinate,right of=t2,node distance=1cm] (tl2) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t2,node distance=1cm] (ta2) {};
+  \node [left=2cm of ta2] (taa2) {$k_2$};
+  \path (ta2) edge[dotted] node [] {} (taa2);
+  \node [coordinate,below left=-0.125cm and 0cm of t2,node distance=1cm] (tb2) {};
+  \node [left=2cm of tb2] (tbb2) {$m_2$};
+  \path (tbb2) edge[dotted] node [] {} (tb2);
+
+  % Box t3
+  \node [box,below of=t2] (t3) {Send};
+  \node [coordinate,right of=t3,node distance=1cm] (tl3) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t3,node distance=1cm] (ta3) {};
+  \node [left=2cm of ta3] (taa3) {$k_3$};
+  \path (ta3) edge[dotted] node [] {} (taa3);
+  \node [coordinate,below left=-0.125cm and 0cm of t3,node distance=1cm] (tb3) {};
+  \node [left=2cm of tb3] (tbb3) {$m_3$};
+  \path (tbb3) edge[dotted] node [] {} (tb3);
+
+  % Box t4
+  \node [box,below of=t3] (t4) {Receive};
+  \node [coordinate,right of=t4,node distance=1cm] (tl4) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t4,node distance=1cm] (ta4) {};
+  \node [left=2cm of ta4] (taa4) {$k_4$};
+  \path (ta4) edge[dotted] node [] {} (taa4);
+  \node [coordinate,below left=-0.125cm and 0cm of t4,node distance=1cm] (tb4) {};
+  \node [left=2cm of tb4] (tbb4) {$m_4$};
+  \path (tbb4) edge[dotted] node [] {} (tb4);
+
+  % Box t5
   \node [box,right of=t0,node distance=6cm] (t5) {Send};
+  \node [coordinate,left of=t5,node distance=1cm] (tl5) {};
+  \node [coordinate,above right=-0.125cm and 0cm of t5,node distance=1cm] (ta5) {};
+  \node [right=2cm of ta5] (taa5) {$k_5$};
+  \path (ta5) edge[dotted] node [] {} (taa5);
+  \node [coordinate,below right=-0.125cm and 0cm of t5,node distance=1cm] (tb5) {};
+  \node [right=2cm of tb5] (tbb5) {$m_5$};
+  \path (tbb5) edge[dotted] node [] {} (tb5);
+
+
+
   \node [box,below of=t5] (t6) {Send};
   \node [box,below of=t6] (t7) {Send};
   \node [box,below of=t7] (t8) {Receive};
