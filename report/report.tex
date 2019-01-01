@@ -19,6 +19,7 @@
 \usepackage[labelfont=bf]{caption} % Bold figure titles.
 
 \renewcommand{\t}{\text} % Shorten \text command.
+\parindent0pt            % Do not indent new paragraphs.
 
 \begin{document}
 \input{cover/cover}
@@ -339,13 +340,13 @@ The fact that sets this protocol, and the protocol in the following
 section, apart from the others is the notion of \textit{fine-grained}
 post-compromise security, meaning that there still remain some
 security guarantees concerning the message that directly follows a
-state compromise. This kind of security is not supported in
+state compromise. This kind of security is not fully supported in
 the other protocols where such a message can be fully deciphered
 or forged by the adversary. It thus excludes fewer trivial attacks
 from their security game, however it does not allow the leakage
 or adversarial choice of randomness. The authors conjecture that
 fine-grained post-compromise security marks the lower bound
-of how many trivial attacks a ratcheted protocol may exclude, hence
+of how many trivial attacks a ratcheted protocol may permit, hence
 the security level achieved in their protocol is optimal.
 Surprisingly enough, some heavyweight primitives are required
 to reach this lower bound at the cost of an extensive decline
@@ -370,8 +371,8 @@ key update algorithm.
   $(k,c) \in \t{enc}(pk_n)$ we have $\t{dec}(sk_n,c)=k$.
 \end{itemize}
 In security terms a ku-KEM should satisfy the guarantees of regular
-key-encapsulation mechanisms plus some kind of forward security that
-protects past keys from state exposures. A ku-KEM can be constructed
+key-encapsulation mechanisms in addition to forward security that
+protecting past keys from state exposures. A ku-KEM can be constructed
 out of any hierarchical identity-based encryption scheme
 (HIBE)~\cite{gentry2002hierarchical}. Contrary to an ordinate
 identity-based encryption scheme where there is a single central
@@ -380,24 +381,11 @@ of hierarchical tree structure of many authorities on different levels
 such that an authority can access the keys distributed by its children
 but its own keys remain inaccessible to any authority on a lower level.
 As with ordinary IBE schemes HIBE schemes are usually based on pairing- or
-lattice-based cryptography which is far more inefficient than
+lattice-based cryptography which are far more inefficient than
 regular public-key cryptography on elliptic curves.
-Next to a HIBE, the protocol requires some other, more standard, primitives.
-\begin{itemize}
-\item \textbf{One-Time Signature Scheme (OTS).} It consists of three procedures, a initial
-  key generation algorithm $\t{gen}_\t{S} \rightarrow \mathcal{SK} \times \mathcal{VK}$,
-  a signature algorithm $\t{sgn}: \mathcal{SK} \times \mathcal{M} \rightarrow \Sigma$
-  and its corresponding verification algorithm
-  $\t{vfy}: \mathcal{VK} \times \mathcal{M} \times \Sigma \rightarrow \{\t{T,F}\}$ with
-  $\mathcal{M}$ being the message domain,
-  $\mathcal{SK}$ the signing key domain, $\mathcal{VK}$ the verification key domain and
-  $\Sigma$ the signature domain.
-  We have the following correctness notion, for all $(sgk,vfk) \in \t{gen}_\t{S}$ and
-  $m \in \mathcal{M}$ and $\sigma \in \t{sgn}(sgk,m)$ we have $\t{T} = \t{vfy}(vfk,m,\sigma)$.
-  We further require strong unforgeability as the security level.
-\item \textbf{Random Oracle}. As the protocol is secure in the random oracle H it demands
-  a random oracle function H. In practice, H is replaced by a standard hash function.
-\end{itemize}
+Next to a HIBE construction, the protocol also requires a one-time signature scheme
+defined by three algorithms $\t{gen}_\t{S}$, sgn and vfy with the
+usual correctness notions.
 
 \subsection{Construction}
 \label{sec:construction}
@@ -412,7 +400,7 @@ analysis of the benchmarks in the next chapter.
 
 % TODO: Complete algorithm.
 
-\begin{figure}[H]
+\begin{figure}[ht]
   \centering
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
@@ -534,7 +522,7 @@ a key-updatable digital signature scheme.
 
 % TODO: Complete algorithm.
 
-\begin{figure}[H]
+\begin{figure}[ht]
   \centering
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
@@ -725,7 +713,7 @@ there is a flag passed to \texttt{uniARCAD.Send}. The
 \texttt{HSent} and \texttt{HReceived} chain-hash variables
 ensure the recover security.
 
-\begin{figure}[H]
+\begin{figure}[ht]
   \centering
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
@@ -982,10 +970,145 @@ instigate key updates via a back-channel to start the healing process.
   \label{fig:secmsg}
 \end{figure}
 
-\section{Alwen, Coretti and Dodis}
+\section[Alwen, Coretti and Dodis]
+{Alwen, Coretti and Dodis~\cite{alwen2018double}}
 \label{sec:alwen-coretti-dodis}
 
+This secure messaging protocol was published in the paper \textit{The
+Double Ratchet: Security Notions, Proofs, and Modularization for the
+Signal Protocol} in late October 2018. The protocol is an attempt to
+modularize the existing Signal algorithm using simpler cryptographic
+primitives. It is further the only protocol that offers immediate
+decryption thus possessing message-loss and message-reorder resilience
+while using mostly symmetric-key cryptography to achieve forward and
+post-compromise security. This makes the protocol faster than the
+other protocols that almost exclusively rely on public-key primitives.
+Due to this the protocol offers the weakest security level especially
+during unidirectional traffic where the states are not ratcheted hence
+compromising post-compromise security.
 
+\subsection{Primitives}
+\label{sec:primitives-4}
+
+The protocol proposes three novel building blocks. The first provides
+the protocol with forward-security and the immediate decryption
+property.
+\begin{itemize}
+\item \textbf{Forward-Secure Authenticated Encryption with Associated Data (FS-AEAD).}
+  This primitives consists of four routines, two state generation functions
+  (\texttt{FS-Init-S},\texttt{FS-Init-R})
+  one for the sender key and one for the receiver key, a send routine \texttt{FS-Send}
+  and its corresponding receive function \texttt{FS-Rcv}. We have the following
+  function headers
+  \begin{align*}
+    \t{FS-Init-S} & : \mathcal{K} \rightarrow \mathcal{V}_S \\
+    \t{FS-Init-R} & : \mathcal{K} \rightarrow \mathcal{V}_R \\
+    \t{FS-Send} & : \mathcal{V}_S \times \mathcal{AD} \times \mathcal{M}
+                                \rightarrow \mathcal{V}_S \times \mathcal{C} \\
+    \t{FS-Rcv} & : \mathcal{V}_R \times \mathcal{AD} \times \mathcal{C}
+                                \rightarrow \mathcal{V}_R \times \mathcal{C}.
+  \end{align*}
+  $\mathcal{K}$ is the key domain, $\mathcal{V}_S$ is the sender state domain,
+  $\mathcal{V}_R$ is the receiver state domain, $\mathcal{AD}$
+  is the associated data domain, $\mathcal{M}$ is the message domain and
+  $\mathcal{C}$ is the ciphertext domain. The correctness notion is
+  straightforward with the added requirement of immediate decryption.
+\end{itemize}
+
+A FS-AEAD can be constructed out of a regular AEAD scheme and a pseudo-random
+number generator. The second primitive takes care of the scheduling
+of new keys for post-compromise security.
+\begin{itemize}
+\item \textbf{Continuous Key Agreement (CKA).} This primitive consists
+  of four routines, two state generation functions (\texttt{CKA-Init-S}, \texttt{CKA-Init-R})
+  one for the sender and one for the receiver, a send routine \texttt{CKA-S} and
+  its corresponding receive function \texttt{CKA-R}. We have the following
+  function headers
+  \begin{align*}
+    \texttt{CKA-Init-S} & : \mathcal{K} \rightarrow \mathcal{V}_A \\
+    \texttt{CKA-Init-R} & : \mathcal{K} \rightarrow \mathcal{V}_B \\
+    \texttt{CKA-S} & : \mathcal{V}_A \rightarrow
+                \mathcal{V}_A \times \mathcal{T} \times \mathcal{I} \\
+    \texttt{CKA-R} & : \mathcal{V}_B \times \mathcal{T} \rightarrow
+                \mathcal{V}_B \times \mathcal{I}.
+  \end{align*}
+  $\mathcal{K}$ is the key domain, $\mathcal{V}_A$ is state domain of Alice,
+  $\mathcal{V}_B$ is the state domain of Bob, $\mathcal{T}$
+  is message domain and $\mathcal{I}$ is the domain of the generated key.
+  The CKA is alternating in its nature meaning that if Alice instigated
+  the first key exchange the following one must be started by Bob thus
+  the participants switch the roles after each exchange. By the
+  above definition, Alice has to send the first message.
+\end{itemize}
+
+A CKA scheme can be constructed out of a generic key-encapsulation
+mechanism or using the Diffie-Hellman assumption. The last
+primitive in the group is a blend between a pseudo-random function
+and a pseudo-random number generator.
+\begin{itemize}
+\item \textbf{PRF-PRNG.} This primitive consists of two routines.
+  An initialization algorithm \texttt{P-Init} and an update function \texttt{P-Up}
+  with the following function headers
+  \begin{align*}
+    \t{P-Init} & : \mathcal{K} \rightarrow \Sigma \\
+    \t{P-Up} & : \Sigma \times \mathcal{I} \rightarrow \Sigma \times \mathcal{I}.
+  \end{align*}
+  $\mathcal{K}$ is the key domain, $\Sigma$ is the state domain and
+  $\mathcal{I}$ is the update information domain.
+\end{itemize}
+
+The intuition behind a PRF-PRNG is that on input some update information
+it refreshes its state and yields a pseudo-random output exactly like
+a normal PRNG, furthermore a PRF-PRNG behaves like a PRF in the sense
+that multiple derived outputs are indistinguishable from random
+values. A PRF-PRNG can be constructed out of HKDF or from
+a generic PRNG and PRF functions.
+
+\subsection{Construction}
+\label{sec:construction-4}
+
+Figure~\ref{fig:double-ratchet} shows the double ratchet protocol by
+Alwen, Coretti and Dodis. For simplicity only the algorithms
+for one participant are specified but they are analogous for
+the partner. Similar to the protocol by Poettering and Rösler
+the double ratchet protocol also proceeds in epochs where
+even epochs are reserved for Alice to send and odd epochs for Bob.
+\begin{itemize}
+\item \textbf{Init.} A shared key $k$ is split into the PRF-PRNG key
+  $k_\t{root}$ and a key for the CKA $k_\t{CKA}$. $k_\t{root}$ serves
+  to create the first PRF-PRNG state $\sigma_\t{root}$ which in
+  turn is used to derive a initialization key for the initial
+  FS-AEAD sender and receiver states stored in $v[0]$. Finally,
+  $k_\t{CKA}$ is used to generate the initial CKA state $\gamma$. Let
+  $t_\t{P}$ denote the current epoch for a user and $T_\t{cur}$ the
+  current CKA update message.
+\item \textbf{Send-P.} At the start of each epoch (if-branch) the user
+  generates a new CKA update message $T_\t{cur}$ and update information $I$
+  to create fresh FS-AEAD state. Furthermore, old FS-AEAD states from previous
+  epochs of the user are erased from memory (not depicted in the figure).
+  Whether it is the first message of a new epoch or not the FS-AEAD is
+  always updated at the end with when encrypting
+  the message where $t_\t{P}$ and $T_\t{cur}$ serve as associated data.
+\item \textbf{Rcv-P.} Whenever the received messages marks the beginning
+  of a new epoch the user has to update his state accordingly (elseif-branch)
+  mirroring the operations performed by the partner in his send
+  routine. Again in this case old FS-AEAD states can be erased
+  from memory (not depicted). In every case the FS-AEAD state
+  is then updated when decrypting the ciphertext.
+  
+\end{itemize}
+
+\begin{figure}[ht]
+  \centering
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.9}{%
+    \fbox{%
+      \input{figures/dratch.tikz}
+    }
+  }
+  \caption{Double Ratchet Protocol}
+  \label{fig:double-ratchet}
+\end{figure}
 
 \chapter{Benchmarks}
 \label{chap:benchmarks}
