@@ -405,45 +405,7 @@ analysis of the benchmarks in the next chapter.
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
     \fbox{%
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{func}}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{init}{}
-          \For{$u \in \{A,B\}$}
-            \State $(sgk_u, vfk_u) \gets \t{gen}_\t{S}$
-            \State $(sk_u, pk_u) \gets \t{gen}_\t{K}$
-            \State random $K_u \in \{0,1\}^{|\mathcal{K}|}$
-            \State $(E^\vdash,E^\dashv) \gets 0; \ (s,r) \gets 0$
-            \State $PK_u[0] \gets pk_u; \ SK_u[0] \gets sk_u$
-            \State $S_u \gets (PK_{\bar{u}},E,s,vfk_{\bar{u}},K_{\bar{u}})$
-            \State $R_u \gets (SK_u,E,r,sgk_u,K_u)$
-            \State $ST_u \gets (R_u,S_u)$
-          \EndFor
-          \State \Return $(ST_A,ST_B)$
-          \EndProcedure
-        \end{algorithmic}
-      \end{minipage}
-
-      \vline
-
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{RATCH'}{$\t{P},m_0,m_1$}
-          \State \Return \Call{RATCH}{$\t{P},m_b$}
-          \EndProcedure
-
-          \item[] % Blank line.
-
-          \Procedure{EXP}{$\t{P}$}
-          \State \Return $\t{st}_\t{P}$ 
-          \EndProcedure
-       \end{algorithmic}
-     \end{minipage}%
+      \input{figures/brke.tikz}
     }
   }
   \caption{Bidirectional Asynchronous Key-Exchange Protocol (BRKE)}
@@ -527,45 +489,7 @@ a key-updatable digital signature scheme.
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
     \fbox{%
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{func}}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{init}{}
-          \For{$u \in \{A,B\}$}
-            \State $(sgk_u, vfk_u) \gets \t{gen}_\t{S}$
-            \State $(sk_u, pk_u) \gets \t{gen}_\t{K}$
-            \State random $K_u \in \{0,1\}^{|\mathcal{K}|}$
-            \State $(E^\vdash,E^\dashv) \gets 0; \ (s,r) \gets 0$
-            \State $PK_u[0] \gets pk_u; \ SK_u[0] \gets sk_u$
-            \State $S_u \gets (PK_{\bar{u}},E,s,vfk_{\bar{u}},K_{\bar{u}})$
-            \State $R_u \gets (SK_u,E,r,sgk_u,K_u)$
-            \State $ST_u \gets (R_u,S_u)$
-          \EndFor
-          \State \Return $(ST_A,ST_B)$
-          \EndProcedure
-        \end{algorithmic}
-      \end{minipage}
-
-      \vline
-
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{RATCH'}{$\t{P},m_0,m_1$}
-          \State \Return \Call{RATCH}{$\t{P},m_b$}
-          \EndProcedure
-
-          \item[] % Blank line.
-
-          \Procedure{EXP}{$\t{P}$}
-          \State \Return $\t{st}_\t{P}$ 
-          \EndProcedure
-       \end{algorithmic}
-     \end{minipage}%
+      \input{figures/sch.tikz}
     }
   }
   \caption{Secure Channel Protocol (SCh)}
