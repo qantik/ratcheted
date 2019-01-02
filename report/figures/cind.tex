@@ -1,0 +1,31 @@
+\algrenewcommand\textproc{}
+  \algrenewcommand\algorithmicprocedure{\textbf{Game}}
+
+  \begin{minipage}{.5\linewidth}
+    \begin{algorithmic}[1]
+      \Procedure{$\t{CIND}_b^\mathcal{A}$}{}
+      \State $(\t{st}_\t{A},\t{st}_\t{B}) \gets$ \Call{Init}{$1^\lambda$}
+      \State $b' \gets \mathcal{A}^{\t{RATCH',EXP}}$
+      \State \Return $b'$
+      \EndProcedure
+    \end{algorithmic}
+  \end{minipage}
+
+  \vline
+
+  \algrenewcommand\textproc{}
+  \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
+
+  \begin{minipage}{.5\linewidth}
+    \begin{algorithmic}[1]
+      \Procedure{RATCH'}{$\t{P},m_0,m_1$}
+      \State \Return \Call{RATCH}{$\t{P},m_b$}
+      \EndProcedure
+
+      \item[] % Blank line.
+
+      \Procedure{EXP}{$\t{P}$}
+      \State \Return $\t{st}_\t{P}$ 
+      \EndProcedure
+   \end{algorithmic}
+ \end{minipage}%

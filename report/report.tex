@@ -86,11 +86,7 @@ chapter~\ref{chap:protocols} the notion of secure messaging and
 especially ratcheting is formally reviewed before each protocol is
 summarized in terms of composition and security levels, then in
 chapter~\ref{chap:benchmarks} the protocols are measured and compared
-on the basis of several benchmarks. In chapter~\ref{chap:bark} we
-extend and modify the in-house Bidirectional Asynchronous Ratcheted
-Key Agreement protocol (BARK) proposed by the LASEC laboratory into a
-faster version with only minor concessions in terms of security before
-concluding this report in the last chapter.
+on the basis of several benchmarks.
 
 \section{Circumstances}
 \label{sec:circumstances}
@@ -181,98 +177,9 @@ and receive procedures of both Alice and Bob can expose their states
 and in the end tries to distinguish some key from random in the KIND
 game or decide which one of two chosen messages corresponds to a given
 ciphertext in the CIND game.
-
-\begin{figure}[ht]
-  \centering
-  \setlength{\fboxsep}{10pt}
-  \scalebox{0.8}{%
-    \fbox{%
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{Game}}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{$\t{KIND}_b^\mathcal{A}$}{}
-          \State $(\t{st}_\t{A},\t{st}_\t{B}) \gets$ \Call{Init}{$1^\lambda$}
-          \State $b' \gets \mathcal{A}^{\t{RATCH,EXP,TEST}}$
-          \State \Return $b'$
-          \EndProcedure
-        \end{algorithmic}
-      \end{minipage}
-
-      \vline
-
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{TEST}{$\t{P}$}
-          \If{$b = 1$}
-          \State \Return $k_\t{P}$
-          \EndIf
-          \State \Return random $\{0,1\}^{|k_\t{P}|}$ 
-          \EndProcedure
-
-          \item[] % Blank line.
-
-          \Procedure{EXP}{$\t{P}$}
-          \State \Return $\t{st}_\t{P}$ 
-          \EndProcedure
-       \end{algorithmic}
-     \end{minipage}%
-    }
-  }
-  \caption{Generic Key-Indistinguishability Game}
-  \label{fig:kind}
-\end{figure}
-
 Figure~\ref{fig:kind} depicts a generic KIND game where \texttt{RATCH} denotes
 the send or receive procedures for both Alice and Bob, at will callable by the
 adversary. We can similarly define the CIND game in figure~\ref{fig:cind}.
-
-\begin{figure}[ht]
-  \centering
-  \setlength{\fboxsep}{10pt}
-  \scalebox{0.8}{%
-    \fbox{%
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{Game}}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{$\t{CIND}_b^\mathcal{A}$}{}
-          \State $(\t{st}_\t{A},\t{st}_\t{B}) \gets$ \Call{Init}{$1^\lambda$}
-          \State $b' \gets \mathcal{A}^{\t{RATCH',EXP}}$
-          \State \Return $b'$
-          \EndProcedure
-        \end{algorithmic}
-      \end{minipage}
-
-      \vline
-
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{RATCH'}{$\t{P},m_0,m_1$}
-          \State \Return \Call{RATCH}{$\t{P},m_b$}
-          \EndProcedure
-
-          \item[] % Blank line.
-
-          \Procedure{EXP}{$\t{P}$}
-          \State \Return $\t{st}_\t{P}$ 
-          \EndProcedure
-       \end{algorithmic}
-     \end{minipage}%
-    }
-  }
-  \caption{Generic Ciphertext-Indistinguishability Game}
-  \label{fig:cind}
-\end{figure}
-
 It is important to note that the way the games are defined is
 not sufficient since there exist trivial strategies that make an adversary
 succeed. If for example Bob's state is exposed right before he
@@ -292,7 +199,29 @@ and some time complexity as
                          \right|.
 \]
 
+\begin{figure}[ht]
+  \centering
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.8}{%
+    \fbox{%
+      \input{figures/kind.tikz}
+    }
+  }
+  \caption{Generic Key-Indistinguishability Game}
+  \label{fig:kind}
+\end{figure}
 
+\begin{figure}[ht]
+  \centering
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.8}{%
+    \fbox{%
+      \input{figures/cind.tex}
+    }
+  }
+  \caption{Generic Ciphertext-Indistinguishability Game}
+  \label{fig:cind}
+\end{figure}
 
 \section{A Brief History of Ratcheted Protocols}
 \label{sec:brief-hist-ratch}
@@ -360,15 +289,20 @@ functionality of an ordinary key-encapsulation mechanism with an
 key update algorithm.
 \begin{itemize}
 \item \textbf{Key-Updatable Key-Encapsulation Mechanism (ku-KEM).} The primitive
-  consists of four procedures, a initial key generation algorithm ($\t{gen}_\t{K}$), an
-  key-encapsulation procedure (enc), a corresponding decapsulation procedure (dec) and
-  an update procedure for both the public and secret key. Let $\mathcal{PK}$ be
-  the public key domain, $\mathcal{SK}$ the secret key domain and $\mathcal{AD}$ the
-  associated data domain. We have the following correctness notion, for all
-  $(sk_0, pk_0) \in \t{gen}$ and $ad_1,...,ad_n \in \mathcal{AD}$, if
-  $sk_i = \t{up}(sk_{i-1},ad_i) \in \mathcal{SK}$ and
-  $pk_i = \t{up}(pk_{i-1},ad_i) \in \mathcal{PK}$ for all $i$, then for all
-  $(k,c) \in \t{enc}(pk_n)$ we have $\t{dec}(sk_n,c)=k$.
+  consists of four procedures, a initial key generation algorithm \texttt{Gen}, an
+  key-encapsulation procedure \texttt{Enc}, a corresponding decapsulation
+  procedure \texttt{Dec} and
+  an update procedure for both the public \texttt{UpdPk} and secret key \texttt{UpdSk}.
+  \begin{align*}
+    \texttt{Gen} & : \ \rightarrow \mathcal{SK} \times \mathcal{VK} \\
+    \texttt{Enc} & : \mathcal{PK} \rightarrow \mathcal{K} \times \mathcal{C} \\ 
+    \texttt{Dec} & : \mathcal{SK} \times \mathcal{C} \rightarrow \mathcal{K} \\
+    \texttt{UpdPk} & : \mathcal{PK} \times \Delta \rightarrow \mathcal{PK} \\
+    \texttt{UpdSk} & : \mathcal{SK} \times \Delta \rightarrow \mathcal{SK}
+  \end{align*}
+  $\mathcal{PK}$ is the public key domain, $\mathcal{SK}$ is the secret key domain,
+  $\mathcal{AD}$ is the associated data domain and $\Delta$ is
+  the update information domain.
 \end{itemize}
 In security terms a ku-KEM should satisfy the guarantees of regular
 key-encapsulation mechanisms in addition to forward security that
@@ -385,7 +319,9 @@ lattice-based cryptography which are far more inefficient than
 regular public-key cryptography on elliptic curves.
 Next to a HIBE construction, the protocol also requires a one-time signature scheme
 defined by three algorithms $\t{gen}_\t{S}$, sgn and vfy with the
-usual correctness notions.
+usual correctness notions. The protocol further needs a forward secure
+signature scheme (\texttt{DS.Gen,DS.Sign,DS.Verify}) and a random
+oracle \texttt{H}.
 
 \subsection{Construction}
 \label{sec:construction}
@@ -396,11 +332,16 @@ Bob can reply without establishing a key, finally both URKE and SRKE
 are used to create a bidirectional asynchronous key-exchange protocol (BRKE)
 with optimal security. The construction is quite involved with long
 procedures, figure~\ref{fig:brke} prunes out some parts not necessary for the
-analysis of the benchmarks in the next chapter.
+analysis of the benchmarks in the next chapter. The protocol proceeds
+in epochs indicated by the $(E_S^\vdash,E_S^\dashv)$ and $(E_R^\vdash,E_R^\dashv)$
+variables that steer the creation of encapsulations and key updates.
+Prolonged periods of unidirectional traffic will enlarge the
+difference between $(E_R^\vdash,E_R^\dashv)$ for the sending
+party and $(E_S^\vdash,E_S^\dashv)$ for the receiving party, when
+the direction of traffic changes both parties will perform
+multiple iterations of key updates to equalize those counters again.
 
-% TODO: Complete algorithm.
-
-\begin{figure}[ht]
+\begin{figure}[p]
   \centering
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
@@ -412,15 +353,31 @@ analysis of the benchmarks in the next chapter.
   \label{fig:brke}
 \end{figure}
 
-An important concept in the above protocols is the notion epochs
-controlled by the $E_S^\vdash,E_S^\dashv$ and $E_R^\vdash,E_R^\dashv$
-variables in the state of each user. They basically determine
-the complexity of the send and receive procedures due to their
-control of the loop bounds.
+\begin{itemize}
+\item \textbf{Init.} Two sets of ku-KEM, DS and hashing keys are generated
+  and distributed to the participants. Furthermore, each user has a counter
+  for sent messages $s$ and for received messages $r$ next to the epoch
+  counters unified under the variable $E$. Due to epochs the ku-KEM keys
+  are stored in arrays (SK,PK) with $(L_S,L_R)$ storing the transcript
+  of sent and received messages.
+\item \textbf{Send}. Each send operation generates a new set of
+  ku-KEM and DS keys where the encapsulation key $pk^*$ and the
+  signature verification key $sk^*$ are sent along the ciphertext
+  together with a signature $\sigma$ and the current $E_S^\dashv$ epoch
+  counter. The random oracle creates the session key as well as yet another
+  ku-KEM public key and updates the hashing key.
+\item \textbf{Receive.} The receive operation mirrors the
+  operations in the send function. With the addition
+  of updating the ku-KEM keys in case the epoch counters have diverged.
+  Note that in both the send and receive routines there is some light
+  housekeeping to delete transcripts and ku-KEM keys of past
+  epochs.
+\end{itemize}
 
-% TODO Explain epochs.
+\clearpage
 
-\section[Jaeger and Stepanovs]{Jaeger and Stepanovs~\cite{jaeger2018optimal}}
+\section[Jaeger and Stepanovs]
+{Jaeger and Stepanovs~\cite{jaeger2018optimal}}
 \label{sec:jaeger-stepanovs}
 
 This secure messaging protocol was published in the paper
@@ -436,21 +393,20 @@ The protocol, again as in the Poettering and Rösler case, uses a HIBE to constr
 one of two novel primitives.
 \begin{itemize}
 \item \textbf{Key-Updatable Public-Key Encryption Scheme (ku-PKE).} The primitive
-  consists of five routines. A key generation algorithm
-  $\t{PKE.Kg} \rightarrow \mathcal{DK} \times \mathcal{EK}$, an encryption
-  procedure $\t{PKE.Enc}: \mathcal{EK} \times \mathcal{M} \rightarrow \mathcal{C}$,
-  a corresponding decryption function
-  $\t{PKE.Dec}: \mathcal{DK} \times \mathcal{C} \rightarrow \mathcal{M}$ and
-  a public-key and private-key update algorithms
-  $\t{PKE.UpdEk}: \mathcal{EK} \times \Delta \rightarrow \mathcal{EK}$,
-  $\t{PKE.UpdDk}: \mathcal{DK} \times \Delta \rightarrow \mathcal{DK}$, where
+  consists of five routines. A key generation algorithm \texttt{PKE.Gen},
+  an encryption procedure \texttt{PKE.Enc}, a corresponding decryption
+  function \texttt{PKE.Dec} and two update routines one for the
+  encryption key \texttt{PKE.UpdEk} and one for the decryption key \texttt{PKE.UpdDk}.
+  \begin{align*}
+    \texttt{PKE.Kg} & : \ \rightarrow \mathcal{DK} \times \mathcal{EK} \\
+    \texttt{PKE.Enc} & : \mathcal{EK} \times \mathcal{M} \rightarrow \mathcal{C} \\
+    \texttt{PKE.Dec} & : \mathcal{DK} \times \mathcal{C} \rightarrow \mathcal{M} \\
+    \texttt{PKE.UpdEk} & : \mathcal{EK} \times \Delta \rightarrow \mathcal{EK} \\
+    \texttt{PKE.UpdDk} & : \mathcal{DK} \times \Delta \rightarrow \mathcal{DK}
+  \end{align*}
   $\mathcal{EK}$ denotes the encryption key domain, $\mathcal{DK}$ the
   decryption key domain, $\mathcal{M}, \mathcal{C}$ the message and
-  ciphertext domain respectively. We have the following correctness notion, for all
-  $(dk_0, ek_0) \in \t{gen}$ and $\delta_1,...,\delta_n \in \Delta$, if
-  $dk_i = \t{PKE.UpdDk}(dk_{i-1},\delta_i)$ and
-  $ek_i = \t{PKE.UpdEk}(ek_{i-1},\delta_i)$ for all $i$, then for all
-  $c \in \t{enc}(ek_n,m)$ we have $\t{dec}(dk_n,c)=m$.
+  ciphertext domain respectively and $\Delta$ is the update information domain.
 \end{itemize}
 
 The construction of a ku-PKE is trivially performed out of a HIBE thus if
@@ -460,15 +416,20 @@ Jaeger and Stepanovs define a second novel primitive for use in the final protoc
 \begin{itemize}
 \item \textbf{Key-Updatable Digital Signature Scheme (ku-DSS).} The primitive
   consists of five routines. A key generation algorithm
-  $\t{DSS.Kg} \rightarrow \mathcal{SK} \times \mathcal{VK}$, a signing routine
-  $\t{DSS.Sign}: \mathcal{SK} \times \mathcal{M} \rightarrow \Sigma$, its
-  corresponding verification function
-  $\t{DSS.Vrfy}: \mathcal{VK} \times \mathcal{M} \times \Sigma \rightarrow \{\t{T,F}\}$ and
-  two public/private-key update routines
-  $\t{DSS.UpdVk}: \mathcal{VK} \times \Delta \rightarrow \mathcal{VK}$ and
-  $\t{DSS.UpdSk}: \mathcal{SK} \times \Delta \rightarrow \mathcal{SK}$, where
+  \texttt{DS.Gen}, a signing routine \texttt{DS.Sign}, its corresponding
+  verification function \texttt{DS.Verify} and two key update routines
+  one for the signing key \texttt{DS.UpdSk} and one for the verification
+  key \texttt{DS.UpdVk}.
+  \begin{align*}
+    \texttt{DS.Gen} & \  \rightarrow \mathcal{SK} \times \mathcal{VK} \\
+    \texttt{DS.Sign} & : \mathcal{SK} \times \mathcal{M} \rightarrow \Sigma \\
+    \texttt{DS.Verify} & : \mathcal{VK} \times \mathcal{M} \times \Sigma \rightarrow \{0,1\} \\
+    \texttt{DS.UpdSk} & : \mathcal{SK} \times \Delta \rightarrow \mathcal{SK} \\
+    \texttt{DS.UpdVk} & : \mathcal{VK} \times \Delta \rightarrow \mathcal{VK}
+  \end{align*}
   $\mathcal{VK}$ is the signing key domain, $\mathcal{SK}$ the verification key
-  domain and $\mathcal{M}, \Sigma$ are the message and signature domains.
+  domain, $\mathcal{M}, \Sigma$ are the message and signature domains and
+  $\Delta$ is the update information domain.
 \end{itemize}
 
 In order to construct a ku-DSS we need a forward-secure signature scheme. As
@@ -478,13 +439,32 @@ exposures.
 \subsection{Construction}
 \label{sec:construction-1}
 
-Figure contains the full secure channel protocol (SCh) based on a collision-resistant
+Figure~\ref{fig:secure-channel} depicts the secure channel
+protocol (SCh) based on a collision-resistant
 hash function H, a key-updatable public-key encryption scheme PKE and
-a key-updatable digital signature scheme.
+a key-updatable digital signature scheme DS. Some non-critical
+control-branches have been omitted.
+\begin{itemize}
+\item \textbf{Init.} Two sets of ku-PKE and ku-DSS are generated
+  distributed to each user next to shared hashing key $hk$. Furthermore,
+  each user has counter of sent messages $s$, a counter for received messages
+  $r$ and a counter for sent messages that were received by the partner
+  $r^\t{ack}$. Both users keep chain-hashes of sent $T_\t{S}$ and received
+  messages $T_\t{R}$.
+\item \textbf{Send.} Each send operation generates new ku-DSS key pair
+  $(sk',vk')$ and a new ku-PKE key pair $(ek',dk')$. $vk'$ and $ek'$ are sent
+  along the ciphertext as associated data. The new ku-PKE decryption keys are accumulated
+  in the $dk$ array. Note that updated encryption keys $ek'$ are used to
+  encrypt the message but $ek'$ is then discarded at the end of the function.
+\item \textbf{Receive.} The receive function mirrors the operations
+  performed during sending. At every call the signing key $sk$ is updated
+  thus when this key is then used in a sending operation the
+  partner has to perform a corresponding loop of \texttt{DSS.UpdVk}
+  call to equalize its verification key again these updates
+  are not kept in memory upon exiting the functions.
+\end{itemize}
 
-% TODO: Complete algorithm.
-
-\begin{figure}[ht]
+\begin{figure}[p]
   \centering
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
@@ -495,6 +475,8 @@ a key-updatable digital signature scheme.
   \caption{Secure Channel Protocol (SCh)}
   \label{fig:secure-channel}
 \end{figure}
+
+\clearpage
 
 \section[Durak and Vaudenay]
 {Durak and Vaudenay~\cite{durak2018bidirectional}}
@@ -528,28 +510,28 @@ achieving similar levels of security with symmetric primitives.
 \label{sec:primitives-2}
 
 As already indicated the protocol does not deploy any intricate
-cryptographic primitives. Next to the hash function combines a
+cryptographic primitives. Next to the hash function it combines a
 public-key encryption scheme and a digital signature scheme to
 a signcryption algorithm.
 \begin{itemize}
 \item \textbf{Signcryption Scheme (SC).} This primitive consists of four routines,
-  two key generation algorithms one creating the PKE keys
-  $\t{Gen}_\t{R} \rightarrow \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{R}$ and
-  similarly for the creation of the DSS keys
-  $\t{Gen}_\t{S} \rightarrow \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{S}$ where
-  $(\mathcal{PK}_\t{R},\mathcal{SK}_\t{R})$ are the PKE key domains and
-  $(\mathcal{PK}_\t{S},\mathcal{SK}_\t{S})$ are the DSS key domains. Furthermore,
-  there is an encryption procedure
-  $\t{Enc}: \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{R} \times
-   \rightarrow \mathcal{C}$ and its corresponding
-  decryption function
-  $\t{Dec}: \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{S}
-  \mathcal{C} \times \mathcal{AD} \rightarrow \mathcal{M}$ with $\mathcal{AD}$
-  being the associated data domain and $(\mathcal{M}, \mathcal{C})$ being
-  the message and ciphertext domain respectively. We have the following
-  correctness notion, for all $m \in \mathcal{M}$, $ad \in \mathcal{AD}$,
-  $(sk_R,pk_R) \in \t{Gen}_\t{R}$ and $(sk_S,pk_S) \in \t{Gen}_\t{S}$ it
-  holds that $\t{Dec}(sk_R,pk_S,ad,\t{Enc}(sk_S,pk_R,ad,m)) = m$.
+  two key generation algorithms one creating the PKE keys \texttt{PKE.Gen}
+  $\t{Gen}_\t{R} \rightarrow \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{R}$
+  for the creation of the DS keys \texttt{DS.Gen}. Furthermore,
+  there is an encryption procedure \texttt{Enc} and a corresponding
+  decryption procedure \texttt{Dec}.
+  \begin{align*}
+    \texttt{PKE.Gen} & : \ \rightarrow \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{R} \\
+    \texttt{DS.Gen} & : \ \rightarrow \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{S} \\
+    \texttt{Enc} & : \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{R} \times
+                   \rightarrow \mathcal{C} \\
+    \texttt{Dec} & : \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{S}
+  \mathcal{C} \times \mathcal{AD} \rightarrow \mathcal{M}
+  \end{align*}
+  $(\mathcal{PK}_\t{R},\mathcal{SK}_\t{R})$ are the PKE key domains,
+  $(\mathcal{PK}_\t{S},\mathcal{SK}_\t{S})$ are the DS key domains, $\mathcal{AD}$
+  is the associated data domain and $(\mathcal{M}, \mathcal{C})$ are
+  the message and ciphertext domain respectively.
 \end{itemize}
 
 A signcryption scheme can be constructed by naively chaining a DSS and PKE scheme
@@ -563,158 +545,62 @@ DSS scheme is EF-OTCMA secure.
 Similar to the protocol by Poettering and Rösler the BARK protocol is
 constructed via a smaller unidirectional protocol. Figure~\ref{fig:uni-arcad}
 shows the unidirectional ARCAD messaging protocol that is KIND-secure but
-does not offer recover security. The composition of two uniARCAD yields
-the full BARK protocol as shown in figure~\ref{fig:bark}
+does not offer recover security. In the ARCAD protocol with each send operation
+there is an exchange of fresh signcryption key pairs.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
     \fbox{%
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{func}}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{uniARCAD.Init}{$1^\lambda$}
-          \State $(\t{sk}_\t{S},\t{pk}_\t{S}) \gets$ \Call{$\t{Gen}_\t{S}$}{$1^\lambda$}
-          \State $(\t{sk}_\t{R},\t{pk}_\t{R}) \gets$ \Call{$\t{Gen}_\t{R}$}{$1^\lambda$}
-
-          \State $\t{st}_\t{S} \gets (\t{sk}_\t{S},\t{pk}_\t{R})$ 
-          \State $\t{st}_\t{S} \gets (\t{sk}_\t{R},\t{pk}_\t{S})$ 
-
-          \State \Return $(\t{st}_\t{S},\t{st}_\t{R})$
-          \EndProcedure
-
-          \item[]
-
-          \Procedure{uniARCAD.Receive}{$\t{st}_\t{R}, \t{ad}, \t{ct}$}
-          \State $(\t{sk}_\t{R},\t{pk}_\t{S}) \gets \t{st}_\t{R}$ 
-          \State $\t{pt}' \gets$ \Call{Dec}{$\t{sk}_\t{R},\t{pk}_\t{S},\t{ad},\t{ct}$}
-          \If{$\t{pt}' = \perp$}
-          \State \Return $(\t{false}, \t{st}_\t{R}, \perp)$
-          \EndIf
-          \State $(\t{pt},\t{st}_\t{R}') \gets \t{pt}'$
-          \State \Return $(\t{true},\t{st}_\t{R}, \t{pt})$
-          \EndProcedure
-         
-        \end{algorithmic}
-      \end{minipage}
-
-      \begin{minipage}{.5\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{uniARCAD.Send}{$\t{st}_\t{S}, \t{ad}, \t{pt}, \t{flag}$}
-          \State $(\t{sk}_\t{S},\t{pk}_\t{R}) \gets \t{st}_\t{S}$ 
-          \If{$\t{flag} = \t{true}$}
-          \State $(\t{sk}_\t{S}',\t{pk}_\t{S}') \gets$ \Call{SC.Gen}{$1^\lambda$}
-          \State $(\t{sk}_\t{R}',\t{pk}_\t{R}') \gets$ \Call{SC.Gen}{$1^\lambda$}
-          \State $\t{st}_\t{S}' \gets (\t{sk}_\t{S}',\t{pk}_\t{R}')$
-          \State $\t{st}_\t{R}' \gets (\t{sk}_\t{R}',\t{pk}_\t{S}')$
-          \Else
-          \State $(\t{sk}_\t{S}',\t{pk}_\t{R}') \gets (\perp,\perp)$
-          \EndIf
-          \State $\t{pt}' \gets (\t{st}_\t{R}', \t{pt})$
-          \State $\t{ct} \gets$ \Call{Enc}{$\t{sk}_\t{S},\t{pk}_\t{R}, \t{ad}, \t{pt}'$}
-          \State \Return $(\t{st}_\t{S}', \t{ct})$
-          \EndProcedure
-          
-        \end{algorithmic}
-      \end{minipage}%
+      \input{figures/arcad.tikz}
     }
   }
   \caption{Unidirectional ARCAD Protocol}
   \label{fig:uni-arcad}
 \end{figure}
 
-Contrarily to the other protocols BARK is quite self-explanatory. It
-operates on the basis of onion encryptions where repeated unidirectional
-traffic builds up an chain of receiving states that have to traversed once
-a response is received since the outgoing messages contained
-the sender states which are used to encrypt said response.
-Also note that the creation of new sending and receiving states
-is not necessary in but the inner most layer of the onion hence
-there is a flag passed to \texttt{uniARCAD.Send}. The
-\texttt{HSent} and \texttt{HReceived} chain-hash variables
-ensure the recover security.
 
-\begin{figure}[ht]
+The composition of two separate uniARCAD instances yields
+the full BARK protocol as shown in figure~\ref{fig:bark}.
+\begin{itemize}
+\item \textbf{Init.} Two uniARCAD instances are generated and
+  distributed to the participants alongside a hashing key $hk$.
+  The Hsent and Hreceived chain-hash variable meant to record
+  the hash of all sent and recorded messages are initialized
+  to null.
+\item \textbf{Send.} Each send operation creates a fresh
+  signcryption key pair that is the onion encrypted alongside
+  the chosen session key $k$. The onion encryption itself
+  creates new signcryption states of which only the one from
+  the inner-most layer is kept. The onion has many layers when
+  after a long period of unidirectional messages the direction
+  of traffic changes after this message the participants will
+  then have sync-up again thus further messages will then
+  have again few onion layers. Note that the chain-hash
+  of all sent and received messages is to ensure recover security.
+\item \textbf{Receive.} The operation during a receive call
+  mirror the ones in the send routine. The receiver extracts
+  the signcryption sender state from the ciphertext and appends
+  it to its array of sender states. When the receiver decides
+  to reply all these accumulated states will be used in the
+  onion encryption. Furthermore, old receiver states are
+  erased from memory at the end of the function.
+\end{itemize}
+
+\begin{figure}[p]
   \centering
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
     \fbox{%
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{func}}
-
-      \begin{minipage}{\linewidth}
-        \begin{algorithmic}[1]
-          \Procedure{BARK.Init}{$1^\lambda$}
-          \State $(\t{st}_\t{A,send},\t{st}_\t{B,rec}) \gets$ \Call{uniBARK.Init}{$1^\lambda$}
-          \State $(\t{st}_\t{B,send},\t{st}_\t{A,rec}) \gets$ \Call{uniBARK.Init}{$1^\lambda$}
-          \State $\t{hk} \gets$ \Call{H.Init}{$1^\lambda$}
-          \State $\t{st}_\t{A} \gets (\t{hk}, \t{st}_\t{A,send}, \t{st}_\t{A,rec},
-          \perp, \perp, 0, 10)$ 
-          \State $\t{st}_\t{B} \gets (\t{hk}, \t{st}_\t{B,send}, \t{st}_\t{B,rec},
-          \perp, \perp, 0, 10)$
-          \State \Return $(\t{st}_\t{A},\t{st}_\t{B})$
-          \EndProcedure
-          
-          \item[]
-          
-          \Procedure{BARK.Send}{$\t{st}_\t{P}, \t{ad}, \t{pt}$}
-          \State $(\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
-          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max}) \gets \t{st}_\t{P}$
-          
-          \If{$\t{rt} = \t{rt}_\t{max}$}
-          \State $(\t{st}_\t{S,new}, \t{st}_\t{P,rec}) \gets$
-          \Call{uniBARK.Init}{$1^\lambda$}
-          \State $\t{msg} \gets (\t{st}_\t{S,new}, \t{pt})$
-          \Else
-          \State $\t{msg} \gets (\perp, \t{pt})$
-          \EndIf
-          \State $(\t{st}_\t{P,send}, \t{ct'}) \gets$
-          \Call{uniBARK.Send}{$\t{st}_\t{P,send}, \t{ad}, \t{msg}, \t{rt} = \t{rt}_\t{max}$}
-         
-          \State $\t{ct} \gets (\t{Hsent}, \t{ct'}, \t{rt}_\t{S} = \t{rt}_\t{max})$ 
-          \State $\t{Hsent} \gets$ \Call{H.Eval}{$\t{hk}, (\t{ad}, \t{ct})$}
-          
-          \State $\t{st}_\t{P} \gets (\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
-          \t{Hsent}, \t{Hreceived}, \t{rt} + 1 \mod \t{rt}_\t{max}, \t{rt}_\t{max})$
-          \State \Return $(\t{st}_\t{P}, \t{ct})$
-          \EndProcedure
-          
-          \item[] % blank line
-          
-          \Procedure{BARK.Receive}{$\t{st}_\t{P}, \t{ad}, \t{ct}$}
-          \State $(\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
-          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max}) \gets \t{st}_\t{P}$
-          \State $(\t{h}, \t{ct'}, \t{rt}_\t{S}) \gets \t{ct}$
-          \If{$\t{Hreceived} \neq \t{h}$} \State \Return $(\t{false}, \t{st}_\t{P})$
-          \EndIf
-          
-          \State $(\t{acc}, \t{st}_\t{P,rec}, \t{msg}) \gets$
-          \Call{uniBARK.Receive}{$\t{st}_\t{P,rec}, \t{ad}, \t{ct'}, \t{rt}_\t{S} =
-          \t{rt}_\t{max}$}
-          \If{$\t{acc} = \t{false}$} \State \Return $(\t{false}, \t{st}_\t{P})$ \EndIf
-          
-          \If{$\t{rt}_\t{S} = \t{rt}_\t{max}$}
-          \State $(\t{st}_\t{P,send}, \t{pt}) \gets \t{msg}$
-          \Else
-          \State $(\perp, \t{pt}) \gets \t{msg}$
-          \EndIf
-          
-          \State $\t{Hreceived} \gets$ \Call{H.Eval}{$\t{hk}, (\t{ad}, \t{ct})$}
-          
-          \State $\t{st}_\t{P} \gets (\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
-          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max})$
-          \State \Return $(\t{true}, \t{st}_\t{P}, \t{pt})$
-          \EndProcedure
-        \end{algorithmic}
-      \end{minipage}
+      \input{figures/bark.tikz}
     } 
   }
   \caption{BARK Protocol}
   \label{fig:bark}
 \end{figure}
+
+\clearpage
 
 \section[Jost, Maurer and Mularczyk]
 {Jost, Maurer and Mularczyk~\cite{jostefficient}}
@@ -1036,9 +922,6 @@ even epochs are reserved for Alice to send and odd epochs for Bob.
 
 \chapter{Benchmarks}
 \label{chap:benchmarks}
-
-\chapter{On-Demand BARK}
-\label{chap:bark}
 
 \chapter{Conclusion}
 \label{chap:conclusion}

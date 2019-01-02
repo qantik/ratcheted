@@ -21,7 +21,11 @@
     \State $s \gets s+1$
     \State $(sk',vk') \gets \t{DS.Gen}, \ (ek',dk[s]) \gets \t{PKE.Gen}$
     \State $l \gets (s,r,ad,vk',ek',T_\t{R},T_\t{S}[s-1])$
-    \State $(ek',c') \gets$ \Call{PKE.Enc}{$ek,l,m,T_\t{S}$}
+    \State $ek' \gets ek$
+    \For{$i \gets r^\t{ack}+1$ to $s$}
+    \State $ek' \gets$ \Call{PKE.UpdEk}{$ek', T_\t{S}[i]$}
+    \EndFor
+    \State $(ek',c') \gets$ \Call{PKE.Enc}{$ek',l,m,T_\t{S}$}
     \State $v \gets (c',l), \ \sigma \gets \t{DS.Sign}(sk,v)$
     \State $c \gets (\sigma,v), \ T_\t{S}[s] \gets \t{H.Ev}(hk,c)$
     \State $st \gets (s,r,r^\t{ack},sk',vk,ek,dk,hk,T_\t{R},T_\t{S})$
@@ -34,12 +38,15 @@
     \State $(s,r,r^\t{ack},sk,vk,ek,dk,hk,T_\t{R},T_\t{S}) \gets st$
     \State $(\sigma,v) \gets c, \ (c',l) \gets v$
     \State $(s',r',ad',vk',ek',T_\t{R}',T_\t{S}') \gets l$
-    \State $(vk'',t) \gets$ \Call{DS.Verify}{$vk,\sigma,v,T_\t{S}$}
-    \State \textbf{assert} $t = \t{T}$
+    \State $vk'' \gets vk$
+    \For{$i \gets r^\t{ack}$ to r'}
+    \State $vk'' \gets$ \Call{DS.UpdVk}{$vk'', T_\t{S}[i]$}
+    \EndFor
+    \State \textbf{assert} \Call{DS.Verify}{$vk'',\sigma,v,T_\t{S}$}
     \State $r \gets r+1, \ r^\t{ack} \gets r' , \ m \gets \t{PKE.Dec}(dk[r^\t{ack}],l,c')$
     \State $T_\t{S}[...,r^\t{ack}] \gets \perp, \ dk_\t{S}[...,r^\t{ack}] \gets \perp$
     \State $T_\t{R} \gets \t{H.Ev}(hk,c), \ sk \gets \t{DS.UpdSk}(sk,T_\t{R})$
-    \For{$i = r^\t{ack}$ to $s_\t{u}$}
+    \For{$i = r^\t{ack}$ to $s$}
     \State $dk[i] \gets$ \Call{PKE.UpdDk}{$dk[i],T_\t{R}$}
     \EndFor
     \State $st \gets (s,r,r^\t{ack},sk,vk',ek',dk,hk,T_\t{R},T_\t{S})$

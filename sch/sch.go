@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -183,6 +184,7 @@ func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 	}
 
 	uvk := user.vk
+	fmt.Println(user.ack+1, msg.Aux.R)
 	for i := user.ack + 1; i <= msg.Aux.R; i++ {
 		uvk, _ = s.kuDSS.updatePublicKey(uvk, user.t[i])
 	}
