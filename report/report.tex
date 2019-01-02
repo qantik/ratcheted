@@ -204,7 +204,7 @@ and some time complexity as
   \setlength{\fboxsep}{10pt}
   \scalebox{0.8}{%
     \fbox{%
-      \input{figures/kind.tikz}
+      \input{figures/kind.tex}
     }
   }
   \caption{Generic Key-Indistinguishability Game}
@@ -258,6 +258,20 @@ the ability to decipher messages even if they arrive in
 a different order that than they were initially sent in.
 In the following sections we will look more closely into all
 above described protocols except~\cite{bellare2017ratcheted}.
+
+\section{Notation}
+\label{sec:notation}
+
+All the protocols depicted in the following figures are as closely
+as possible modelled in respect to the original prints in their respective
+papers. The pseudo-code should be self-contained but there are nonetheless
+some special symbols. We let $\perp$ denote the \texttt{null} symbol.
+$||$ represents the concatenation of two byte arrays. An empty
+array is described by $[\cdot]$. Ellipses in the array selector
+$A[...,i]$ are used to
+denote an operation on multiple array elements and last but not least
+$\leftarrow$ is the assignment operator.
+
 
 \section[Poettering and Rösler]
 {Poettering and Rösler~\cite{poettering2018towards}}
@@ -341,18 +355,6 @@ party and $(E_S^\vdash,E_S^\dashv)$ for the receiving party, when
 the direction of traffic changes both parties will perform
 multiple iterations of key updates to equalize those counters again.
 
-\begin{figure}[p]
-  \centering
-  \setlength{\fboxsep}{10pt}
-  \scalebox{0.9}{%
-    \fbox{%
-      \input{figures/brke.tikz}
-    }
-  }
-  \caption{Bidirectional Asynchronous Key-Exchange Protocol (BRKE)}
-  \label{fig:brke}
-\end{figure}
-
 \begin{itemize}
 \item \textbf{Init.} Two sets of ku-KEM, DS and hashing keys are generated
   and distributed to the participants. Furthermore, each user has a counter
@@ -373,6 +375,18 @@ multiple iterations of key updates to equalize those counters again.
   housekeeping to delete transcripts and ku-KEM keys of past
   epochs.
 \end{itemize}
+
+\begin{figure}[p]
+  \centering
+  \setlength{\fboxsep}{10pt}
+  \scalebox{0.9}{%
+    \fbox{%
+      \input{figures/brke.tex}
+    }
+  }
+  \caption{Bidirectional Asynchronous Key-Exchange Protocol (BRKE)}
+  \label{fig:brke}
+\end{figure}
 
 \clearpage
 
@@ -469,7 +483,7 @@ control-branches have been omitted.
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
     \fbox{%
-      \input{figures/sch.tikz}
+      \input{figures/sch.tex}
     }
   }
   \caption{Secure Channel Protocol (SCh)}
@@ -553,7 +567,7 @@ there is an exchange of fresh signcryption key pairs.
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
     \fbox{%
-      \input{figures/arcad.tikz}
+      \input{figures/arcad.tex}
     }
   }
   \caption{Unidirectional ARCAD Protocol}
@@ -593,7 +607,7 @@ the full BARK protocol as shown in figure~\ref{fig:bark}.
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
     \fbox{%
-      \input{figures/bark.tikz}
+      \input{figures/bark.tex}
     } 
   }
   \caption{BARK Protocol}
@@ -625,20 +639,17 @@ mounted by regular public-key key cryptosystems to extend them
 with key-update routines.
 \begin{itemize}
 \item \textbf{Key-Updating Signature (KuSig).} This primitive consists of
-  three routines. A key generation algorithm
-  $\t{Gen} \rightarrow \mathcal{VK} \times \mathcal{SK}$, a signing function
-  $\t{Sign}: \mathcal{SK} \times \mathcal{M} \rightarrow \mathcal{SK} \times \Sigma$
-  and its corresponding verification procedure
-  $\t{Ver}: \mathcal{VK} \times \mathcal{M} \times \Sigma
-  \rightarrow \mathcal{VK} \times \{\t{T,F}\}$
-  where $\mathcal{VK}$ is the verification key domain, $\mathcal{SK}$ the signing
-  key domain and $\mathcal{M},\Sigma$ are the message and the signature domains
-  respectively. We have the following correctness notion,
-  if $(\t{vk}_0,\t{sk}_0) \leftarrow \t{Gen}$ then for any sequence of
-  messages $m_1,...,m_k \in \mathcal{M}$ and for all $i \in [k]$
-  such that $(\t{sk}_i,\sigma_i) \leftarrow \t{Sign}(\t{sk}_{i-1},m_i)$
-  and $(\t{vk}_i,v_i) \leftarrow \t{Ver}(\t{vk}_{i-1},\sigma_i)$ we have
-  that $v_i = \t{T}$.
+  three routines. A key generation algorithm \texttt{Gen}, a signing function
+  \texttt{Sign}, and its corresponding verification procedure.
+  \begin{align*}
+    \texttt{Gen} & : \ \rightarrow \mathcal{VK} \times \mathcal{SK} \\
+    \texttt{Sign} & : \mathcal{SK} \times \mathcal{M} \rightarrow \mathcal{SK} \times \Sigma \\
+    \texttt{Verify} & : \mathcal{VK} \times \mathcal{M} \times \Sigma
+             \rightarrow \mathcal{VK} \times \{0,1\}
+  \end{align*}
+  $\mathcal{VK}$ is the verification key domain, $\mathcal{SK}$ the signing
+  key domain and $(\mathcal{M},\Sigma)$ are the message and the signature domains
+  respectively.
 \end{itemize}
 
 As the security level we require resistance against universal forgeries
@@ -646,26 +657,24 @@ with added forward security in case of state exposures.
 
 \begin{itemize}
 \item \textbf{Secretly Key-Updatable Public-Key Encryption (SkuPke).} This
-  primitive consists of six routines. A key generation algorithm
-  $\t{Gen} \rightarrow \mathcal{EK} \times \mathcal{DK}$, an encryption
-  routine $\t{Enc}: \mathcal{EK} \times \mathcal{M} \rightarrow \mathcal{C}$ and
-  its corresponding decryption function
-  $\t{Dec}: \mathcal{DK} \times \mathcal{C} \rightarrow \mathcal{M}$, where
-  $\mathcal{EK},\mathcal{DK}$ denote the encryption/decryption key domains
-  and $\mathcal{M},\mathcal{C}$ denote the message/ciphertext domains.
-  Furthermore, there is an algorithm that generates key update information
-  $\t{UpdateGen} \rightarrow \mathcal{UE} \times \mathcal{UD}$ with
-  $\mathcal{UE}$ being the public key update information domain and
-  $\mathcal{UD}$ being the secret key update information. This two
-  arguments can be fed into an encryption key update function
-  $\t{UpdateEk}: \mathcal{UE} \times \mathcal{EK} \rightarrow \mathcal{EK}$
-  and the respective decryption key update function
-  $\t{UpdateDk}: \mathcal{UD} \times \mathcal{DK} \rightarrow \mathcal{DK}$.
-  We have the following correctness notion. If $(\t{ek}_0,\t{dk}_0) \in \t{Gen}$ and
-  $(\t{ue}_1,\t{ud}_1),...,(\t{ue}_k,\t{ud}_k) \in \t{UpdateGen}$ then
-  for all $i \in [k]$ with $\t{ek}_i = \t{UpdateEk}(\t{ue}_i, \t{ek}_{i-1})$ and
-  $\t{dk}_i = \t{UpdateDk}(\t{ud}_i, \t{dk}_{i-1})$ and all $m \in \mathcal{M}$
-  it holds that $\t{Dec}(\t{dk}_i,\t{Enc}(\t{ek}_i, m)) = m$.
+  primitive consists of six routines. A key generation algorithm \texttt{Gen},
+  an encryption routine \texttt{Enc} and its corresponding decryption function
+  \texttt{Dec}. Furthermore, there is an algorithm that generate key update
+  information \texttt{UpdGen} that feeds two key update procedures
+  one for the encryption key \texttt{UpdEk} and one for the
+  decryption key \texttt{UpdDk}.
+  \begin{align*}
+    \texttt{Gen} & : \rightarrow \mathcal{EK} \times \mathcal{DK} \\
+    \texttt{Enc} & : \mathcal{EK} \times \mathcal{M} \rightarrow \mathcal{C} \\
+    \texttt{Dec} & : \mathcal{DK} \times \mathcal{C} \rightarrow \mathcal{M} \\
+    \texttt{UpdGen} & : \ \rightarrow \mathcal{UE} \times \mathcal{UD} \\
+    \texttt{UpdEk} & : \mathcal{UE} \times \mathcal{EK} \rightarrow \mathcal{EK} \\
+    \texttt{UpdDk} & :  \mathcal{UD} \times \mathcal{DK} \rightarrow \mathcal{DK}
+  \end{align*}
+  $(\mathcal{EK},\mathcal{DK})$ denote the encryption/decryption key domains,
+  $\mathcal{M},\mathcal{C}$ denote the message/ciphertext domains, $\mathcal{UE}$
+  is the encryption key update information domain and $\mathcal{UD}$ is the
+  decryption key update information domain.
 \end{itemize}
 
 The intuition behind this primitive is that the key pair can be
@@ -678,107 +687,86 @@ of the ElGamal cryptosystem. The SkuPke scheme serves to
 create another primitive.
 \begin{itemize}
 \item \textbf{Healable And Key-Updating Public-Key Encryption (HkuPke).} This
-  primitive consists of five routines. A key generation algorithm
-  $\t{Gen} \rightarrow \mathcal{EK} \times \mathcal{DK}$ and encryption/decryption
-  functions
-  $\t{Enc}: \mathcal{EK} \times \mathcal{M} \times \mathcal{AD} \rightarrow \mathcal{C}$,
-  $\t{Dec}: \mathcal{DK} \times \mathcal{C} \times \mathcal{AD} \rightarrow \mathcal{M}$
-  with $\mathcal{EK}$ being the encryption key domain, $\mathcal{DK}$ the decryption
-  key domain and $\mathcal{M},\mathcal{C},\mathcal{AD}$ are the message, ciphertext
-  and associated data domains. The scheme is completed with two key update
-  functions $\t{BcUpEk}: \mathcal{EK} \times \Delta \rightarrow \mathcal{EK}$ and
-  $\t{BcUpDk}: \mathcal{DK} \times \Delta \rightarrow \mathcal{DK}$ with
-  $\Delta$ being the update information domain.
+  primitive consists of five routines. A key generation algorithm \texttt{Gen},
+  an encryption routine \texttt{Enc} and the respective decryption function
+  \texttt{Dec}. Furthermore, there are two key update algorithms one
+  for the encryption key \texttt{BcUpEk} and one for the decryption key \texttt{BcUpDk}.
+  \begin{align*}
+    \texttt{Gen} & : \ \rightarrow \mathcal{EK} \times \mathcal{DK} \\
+    \texttt{Enc} & : \mathcal{EK} \times \mathcal{M} \times \mathcal{AD}
+                   \rightarrow \mathcal{C} \\
+    \texttt{Dec} & : \mathcal{DK} \times \mathcal{C} \times \mathcal{AD}
+                   \rightarrow \mathcal{M} \\
+    \texttt{BcUpEk} & : \mathcal{EK} \times \Delta \rightarrow \mathcal{EK} \\
+    \texttt{BcUpDk} & : \mathcal{DK} \times \Delta \rightarrow \mathcal{DK}
+  \end{align*}
+  $\mathcal{EK}$ being the encryption key domain, $\mathcal{DK}$ the decryption
+  key domain, $\mathcal{M}$, is the message domain, $\mathcal{C}$ the ciphertext
+  domain, $\mathcal{AD}$ is the associated data domain
+  and $\Delta$ is the update information domain.
 \end{itemize}
 
 The purpose of the HkuPke scheme is similar to the SkuPke scheme with the difference
-that we now still allow the decryption of message for any arbitrary sequence
+that we now still allow the decryption of messages for any arbitrary sequence
 of \texttt{BcUpDk} calls where only a prefix of the used update information
 has been used in \texttt{BcUpEk} calls. The receiver can thus
 instigate key updates via a back-channel to start the healing process.
+Finally, the protocol also needs standard digital signature scheme Sig
+with the functions (\texttt{Gen,Sign,Verify}) and some collision-resistant
+hash function H.
 
 \subsection{Construction}
 \label{sec:construction-3}
 
-\begin{figure}[ht]
+Figure~\ref{fig:secmsg} shows the SecMsg protocol based on a healable and key-updating
+public-key encryption scheme HkuPke, a key-updatable signature scheme KuSig,
+a regular digital signature scheme Sig and a collision-resistant hash function H.
+\begin{itemize}
+\item \textbf{Init.} The initialization routine creates two sets of key pairs
+  for each primitive and distributes them to the participants. It further
+  initializes a sent message counter $s$, a received messages counter $r$,
+  an acknowledged message counter $s_\t{ack}$ passed alongside
+  each ciphertext to indicate the number of already received messages, an array
+  of signature verification keys $VK^\t{eph}$, a variable $tr$ holding the chain-hash
+  of all received ciphertexts and finally an array $TR$ for acccumulating
+  the chain-hash of all sent ciphertexts.
+\item \textbf{Send.} The send operation starts of with creating two signature
+  key pairs one for signing the following message $(sk_2^\t{eph},vk_2^\t{eph})$
+  and one for the partner sign his response $(sk_1^\t{eph},vk_1^\t{eph})$ thus
+  implying that $sk_1^\t{eph}$ is part of the ciphertext and $vk_2^\t{eph}$ is
+  sent alongside the ciphertext. The sender then updates his
+  HkuPke decryption key $dk$ and includes the update information $upd$
+  in the sent message. After encrypting the message with the mentioned
+  side information the resulting ciphertext is signed twice once
+  by the KuSig and once by the regular signature scheme. The two signatures
+  and the ciphertext are sent to the partner. The two signatures are
+  necessary to provide post-hijack security while maintaining post-compromise
+  security. Note the first message of a cascade of message to be sent
+  without any replies in between will use the signing key provided in
+  the last received message the following messages in the cascade
+  will use the keys generated at the beginning of the procedure. This
+  is the reason why $vk_1^\t{eph}$ is stored in an array.
+\item \textbf{Receive.} The receive routine mirrors the operations performed
+  during the send call. This means it unpacks the signature keys
+  $(vk_\t{msg}^\t{eph},sk_\t{msg}^\t{eph})$ and retrieves the plaintext while
+  updating its HkuPke encryption key. Further note that the chain-hash
+  of the communication transcript is included in both signature ensuring
+  that messages of a hijacked participants are rejected.
+\end{itemize}
+
+\begin{figure}[p]
   \centering
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
     \fbox{%
-      \algrenewcommand\textproc{}
-      \algrenewcommand\algorithmicprocedure{\textbf{func}}
-      \begin{minipage}{\linewidth}
-        {\fontsize{8}{10}\selectfont
-        \begin{algorithmic}[1]
-          \Procedure{BARK.Init}{$1^\lambda$}
-          \State $(\t{st}_\t{A,send},\t{st}_\t{B,rec}) \gets$ \Call{uniBARK.Init}{$1^\lambda$}
-          \State $(\t{st}_\t{B,send},\t{st}_\t{A,rec}) \gets$ \Call{uniBARK.Init}{$1^\lambda$}
-          \State $\t{hk} \gets$ \Call{H.Init}{$1^\lambda$}
-          \State $\t{st}_\t{A} \gets (\t{hk}, \t{st}_\t{A,send}, \t{st}_\t{A,rec},
-          \perp, \perp, 0, 10)$ 
-          \State $\t{st}_\t{B} \gets (\t{hk}, \t{st}_\t{B,send}, \t{st}_\t{B,rec},
-          \perp, \perp, 0, 10)$
-          \State \Return $(\t{st}_\t{A},\t{st}_\t{B})$
-          \EndProcedure
-          
-          \item[]
-          
-          \Procedure{BARK.Send}{$\t{st}_\t{P}, \t{ad}, \t{pt}$}
-          \State $(\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
-          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max}) \gets \t{st}_\t{P}$
-          
-          \If{$\t{rt} = \t{rt}_\t{max}$}
-          \State $(\t{st}_\t{S,new}, \t{st}_\t{P,rec}) \gets$
-          \Call{uniBARK.Init}{$1^\lambda$}
-          \State $\t{msg} \gets (\t{st}_\t{S,new}, \t{pt})$
-          \Else
-          \State $\t{msg} \gets (\perp, \t{pt})$
-          \EndIf
-          \State $(\t{st}_\t{P,send}, \t{ct'}) \gets$
-          \Call{uniBARK.Send}{$\t{st}_\t{P,send}, \t{ad}, \t{msg}, \t{rt} = \t{rt}_\t{max}$}
-         
-          \State $\t{ct} \gets (\t{Hsent}, \t{ct'}, \t{rt}_\t{S} = \t{rt}_\t{max})$ 
-          \State $\t{Hsent} \gets$ \Call{H.Eval}{$\t{hk}, (\t{ad}, \t{ct})$}
-          
-          \State $\t{st}_\t{P} \gets (\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
-          \t{Hsent}, \t{Hreceived}, \t{rt} + 1 \mod \t{rt}_\t{max}, \t{rt}_\t{max})$
-          \State \Return $(\t{st}_\t{P}, \t{ct})$
-          \EndProcedure
-          
-          \item[] % blank line
-          
-          \Procedure{BARK.Receive}{$\t{st}_\t{P}, \t{ad}, \t{ct}$}
-          \State $(\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
-          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max}) \gets \t{st}_\t{P}$
-          \State $(\t{h}, \t{ct'}, \t{rt}_\t{S}) \gets \t{ct}$
-          \If{$\t{Hreceived} \neq \t{h}$} \State \Return $(\t{false}, \t{st}_\t{P})$
-          \EndIf
-          
-          \State $(\t{acc}, \t{st}_\t{P,rec}, \t{msg}) \gets$
-          \Call{uniBARK.Receive}{$\t{st}_\t{P,rec}, \t{ad}, \t{ct'}, \t{rt}_\t{S} =
-          \t{rt}_\t{max}$}
-          \If{$\t{acc} = \t{false}$} \State \Return $(\t{false}, \t{st}_\t{P})$ \EndIf
-          
-          \If{$\t{rt}_\t{S} = \t{rt}_\t{max}$}
-          \State $(\t{st}_\t{P,send}, \t{pt}) \gets \t{msg}$
-          \Else
-          \State $(\perp, \t{pt}) \gets \t{msg}$
-          \EndIf
-          
-          \State $\t{Hreceived} \gets$ \Call{H.Eval}{$\t{hk}, (\t{ad}, \t{ct})$}
-          
-          \State $\t{st}_\t{P} \gets (\t{hk}, \t{st}_\t{P,send}, \t{st}_\t{P,rec},
-          \t{Hsent}, \t{Hreceived}, \t{rt}, \t{rt}_\t{max})$
-          \State \Return $(\t{true}, \t{st}_\t{P}, \t{pt})$
-          \EndProcedure
-        \end{algorithmic}
-        }
-      \end{minipage}
+      \input{figures/secmsg.tex}
     } 
   }
   \caption{Secure Messaging Protocol}
   \label{fig:secmsg}
 \end{figure}
+
+\clearpage
 
 \section[Alwen, Coretti and Dodis]
 {Alwen, Coretti and Dodis~\cite{alwen2018double}}
@@ -795,7 +783,11 @@ post-compromise security. This makes the protocol faster than the
 other protocols that almost exclusively rely on public-key primitives.
 Due to this the protocol offers the weakest security level especially
 during unidirectional traffic where the states are not ratcheted hence
-compromising post-compromise security.
+compromising post-compromise security. Recall that the term
+\textit{double ratchet} was used by Signal to denote the one ratchet
+providing forward-security and the other which provides post-compromise
+security.
+
 
 \subsection{Primitives}
 \label{sec:primitives-4}
@@ -905,7 +897,6 @@ even epochs are reserved for Alice to send and odd epochs for Bob.
   routine. Again in this case old FS-AEAD states can be erased
   from memory (not depicted). In every case the FS-AEAD state
   is then updated when decrypting the ciphertext.
-  
 \end{itemize}
 
 \begin{figure}[ht]
@@ -913,7 +904,7 @@ even epochs are reserved for Alice to send and odd epochs for Bob.
   \setlength{\fboxsep}{10pt}
   \scalebox{0.9}{%
     \fbox{%
-      \input{figures/dratch.tikz}
+      \input{figures/dratch.tex}
     }
   }
   \caption{Double Ratchet Protocol}

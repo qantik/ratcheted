@@ -1,0 +1,78 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+\begin{minipage}{\linewidth}
+  {\fontsize{10}{12}\selectfont
+  \begin{algorithmic}[1]
+    \Procedure{SecMsg.Init}{}
+    \For{$u \in \{A,B\}$}
+      \State $(ek_u,dk_u) \gets$ \Call{\texttt{HkuPke.Gen}}{}
+      \State $(sk_u^\t{upd},vk_u^\t{upd}) \gets$ \Call{\texttt{KuSig.Gen}}{}
+      \State $(sk_u^\t{eph},vk_u^\t{eph}) \gets$ \Call{\texttt{Sig.Gen}}{}
+    \EndFor
+    \For{$u \in \{A,B\}$}
+    \State $st_u \gets (0,0,0,dk_u,ek_{\bar{u}},sk_u^\t{upd},vk_{\bar{u}}^\t{upd},
+                        sk_u^\t{eph},vk_{\bar{u}}^\t{ep},[\cdot],\perp,[\cdot])$
+    \EndFor
+    \State \Return $(st_\t{A},st_\t{B})$
+    \EndProcedure
+   \end{algorithmic}
+    
+   \vspace{10pt}
+    
+  \begin{algorithmic}[1]
+    \Procedure{SecMsg.Send}{$st,m$}
+    \State $(r,s,s_\t{ack},dk,ek,sk^\t{upd},vk^\t{upd},
+                        sk^\t{eph},vk^\t{eph},VK^\t{eph},tr,TR) \gets st$
+    \State $(sk_1^\t{eph},vk_1^\t{eph}) \gets$ \Call{\texttt{Sig.Gen}}{}
+    \State $(sk_2^\t{eph},vk_2^\t{eph}) \gets$ \Call{\texttt{Sig.Gen}}{}
+
+    \State $(dk,upd) \gets$ \Call{\texttt{HkuPke.BcUpDk}}{$dk$}
+    \State $(ek,c) \gets$ \Call{\texttt{HkuPke.Enc}}{$ek,m||sk_1^\t{eph},upd||vk_2^\t{eph}||r$}
+    \State $c' \gets c||upd||vk_2^\t{eph}||r$
+    \State $(sk^\t{upd},\sigma_\t{upd}) \gets$ \Call{\texttt{KuSig.Sign}}{$sk^\t{upd},c'||tr$}
+    \State $\sigma_\t{eph} \gets$ \Call{\texttt{Sig.Sign}}{$sk^\t{eph},c'||tr$}
+
+    \State $s \gets s+1$
+    \State $VK[s] \gets vk_1^\t{eph}$
+    \State $TR[s] \gets$ \Call{\texttt{H}}{$Tr[s-1]||c'$}
+    
+    
+    \State $st \gets (r,s,s_\t{ack},dk,ek,sk^\t{upd},vk^\t{upd},
+                        sk_2^\t{eph},vk^\t{ep},VK^\t{eph},tr,TR)$
+    
+    \State \Return $(st, (c',\sigma_\t{upd},\sigma_\t{eph}))$
+    \EndProcedure
+   \end{algorithmic}
+
+   \vspace{10pt}
+    
+  \begin{algorithmic}[1]
+    \Procedure{SecMsg.Receive}{$st,ct$}
+    \State $(r,s,s_\t{ack},dk,ek,sk^\t{upd},vk^\t{upd},
+                        sk^\t{eph},vk^\t{eph},VK^\t{eph},tr,TR) \gets st$
+    \State $(c',\sigma_\t{upd},\sigma_\t{eph}) \gets ct$
+    \State $(c,upd,vk_\t{msg}^\t{eph},s_\t{msg}) \gets c'$
+    \If{$s_\t{msg} > s_\t{ack}$}
+    \State $vk \gets VK^\t{eph}[s_\t{msg}]$
+    \Else
+    \State $vk \gets vk^\t{eph}$
+    \EndIf
+
+    \State $v_\t{eph} \gets$
+    \Call{\texttt{Sig.Verify}}{$vk^\t{upd},c'||TR[s_\t{msg}],\sigma_\t{eph}$}
+    \State $(vk^\t{upd},v_\t{upd}) \gets$
+    \Call{\texttt{KuSig.Verify}}{$vk^\t{upd},c', \sigma_\t{upd}$}
+    \State \textbf{assert} $v_\t{eph} \wedge v_\t{upd}$
+
+    \State $ek \gets$ \Call{\texttt{HkuPke.Dec}}{$dk,c,upd||vk_\t{msg}^\t{eph}||s_\t{msg}$}
+    \State $r \gets r +1$
+    \State $tr \gets$ \Call{\texttt{H}}{$tr||c'$}
+    
+    \State $st \gets (r,s,s_\t{msg},dk,ek,sk^\t{upd},vk^\t{upd},
+                        sk_\t{msg}^\t{eph},vk_\t{msg}^\t{ep},VK^\t{eph},tr,TR)$
+
+    \State \Return $(st,m)$
+    \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}

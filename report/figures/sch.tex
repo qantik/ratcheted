@@ -25,7 +25,7 @@
     \For{$i \gets r^\t{ack}+1$ to $s$}
     \State $ek' \gets$ \Call{PKE.UpdEk}{$ek', T_\t{S}[i]$}
     \EndFor
-    \State $(ek',c') \gets$ \Call{PKE.Enc}{$ek',l,m,T_\t{S}$}
+    \State $c' \gets$ \Call{PKE.Enc}{$ek',l,m,T_\t{S}$}
     \State $v \gets (c',l), \ \sigma \gets \t{DS.Sign}(sk,v)$
     \State $c \gets (\sigma,v), \ T_\t{S}[s] \gets \t{H.Ev}(hk,c)$
     \State $st \gets (s,r,r^\t{ack},sk',vk,ek,dk,hk,T_\t{R},T_\t{S})$
