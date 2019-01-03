@@ -4,9 +4,10 @@
 \usepackage{graphicx,xcolor,float}
 \usepackage{amssymb,amsmath,array}
 \usepackage{setspace,algpseudocode}
+\usepackage{subcaption}
 
 \usepackage{tikz}
-\usetikzlibrary{positioning,arrows,calc,intersections}
+\usetikzlibrary{positioning,arrows}
 
 % Color citation, references and links.
 \usepackage{url,hyperref}
@@ -653,10 +654,18 @@ post-impersonation authenticity and confidentiality. This choice
 enabled to authors to only rely on public-key cryptography in
 the construction of their primitives. The protocol further
 offers recover security as defined by Durak and Vaudenay.
-It thus offers a slightly higher security level than the protocol by
-Durak and Vaudenay. It also decouples the leakage of random coins
-from state exposures with all security proofs being in the random
-oracle model.
+In terms of security the protocol therefore sits somewhere in
+between the sub-optimal construction from section~\ref{sec:durak-vaudenay}
+and the optimal approaches from section~\ref{sec:poettering-roesler}
+and section~\ref{sec:jaeger-stepanovs}. The same is true
+for when it comes to efficiency although the protocol aimed
+to be as efficient or even faster than the BARK protocol by
+Durak and Vaudenay we will see a particular case where it
+actually performs much worse.
+The protocol is resilient to the leakage of random coins
+after the send send operations. Furthermore, all
+security proofs are in the random oracle model contrary
+to the proofs by Durak and Vaudenay which are in the standard model 
 
 \subsection{Primitives}
 \label{sec:primitives-3}
@@ -806,16 +815,20 @@ Signal Protocol} in late October 2018. The protocol is an attempt to
 modularize the existing Signal algorithm using simpler cryptographic
 primitives. It is further the only protocol that offers immediate
 decryption thus possessing message-loss and message-reorder resilience
-while using mostly symmetric-key cryptography to achieve forward and
-post-compromise security. This makes the protocol faster than the
+while using mostly symmetric-key cryptography to achieve forward security.
+Note that the usage of private-key primitives has the effect that
+a state compromise of a single will enable the adversary to
+decrypt messages and perform impersonations in both directions which
+is not the case in the previous protocols.
+This makes the protocol faster than the
 other protocols that almost exclusively rely on public-key primitives.
 Due to this the protocol offers the weakest security level especially
 during unidirectional traffic where the states are not ratcheted hence
-compromising post-compromise security. Recall that the term
+compromising some post-compromise security. Recall that the term
 \textit{double ratchet} was used by Signal to denote the one ratchet
-providing forward-security and the other which provides post-compromise
+(symmetric-key)
+providing forward-security and the other (public-key) which provides post-compromise
 security.
-
 
 \subsection{Primitives}
 \label{sec:primitives-4}
@@ -941,6 +954,131 @@ even epochs are reserved for Alice to send and odd epochs for Bob.
 
 \chapter{Benchmarks}
 \label{chap:benchmarks}
+
+We will now see how the five messaging and key-exchange protocols
+specified in the last chapter perform against each other in
+several benchmarks laying open some vast differences.
+Benchmarking allows us to survey the actual feasibility
+of the protocols when it comes to potential implementations
+in real-world use cases. Messaging is predominant
+on smartphones where the communication is fast-paced
+and unpredictable, it is thus crucial that the protocols
+remain efficient even when deployed on computationally
+weak devices. The benchmarks further enable us to
+solidify the performance claims of the protocols
+that bear the word \textit{efficient} in their
+titles~\cite{durak2018bidirectional,jostefficient} or
+attempt to be as efficient as the Signal protocol~\cite{alwen2018double}.
+We can further grasp what it really means, in terms
+of efficiency degradation, to use a HIBE as part
+of a protocol~\cite{poettering2018towards,jaeger2018optimal}.
+
+\section{Setup}
+\label{sec:setup}
+
+All protocols were implemented in the Go programming
+language \footnote{\url{https://golang.org/}}. Go is a compiled,
+garbage-collected language comparable to C/C++ in speed
+while relieving the user of the cumbersome memory management
+tasks. Go has an industry-ready benchmarking tool built
+into the language which makes is easy to investigate and
+measure single functions and even entire
+programs \footnote{\url{https://golang.org/pkg/testing/}}.
+All measurements were taken on a regular Intel Core i5 Chip
+with 8GB of RAM. Note that this CPU is roughly equally as
+powerful as a high-end smartphone.
+The benchmarks can be categorized into three types.
+\begin{enumerate}
+\item \textbf{Runtime.} How long it takes to exchange $n$ message.
+\item \textbf{Ciphertext Size.} How the size of the ciphertext changes
+  throughout the exchange of $n$ messages.
+\item \textbf{State Size.} How does the memory footprint changes
+  throughout the exchange of $n$ messages.
+\end{enumerate}
+Each category itself will be tested on three canonical ways
+traffic can be shaped when two participants are communicating,
+all depicted in figure~\ref{fig:picto}.
+\begin{enumerate}
+\item \textbf{Alternating}. Alice and Bob take turns sending messages. Alice
+  sends the odd-numbered messages and Bob sends the even-numbered messages.
+\item \textbf{Unidirectional.} Alice first sends $\frac{n}{2}$ messages
+  to Bob after receiving them Bob responds with the remaining $\frac{n}{2}$ messages.
+\item \textbf{Deferred Unidirectional.} Alice first sends $\frac{n}{2}$ messages
+  to Bob but before he receives them Bob he sends his share of $\frac{n}{2}$
+  messages to Alice.
+\end{enumerate}
+
+\begin{figure}[H]
+  \centering
+  \noindent\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \input{figures/alt.tikz}
+    \caption{}
+  \end{subfigure}%
+  \begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \input{figures/uni.tikz}
+    \caption{}
+  \end{subfigure}%
+  \begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \input{figures/def-uni.tikz}
+    \caption{}
+  \end{subfigure}
+  \caption{Message Traffic Pictographs; Alternating Traffic (a), Unidirectional
+    Traffic (b), Deferred Unidirectional Traffic (c)}
+  \label{fig:picto}
+\end{figure}
+
+\section{Choice of Primitives}
+\label{sec:choice-primitives}
+
+In order to have fair conditions we use the same building blocks
+in each protocol to build their respective primitives and
+perform the benchmarks. The
+codebase however is kept modular thus parts can be easily
+exchanged if the need arises.
+\begin{itemize}
+\item \textbf{SHA-256.} As the hash functions and random
+  oracles in each protocol. A possible alternative could be
+  its successor SHA-3. SHA256 is part of the Go standard
+  library \footnote{\url{https://golang.org/pkg/crypto/sha256/}}.
+\item \textbf{AES-GCM.} As the authenticated encryption scheme with
+  associated-data used in the FS-AEAD scheme in \cite{alwen2018double}.
+  AES-GCM is part of the Go standard
+  library \footnote{\url{https://golang.org/pkg/crypto/aes/}}.
+\item \textbf{Gentry-Silverberg HIBE~\cite{gentry2002hierarchical}.} As
+  the HIBE scheme to build the ku-KEM in \cite{poettering2018towards} and
+  the ku-PKE in \cite{jaeger2018optimal}. The use of HIBE schemes in
+  cryptographic protocols is a relatively new idea thus there do not
+  exist any industry-vetted implementations. The Gentry-Silverberg HIBE
+  has thus been implemented by hand using a Go-port of the
+  famous Stanford Pairing-Based Cryptography
+  Library \footnote{\url{https://github.com/Nik-U/pbc}}.
+  The Gentry-Silverberg construction is the most known scheme,
+  the codebase also includes an experimental implementation of
+  the Boneh-Boyen-Goh HIBE~\cite{boneh2005hierarchical} which however does
+  not allow an unbounded
+  depth as is required by both \cite{poettering2018towards} and
+  \cite{jaeger2018optimal}.
+\item \textbf{ECIES~\cite{shoup2001proposal}.} The Elliptic Curve Integrated
+  Encryption Scheme on the standard curve P256 is used wherever a public-key
+  encryption scheme is required. This is mainly due to the fact that
+  some protocols have large and even growing messages sizes thus regular
+  PKE schemes like RSA-OAEP or PKCS, where the message size is bounded
+  depending on the modulus size, are not suited. ECIES is thus a
+  relatively efficient alternative that can cope with messages
+  of any size. This scheme has been implemented by hand.
+\item \textbf{ECDSA.} As the signature scheme in protocols where
+  a regular or one-time signature is required. The primitive
+  is mounted on the standard curve P256. ECDSA is part of the
+  Go standard library \footnote{\url{https://golang.org/pkg/crypto/ecdsa/}}.
+\item \textbf{Bellare et al.~Forward-Secure Signature~\cite{bellare1999forward}.}
+  As part of the ku-Sig primitive in \cite{jaeger2018optimal}. It
+  is the most known forward-secure signature scheme and has been implemented
+  by hand.
+\end{itemize}
+
 
 \chapter{Conclusion}
 \label{chap:conclusion}
