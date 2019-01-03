@@ -6,8 +6,9 @@
 \usepackage{setspace,algpseudocode}
 \usepackage{subcaption}
 
-\usepackage{tikz}
+\usepackage{pgfplots,tikz}
 \usetikzlibrary{positioning,arrows}
+\pgfplotsset{compat=1.16}
 
 % Color citation, references and links.
 \usepackage{url,hyperref}
@@ -986,7 +987,9 @@ measure single functions and even entire
 programs \footnote{\url{https://golang.org/pkg/testing/}}.
 All measurements were taken on a regular Intel Core i5 Chip
 with 8GB of RAM. Note that this CPU is roughly equally as
-powerful as a high-end smartphone.
+powerful as a high-end smartphone. Additional for all benchmarks
+the Go garbage collector has been disable to reduce the
+overhead created by its sweeps.
 The benchmarks can be categorized into three types.
 \begin{enumerate}
 \item \textbf{Runtime.} How long it takes to exchange $n$ message.
@@ -1025,7 +1028,8 @@ all depicted in figure~\ref{fig:picto}.
     \input{figures/def-uni.tikz}
     \caption{}
   \end{subfigure}
-  \caption{Message Traffic Pictographs; Alternating Traffic (a), Unidirectional
+  \caption[Message Traffic Pictographs]{Message Traffic Pictographs;
+    Alternating Traffic (a), Unidirectional
     Traffic (b), Deferred Unidirectional Traffic (c)}
   \label{fig:picto}
 \end{figure}
@@ -1043,9 +1047,10 @@ exchanged if the need arises.
   oracles in each protocol. A possible alternative could be
   its successor SHA-3. SHA256 is part of the Go standard
   library \footnote{\url{https://golang.org/pkg/crypto/sha256/}}.
-\item \textbf{AES-GCM.} As the authenticated encryption scheme with
+\item \textbf{AES-GCM~\cite{mcgrew2004security}.} As the authenticated
+  encryption scheme with
   associated-data used in the FS-AEAD scheme in \cite{alwen2018double}.
-  AES-GCM is part of the Go standard
+  AES-GCM is also part of the Go standard
   library \footnote{\url{https://golang.org/pkg/crypto/aes/}}.
 \item \textbf{Gentry-Silverberg HIBE~\cite{gentry2002hierarchical}.} As
   the HIBE scheme to build the ku-KEM in \cite{poettering2018towards} and
@@ -1069,7 +1074,7 @@ exchanged if the need arises.
   depending on the modulus size, are not suited. ECIES is thus a
   relatively efficient alternative that can cope with messages
   of any size. This scheme has been implemented by hand.
-\item \textbf{ECDSA.} As the signature scheme in protocols where
+\item \textbf{ECDSA~\cite{johnson2001elliptic}.} As the signature scheme in protocols where
   a regular or one-time signature is required. The primitive
   is mounted on the standard curve P256. ECDSA is part of the
   Go standard library \footnote{\url{https://golang.org/pkg/crypto/ecdsa/}}.
@@ -1079,6 +1084,82 @@ exchanged if the need arises.
   by hand.
 \end{itemize}
 
+To ease the labeling of the protocols within the plots we will
+refer to them by using the first letters of their authors,
+e.g.~Durak-Vaudenay is abbreviated to DV. Also note that
+the plots contains two protocols more than discussed in
+the previous section. DV-lite is the virtually equal to
+the original protocol by Durak and Vaudenay it only replaces
+the signcryption scheme with a symmetric-key variant in
+this case an authenticated encryption scheme with associated
+data, i.e.~AES-GCM in our case. Such a construction cannot provide
+any post-compromise security but it significantly faster
+than the regular protocol. The ACD-PK protocol goes to other way around
+by adding a public-key encryption scheme and a digital signature
+algorithm to the regular ACD protocol to plug some
+of the post-compromise security holes caused by
+the congruence of the states of both participants.
+This comes at the cost of losing some efficiency.
+These two additional protocol serve as a baseline
+to see how the metrics of a protocol can change when
+some of its internals are replaced or extended. In the
+following each benchmark is first given as plot then
+analyzed below the figure.
+
+\section{Runtime Benchmarks}
+\label{sec:runtime-benchmarks}
+
+We start of by measuring the running time of the protocols. As
+it is practice when it comes to pinpointing time in software
+benchmarks the Go profiler runs the benchmarks repeatedly
+until the average time over all runs stabilizes. Usually
+earlier runs serve as warm-ups to bring all the program
+data into the cache for faster access in later runs.
+Note that due to the large differences in terms
+of runtimes between the protocols the y-axis is
+in logarithmic scale. Also note that the measurements
+were only conducted up to 900 messages anything beyond
+can then be safely extrapolated.
+
+\subsection{Alternating Traffic}
+\label{sec:alternating-traffic}
+
+\begin{figure}[H]
+  \centering
+  \input{plots/time-alt.tikz} 
+  \caption{Runtime Benchmark Alternating Traffic}
+  \label{fig:time-alt}
+\end{figure}
+
+\clearpage
+
+\subsection{Unidirectional Traffic}
+\label{sec:unid-traff}
+
+\begin{figure}[H]
+  \centering
+  \input{plots/time-uni.tikz} 
+  \caption{Runtime Benchmark Unidirectional Traffic}
+  \label{fig:time-uni}
+\end{figure}
+
+\clearpage
+
+\subsection{Deferred Unidirectional Traffic}
+\label{sec:deferr-unid-traff-1}
+
+\begin{figure}[H]
+  \centering
+  \input{plots/time-def-uni.tikz} 
+  \caption{Runtime Benchmark Deferred Unidirectional Traffic}
+  \label{fig:time-def-uni}
+\end{figure}
+
+% % Put into separate section
+% The whole codebase with all the protocols, the accompanying benchmarks,
+% auxiliary primitives and installation instructions is
+% open-source \footnote{\url{https://github.com/qantik/ratcheted/}}
+% and be freely altered.
 
 \chapter{Conclusion}
 \label{chap:conclusion}
