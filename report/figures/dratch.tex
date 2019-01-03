@@ -2,56 +2,56 @@
 \algrenewcommand\algorithmicprocedure{\textbf{func}}
 
 \begin{minipage}{0.5\linewidth}
-  {\fontsize{8}{10}\selectfont
+  {\fontsize{10}{12}\selectfont
 
   \begin{algorithmic}[1]
     \Procedure{Init-A}{$k$}
     \State $(k_\t{root},k_\t{CKA}) \gets k$
-    \State $\sigma_\t{root} \gets$ \Call{P-Init}{$k_\t{root}$}
+    \State $\sigma_\t{root} \gets$ \Call{\texttt{P-Init}}{$k_\t{root}$}
     \State $v \gets []$
-    \State $(\sigma_\t{root},k) \gets$ \Call{P-Up}{$\sigma_\t{root},\perp$}
-    \State $v[0] \gets$ \Call{FS-Init-R}{$k$}
-    \State $\gamma \gets$ \Call{CKA-Init-A}{$k_\t{CKA}$}
+    \State $(\sigma_\t{root},k) \gets$ \Call{\texttt{P-Up}}{$\sigma_\t{root},\perp$}
+    \State $v[0] \gets$ \Call{\texttt{FS-Init-R}}{$k$}
+    \State $\gamma \gets$ \Call{\texttt{CKA-Init-A}}{$k_\t{CKA}$}
     \State $T_\t{cur} \gets \perp, \ t_\t{A} \gets 0$
-    \State $\t{st}_\t{A} \gets (\sigma_\t{root},v,\gamma,T_\t{cur},t_\t{A})$
-    \State \Return $\t{st}_\t{A}$
+    \State $st_\t{A} \gets (\sigma_\t{root},v,\gamma,T_\t{cur},t_\t{A})$
+    \State \Return $st_\t{A}$
     \EndProcedure
     
     \item[]
     
-    \Procedure{Send-A}{$\t{st}_\t{A}, m$}
-    \State $(\sigma_\t{root},v,\gamma,T_\t{cur},t_\t{A}) \gets \t{st}_\t{A}$
+    \Procedure{Send-A}{$st_\t{A}, m$}
+    \State $(\sigma_\t{root},v,\gamma,T_\t{cur},t_\t{A}) \gets st_\t{A}$
     \If{$t_\t{A}$ is even}
     \State $t_\t{A} \gets t_\t{A}+1$
-    \State $\gamma,T_\t{cur},I) \gets$ \Call{CKA-S}{$\gamma$}
-    \State $(\sigma_\t{root},k) \gets$ \Call{P-Up}{$\sigma_\t{root},I$}
-    \State $v[t_\t{A}] \gets$ \Call{FS-Init-S}{$k$}
+    \State $\gamma,T_\t{cur},I) \gets$ \Call{\texttt{CKA-S}}{$\gamma$}
+    \State $(\sigma_\t{root},k) \gets$ \Call{\texttt{P-Up}}{$\sigma_\t{root},I$}
+    \State $v[t_\t{A}] \gets$ \Call{\texttt{FS-Init-S}}{$k$}
     \EndIf
     \State $h \gets (t_\t{A},T_\t{cur})$
-    \State $(v[t_\t{A}],e) \gets$ \Call{FS-Send}{$v[t_\t{A}],h,m$}
+    \State $(v[t_\t{A}],e) \gets$ \Call{\texttt{FS-Send}}{$v[t_\t{A}],h,m$}
     \State $c \gets (h,e)$
-    \State \Return $(\t{st}_\t{A},c)$
+    \State \Return $(st_\t{A},c)$
     \EndProcedure
   \end{algorithmic}
   }
 \end{minipage}
 \begin{minipage}{0.5\linewidth}
-  {\fontsize{8}{10}\selectfont
+  {\fontsize{10}{12}\selectfont
 
   \begin{algorithmic}[1]
-    \Procedure{Rcv-A}{$\t{st}_\t{A},c$}
-    \State $(\sigma_\t{root},v,\gamma,T_\t{cur},t_\t{A}) \gets \t{st}_\t{A}$
+    \Procedure{Rcv-A}{$st_\t{A},c$}
+    \State $(\sigma_\t{root},v,\gamma,T_\t{cur},t_\t{A}) \gets st_\t{A}$
     \State $(h,e) \gets c, \ (t,T) \gets h$
     \If{$t \leq t_\t{A}$ and even}
-    \State $(v[t],i,m) \gets$ \Call{FS-Rcv}{$v[t],h,e$}
+    \State $(v[t],i,m) \gets$ \Call{\texttt{FS-Rcv}}{$v[t],h,e$}
     \ElsIf{$t = t_\t{A}+1$ and $t_\t{A}$ odd}
     \State $t_\t{A} \gets t_\t{A}+1$
-    \State $\gamma,I) \gets$ \Call{CKA-R}{$\gamma,T$}
-    \State $(\sigma_\t{root},k) \gets$ \Call{P-Up}{$\sigma_\t{root},I$}
-    \State $(v[t]) \gets$ \Call{FS-Init-R}{$k$}
-    \State $(v[t],i,m) \gets$ \Call{FS-Rcv}{$v[t],h,e$}
+    \State $\gamma,I) \gets$ \Call{\texttt{CKA-R}}{$\gamma,T$}
+    \State $(\sigma_\t{root},k) \gets$ \Call{\texttt{P-Up}}{$\sigma_\t{root},I$}
+    \State $(v[t]) \gets$ \Call{\texttt{FS-Init-R}}{$k$}
+    \State $(v[t],i,m) \gets$ \Call{\texttt{FS-Rcv}}{$v[t],h,e$}
     \EndIf
-    \State \Return $(\t{st}_\t{A},t,i,m)$
+    \State \Return $(st_\t{A},t,i,m)$
     \EndProcedure
   \end{algorithmic}
   }

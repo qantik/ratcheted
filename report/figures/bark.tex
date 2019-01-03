@@ -2,11 +2,11 @@
 \algrenewcommand\algorithmicprocedure{\textbf{func}}
 
 \begin{minipage}{\linewidth}
-  {\fontsize{8}{10}\selectfont
+  {\fontsize{10}{12}\selectfont
   \begin{algorithmic}[1]
     \Procedure{BARK.Init}{}
-    \State $(st_\t{A}^\t{send},st_\t{B}^\t{rec}) \gets$ \Call{uniBARK.Init}{}
-    \State $(st_\t{B}^\t{send},st_\t{A}^\t{rec}) \gets$ \Call{uniBARK.Init}{}
+    \State $(st_\t{A}^\t{send},st_\t{B}^\t{rec}) \gets$ \Call{\texttt{uniBARK.Init}}{}
+    \State $(st_\t{B}^\t{send},st_\t{A}^\t{rec}) \gets$ \Call{\texttt{uniBARK.Init}}{}
     \State pick $hk$ at random
     \State $st_\t{A} \gets (hk, [st_\t{A}^\t{send}], [st_\t{A}^\t{rec}],\perp,\perp)$ 
     \State $st_\t{B} \gets (hk, [st_\t{B}^\t{send}], [st_\t{B}^\t{rec}],\perp,\perp)$ 
@@ -20,11 +20,11 @@
     \State $(hk, [st_\t{P}^\t{send,1},...,st_\t{P}^\t{send,u}],
                  [st_\t{P}^\t{rec,1},...,st_\t{P}^\t{rec,v}],
     \t{Hsent}, \t{Hreceived}) \gets st_\t{P}$
-    \State $(st_\t{S,new},st_\t{P}^\t{rec,v+1}) \gets$ \Call{uniARCAD.Init}{}
+    \State $(st_\t{S,new},st_\t{P}^\t{rec,v+1}) \gets$ \Call{\texttt{uniARCAD.Init}}{}
     \State $\t{onion} \gets st_\t{S,new} || k$
     \State find smallest i such that $st_\t{P}^\t{send,i} \neq \perp$
     \For{$j \gets u$ to $i$}
-    \State $(st_\t{P}^\t{send,j},\t{onion}) \gets$ \Call{uniARCAD.Send}
+    \State $(st_\t{P}^\t{send,j},\t{onion}) \gets$ \Call{\texttt{uniARCAD.Send}}
                {$st_\t{P}^\t{send,j},(u-j)||\t{onion},j=u$}
     \If{$j < u$}
     \State $st_\t{P}^\t{send,j} \gets \perp$
@@ -32,7 +32,7 @@
     \EndFor
 
     \State $\t{upd} \gets (u-i)||\t{Hsent}||\t{onion}$
-    \State $\t{Hsent}' \gets$ \Call{H}{hk,\t{upd}}
+    \State $\t{Hsent}' \gets$ \Call{\texttt{H}}{hk,\t{upd}}
     \State $st_\t{P}' \gets (hk,[st_\t{P}^\t{send,1},...,st_\t{P}^\t{send,u}],
                  [st_\t{P}^\t{rec,1},...,st_\t{P}^\t{rec,v+1}], \t{Hsent}', \t{Hreceived})$
 
@@ -51,7 +51,7 @@
     \EndIf
     \State find smallest i such that $st_\t{P}^\t{rec,i} \neq \perp$
     \For{$j \gets i$ to $i+n$}
-    \State $(\t{acc},st_\t{P}^\t{rec,j'},\t{onion}) \gets$ \Call{uniARCAD.Receive}
+    \State $(\t{acc},st_\t{P}^\t{rec,j'},\t{onion}) \gets$ \Call{\texttt{uniARCAD.Receive}}
     {$st_\t{P}^\t{rec,j}$}
     \If{$\t{acc} = \t{false}$}
     \State \Return $(\t{false},st_\t{P},\perp)$
@@ -63,7 +63,7 @@
     \State $st_\t{P}^\t{rec,j} \gets \perp$
     \EndFor
     \State $st_\t{P}^\t{rec,i+n} \gets st_\t{P}^\t{rec,i+n'}$
-    \State $\t{Hreceived}' \gets$ \Call{H}{$hk,\t{upd}$}
+    \State $\t{Hreceived}' \gets$ \Call{\texttt{H}}{$hk,\t{upd}$}
     \State $st_\t{P}' \gets (hk,[st_\t{P}^\t{send,1},...,st_\t{P}^\t{send,u+1}],
                  [st_\t{P}^\t{rec,1},...,st_\t{P}^\t{rec,v}], \t{Hsent}, \t{Hreceived}')$
 

@@ -2,24 +2,26 @@
 \algrenewcommand\algorithmicprocedure{\textbf{func}}
 
 \begin{minipage}{.5\linewidth}
-  {\fontsize{8}{10}\selectfont
+  {\fontsize{10}{12}\selectfont
 
     \begin{algorithmic}[1]
     \Procedure{uniARCAD.Init}{}
-    \State $(sk_\t{S},pk_\t{S}) \gets$ \Call{PKE.Gen}{}
-    \State $(sk_\t{R},pk_\t{R}) \gets$ \Call{DS.Gen}{}
+    \State $(sk_\t{S},pk_\t{S}) \gets$ \Call{\texttt{PKE.Gen}}{}
+    \State $(sk_\t{R},pk_\t{R}) \gets$ \Call{\texttt{DS.Gen}}{}
 
     \State $st_\t{S} \gets (sk_S,pk_\t{R})$ 
     \State $st_\t{S} \gets (sk_R,pk_\t{S})$ 
 
     \State \Return $(st_\t{S},st_\t{R})$
     \EndProcedure
+    \end{algorithmic}
 
-    \item[]
+    \vspace{10pt}
 
+    \begin{algorithmic}[1]
     \Procedure{uniARCAD.Receive}{$st_\t{R}, ad, ct$}
     \State $(sk_\t{R},pk_\t{S}) \gets st_\t{R}$ 
-    \State $pt' \gets$ \Call{Dec}{$sk_\t{R},pk_\t{S},ad,ct$}
+    \State $pt' \gets$ \Call{\texttt{Dec}}{$sk_\t{R},pk_\t{S},ad,ct$}
     \If{$pt' = \perp$}
     \State \Return $(\t{false}, st_\t{R}, \perp)$
     \EndIf
@@ -32,21 +34,21 @@
 \end{minipage}
 
 \begin{minipage}{.5\linewidth}
-  {\fontsize{8}{10}\selectfont
+  {\fontsize{10}{12}\selectfont
 
   \begin{algorithmic}[1]
     \Procedure{uniARCAD.Send}{$st_\t{S}, ad, pt, \t{flag}$}
     \State $(sk_\t{S},pk_\t{R}) \gets st_\t{S}$ 
     \If{$\t{flag} = \t{true}$}
-    \State $(sk_\t{S}',pk_\t{S}') \gets$ \Call{SC.Gen}{}
-    \State $(\t{sk}_\t{R}',\t{pk}_\t{R}') \gets$ \Call{SC.Gen}{}
+    \State $(sk_\t{S}',pk_\t{S}') \gets$ \Call{\texttt{PKE.Gen}}{}
+    \State $(\t{sk}_\t{R}',\t{pk}_\t{R}') \gets$ \Call{\texttt{DS.Gen}}{}
     \State $st_\t{S}' \gets (sk_\t{S}',pk_\t{R}')$
     \State $st_\t{R}' \gets (sk_\t{R}',pk_\t{S}')$
     \Else
     \State $(sk_\t{S}',pk_\t{R}') \gets (\perp,\perp)$
     \EndIf
     \State $pt' \gets st_\t{R}' || pt$
-    \State $ct \gets$ \Call{Enc}{$sk_\t{S},pk_\t{R}, ad, pt'$}
+    \State $ct \gets$ \Call{\texttt{Enc}}{$sk_\t{S},pk_\t{R}, ad, pt'$}
     \State \Return $(st_\t{S}', ct)$
     \EndProcedure
     
