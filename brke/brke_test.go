@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/hibe"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
@@ -18,7 +17,7 @@ func TestBRKE_Synchronous(t *testing.T) {
 	require := require.New(t)
 
 	//brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
-	brke := NewBRKE(hibe.NewGentry(), encryption.NewECIES(curve), signature.NewECDSA(curve))
+	brke := NewBRKE(hibe.NewGentry(), signature.NewECDSA(curve))
 
 	ad := []byte{1, 2, 3}
 
@@ -46,7 +45,7 @@ func TestBRKE_Aynchronous(t *testing.T) {
 	require := require.New(t)
 
 	//brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
-	brke := NewBRKE(hibe.NewGentry(), encryption.NewECIES(curve), signature.NewECDSA(curve))
+	brke := NewBRKE(hibe.NewGentry(), signature.NewECDSA(curve))
 
 	ad := []byte{1, 2, 3}
 
@@ -74,7 +73,7 @@ func TestBRKE_Unidirectional(t *testing.T) {
 	require := require.New(t)
 
 	//brke := NewBRKE(hibe.NewGentry(), signature.NewLamport(rand.Reader, sha256.New))
-	brke := NewBRKE(hibe.NewGentry(), encryption.NewECIES(curve), signature.NewECDSA(curve))
+	brke := NewBRKE(hibe.NewGentry(), signature.NewECDSA(curve))
 
 	ad := []byte{1, 2, 3}
 

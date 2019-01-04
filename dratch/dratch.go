@@ -5,6 +5,7 @@ package dratch
 
 import (
 	"crypto/elliptic"
+	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -253,6 +254,7 @@ func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 	if (user.name == "alice" && c.I <= user.I && c.I%2 == 0) ||
 		(user.name == "bob" && c.I <= user.I && c.I%2 == 1) {
 
+		fmt.Println("*")
 		v, msg, err := d.fsa.receive(user.V[c.I], cipher, ad)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to fs-aead decrypt message")
@@ -264,7 +266,6 @@ func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 		(user.name == "bob" && c.I == user.I+1 && user.I%2 == 0) {
 
 		user.I++
-
 		if d.pke != nil && d.dss != nil {
 			user.sk[c.I-1], user.ek[c.I], user.vk[c.I+1] = nil, nil, nil
 			user.ek[c.I+1], user.vk[c.I+2] = c.EK, c.VK

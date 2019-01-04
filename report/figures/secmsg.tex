@@ -64,7 +64,9 @@
     \Call{\texttt{KuSig.Verify}}{$vk^\t{upd},c', \sigma_\t{upd}$}
     \State \textbf{assert} $v_\t{eph} \wedge v_\t{upd}$
 
-    \State $ek \gets$ \Call{\texttt{HkuPke.Dec}}{$dk,c,upd||vk_\t{msg}^\t{eph}||s_\t{msg}$}
+    \State $ek \gets$ \Call{\texttt{HkuPke.BcUpEk}}{$ek,upd$} 
+    \State $(dk, (m,sk_\t{msg}^\t{eph})) \gets$
+    \Call{\texttt{HkuPke.Dec}}{$dk,c,upd||vk_\t{msg}^\t{eph}||s_\t{msg}$}
     \State $r \gets r +1$
     \State $tr \gets$ \Call{\texttt{H}}{$tr||c'$}
     

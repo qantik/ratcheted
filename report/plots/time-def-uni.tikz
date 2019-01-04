@@ -62,7 +62,7 @@
   };
 
     
-  \legend{BARK,liteBARK,PR18,JS18,JMM18,ACD18,ACD18-PK}
+  \legend{DV,DV-lite,PR,JS,JMM,ACD,ACD-PK}
  
 \end{axis}
 \end{tikzpicture}

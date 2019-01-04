@@ -1100,11 +1100,15 @@ algorithm to the regular ACD protocol to plug some
 of the post-compromise security holes caused by
 the congruence of the states of both participants.
 This comes at the cost of losing some efficiency.
-These two additional protocol serve as a baseline
+These two additional protocols serve as baselines
 to see how the metrics of a protocol can change when
 some of its internals are replaced or extended. In the
 following each benchmark is first given as plot then
 analyzed below the figure.
+The total number of
+crypto-operations like encryptions and key updates
+for $n$ operations is then also attached for each
+primitive.
 
 \section{Runtime Benchmarks}
 \label{sec:runtime-benchmarks}
@@ -1131,6 +1135,100 @@ can then be safely extrapolated.
   \label{fig:time-alt}
 \end{figure}
 
+\begin{itemize}
+\item \textbf{PR.} Since the unidirectional period is exactly one
+  the epoch counters $(E_S,E_R)$ for both user also have difference one
+  thus each user will perform exactly two encryptions, except for the
+  first exchange, for each message.
+  Furthermore, there are no key updates in the receive function because
+  the users will only use the keys they exchanged to encrypt and decrypt
+  functions.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-KEM} & $2n$ & $2n-1/2n-1$ & $0/0$ \\ \hline
+    \textbf{Signature} & $n$ & $n/n$ & - \\  
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{JS.} We have a similar situation with the Jaeger and Stepanovs
+  protocol. Both participants take turns updating their ku-PKE and
+  ku-Sig keys once while exchanging new key pairs. Since the direction
+  of traffic is changing after one message the encryption key $ek'$
+  is never updated. All of this results in a similar running time
+  than the previous protocol.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-PKE} & $0$ & $n/n$ & $0/n$ \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & $n/n$ \\  
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{DV.} Each participant will perform two onion encryptions
+  for each message which translates to two signcryption
+  encryptions/decryptions. Since the signcryption scheme is spun up by combining
+  a regular PKE system and a DSS scheme we have two PKE encryptions/decryptions
+  and two DSS signatures/verifications per message. Also note that
+  only one key generation is performed during the onion encryption.
+  Replacing the signcryption algorithm with a symmetric AEAD scheme
+  will result in a protocol that has a runtime below one second
+  even for 900 messages.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{PKE} & $2n$ & $2n/2n$ & $0/0$ \\ \hline
+    \textbf{Signature} & $2n$ & $2n/2n$ & $0/0$ \\  
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{JMM.} Superficially we have single calls to the HkuPke, KuSig and
+  Sig primitives but the magic happens under the hood within HkuPke and can
+  be checked in the original paper. We have the following distribution
+  of operations throughout the primitives. To keep the notation lightweight
+  the generation of update information \texttt{UpdGen} as part
+  of the hku-PKE scheme is counted as a key generation call.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & - \\ \hline
+    \textbf{sku-PKE} & $2n$ & $n/n$ & $n/n$ \\ \hline
+    \textbf{PKE-AD} & $3n$ & $n/n$ & - \\
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{ACD.} The protocol only contains loops for housekeeping operations
+  like the deletion of state but not for cryptographic operations. It performs
+  better than the previous two protocols due to only using public-key cryptography
+  for the continuous key agreement primitive. The CKA operations are counted
+  as key generation calls. Also since the participants are alternating
+  each message marks the start of a new epoch thus the key agreement and
+  FS-AEAD key generations are executed with each call. The addition
+  of public-key schemes in ACD-PK adds two generation calls, an PKE encryption call,
+  and DSS signature call to the send function and their corresponding
+  decryption/verification calls to the receive function hence more
+  resembling the DV and JMM protocols in terms of runtime.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{FS-AEAD} & $2n$ & $n/n$ & - \\ \hline
+    \textbf{CKA} & $2n$ & - & - \\  
+    \hline
+    \end{tabular}
+  \end{center}
+\end{itemize}
+
+We have a tame and contained behaviour when the participants
+alternate their messages. This results in three relatively fast
+protocols (DV, JMM, ACD) and two moderately slow protocols
+(PR, JS) that rely on HIBE schemes, which was to be
+expected.
+
 \clearpage
 
 \subsection{Unidirectional Traffic}
@@ -1143,6 +1241,47 @@ can then be safely extrapolated.
   \label{fig:time-uni}
 \end{figure}
 
+\begin{itemize}
+\item \textbf{PR.} The unidirectional case is similar to the alternating
+  one. Again there are no key updates. Alice who sends the first
+  $\frac{n}{2}$ tranches will only do a single encryption for
+  each message but both participants will accumulate the keys
+  generated and distributed by Alice. This means the first
+  message the Bob sends will use all those keys for the encryption
+  and Alice will use all keys for the decryption. Every following
+  message by Bob will then be only encrypted once. All of this
+  makes the unidirectional traffic slightly faster than the alternating.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-KEM} & $2n$ & $\frac{3}{2}n/\frac{3}{2}n$ & $0/0$ \\ \hline
+    \textbf{Signature} & $n$ & $n/n$ & - \\  
+    \hline
+    \end{tabular}
+  \end{center}
+\item  \textbf{JS.} Contrary to all other this protocol incurs a
+  quadratic ku-PKE key update penalty for repeated sending without receiving.
+  Each send operation will perform one \texttt{ku-PKE.UpdEk} call more than the previous
+  one since the partner will update the corresponding decryption key
+  in any case. This gives $\frac{(n-1)n}{2}$ \texttt{ku-PKE.UpdEk} and
+  $\frac{n}{2}$ \texttt{ku-PKE.UpdDk} updates per user. Furthermore,
+  since Bob updates his ku-Sig signature key in every receive, Alice
+  has to perform $n$ \texttt{ku-Sig.UpdVk} calls when she receives the
+  first message from Bob. The protocol thus performs worse in unidirectional
+  traffic than alternating.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-PKE} & $0$ & $n/n$ & $\frac{(n-1)n}{2}/n$ \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & $\frac{n}{2}/n$ \\  
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{DV.}
+\end{itemize}
+
 \clearpage
 
 \subsection{Deferred Unidirectional Traffic}
@@ -1154,6 +1293,42 @@ can then be safely extrapolated.
   \caption{Runtime Benchmark Deferred Unidirectional Traffic}
   \label{fig:time-def-uni}
 \end{figure}
+
+\begin{itemize}
+\item \textbf{PR.} As in the regular unidirectional traffic both
+  participants will encrypt each message only once. However, for
+  each received message a participant will update all
+  the $\frac{n}{2}$ accumulated keys resulting in $2(\frac{n}{2})^2$
+  HIBE extractions and a update key update complexity of $\mathcal{O}(n^2)$.
+  Deferred unidirectional traffic is thus significantly slower than
+  regular unidirectional.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-KEM} & $2n$ & $n/n$ & $2(\frac{n}{2})^2/2(\frac{n}{2})^2$ \\ \hline
+    \textbf{Signature} & $n$ & $n/n$ & - \\  
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{JS.} Deferred unidirectional traffic incurs a quadratic
+  penalty for both ku-PKE key updates. A participant
+  will update all the accumulated ku-PKE decryption keys for
+  each received message, in total $n(\frac{n}{2}+1)$ calls.
+  Updating the encryption key has the same complexity as in the
+  regular unidirectional case. This means that the protocol
+  performs the worst in deferred unidirectional traffic.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-PKE} & $0$ & $n/n$ & $\frac{(n-1)n}{2}/n(\frac{n}{2}+1)$ \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & $0/n$ \\  
+    \hline
+    \end{tabular}
+  \end{center}
+
+\end{itemize}
 
 % % Put into separate section
 % The whole codebase with all the protocols, the accompanying benchmarks,

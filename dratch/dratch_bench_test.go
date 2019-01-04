@@ -110,7 +110,7 @@ func deferredUni(dr *DRatch, n int, b *testing.B) {
 }
 
 func benchmarkAlt(dr *DRatch, i int, b *testing.B) {
-	for n := 0; n < b.N; n++ {
+	for n := 0; n < 1; n++ {
 		alt(dr, i, b)
 	}
 }
@@ -127,35 +127,36 @@ func benchmarkDeferredUni(dr *DRatch, i int, b *testing.B) {
 	}
 }
 
-func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(dr, 50, b) }
-func BenchmarkAlt100(b *testing.B) { benchmarkAlt(dr, 100, b) }
-func BenchmarkAlt200(b *testing.B) { benchmarkAlt(dr, 200, b) }
-func BenchmarkAlt300(b *testing.B) { benchmarkAlt(dr, 300, b) }
-func BenchmarkAlt400(b *testing.B) { benchmarkAlt(dr, 400, b) }
-func BenchmarkAlt500(b *testing.B) { benchmarkAlt(dr, 500, b) }
-func BenchmarkAlt600(b *testing.B) { benchmarkAlt(dr, 600, b) }
-func BenchmarkAlt700(b *testing.B) { benchmarkAlt(dr, 700, b) }
-func BenchmarkAlt800(b *testing.B) { benchmarkAlt(dr, 800, b) }
-func BenchmarkAlt900(b *testing.B) { benchmarkAlt(dr, 900, b) }
+func BenchmarkAlt50(b *testing.B) { benchmarkAlt(dr, 10, b) }
 
-func BenchmarkUni50(b *testing.B)  { benchmarkUni(dr, 50, b) }
-func BenchmarkUni100(b *testing.B) { benchmarkUni(dr, 100, b) }
-func BenchmarkUni200(b *testing.B) { benchmarkUni(dr, 200, b) }
-func BenchmarkUni300(b *testing.B) { benchmarkUni(dr, 300, b) }
-func BenchmarkUni400(b *testing.B) { benchmarkUni(dr, 400, b) }
-func BenchmarkUni500(b *testing.B) { benchmarkUni(dr, 500, b) }
-func BenchmarkUni600(b *testing.B) { benchmarkUni(dr, 600, b) }
-func BenchmarkUni700(b *testing.B) { benchmarkUni(dr, 700, b) }
-func BenchmarkUni800(b *testing.B) { benchmarkUni(dr, 800, b) }
-func BenchmarkUni900(b *testing.B) { benchmarkUni(dr, 900, b) }
-
-func BenchmarkDeferredUni50(b *testing.B)  { benchmarkDeferredUni(dr, 50, b) }
-func BenchmarkDeferredUni100(b *testing.B) { benchmarkDeferredUni(dr, 100, b) }
-func BenchmarkDeferredUni200(b *testing.B) { benchmarkDeferredUni(dr, 200, b) }
-func BenchmarkDeferredUni300(b *testing.B) { benchmarkDeferredUni(dr, 300, b) }
-func BenchmarkDeferredUni400(b *testing.B) { benchmarkDeferredUni(dr, 400, b) }
-func BenchmarkDeferredUni500(b *testing.B) { benchmarkDeferredUni(dr, 500, b) }
-func BenchmarkDeferredUni600(b *testing.B) { benchmarkDeferredUni(dr, 600, b) }
-func BenchmarkDeferredUni700(b *testing.B) { benchmarkDeferredUni(dr, 700, b) }
-func BenchmarkDeferredUni800(b *testing.B) { benchmarkDeferredUni(dr, 800, b) }
-func BenchmarkDeferredUni900(b *testing.B) { benchmarkDeferredUni(dr, 900, b) }
+//func BenchmarkAlt100(b *testing.B) { benchmarkAlt(dr, 100, b) }
+//func BenchmarkAlt200(b *testing.B) { benchmarkAlt(dr, 200, b) }
+//func BenchmarkAlt300(b *testing.B) { benchmarkAlt(dr, 300, b) }
+//func BenchmarkAlt400(b *testing.B) { benchmarkAlt(dr, 400, b) }
+//func BenchmarkAlt500(b *testing.B) { benchmarkAlt(dr, 500, b) }
+//func BenchmarkAlt600(b *testing.B) { benchmarkAlt(dr, 600, b) }
+//func BenchmarkAlt700(b *testing.B) { benchmarkAlt(dr, 700, b) }
+//func BenchmarkAlt800(b *testing.B) { benchmarkAlt(dr, 800, b) }
+//func BenchmarkAlt900(b *testing.B) { benchmarkAlt(dr, 900, b) }
+//
+//func BenchmarkUni50(b *testing.B)  { benchmarkUni(dr, 50, b) }
+//func BenchmarkUni100(b *testing.B) { benchmarkUni(dr, 100, b) }
+//func BenchmarkUni200(b *testing.B) { benchmarkUni(dr, 200, b) }
+//func BenchmarkUni300(b *testing.B) { benchmarkUni(dr, 300, b) }
+//func BenchmarkUni400(b *testing.B) { benchmarkUni(dr, 400, b) }
+//func BenchmarkUni500(b *testing.B) { benchmarkUni(dr, 500, b) }
+//func BenchmarkUni600(b *testing.B) { benchmarkUni(dr, 600, b) }
+//func BenchmarkUni700(b *testing.B) { benchmarkUni(dr, 700, b) }
+//func BenchmarkUni800(b *testing.B) { benchmarkUni(dr, 800, b) }
+//func BenchmarkUni900(b *testing.B) { benchmarkUni(dr, 900, b) }
+//
+//func BenchmarkDeferredUni50(b *testing.B)  { benchmarkDeferredUni(dr, 50, b) }
+//func BenchmarkDeferredUni100(b *testing.B) { benchmarkDeferredUni(dr, 100, b) }
+//func BenchmarkDeferredUni200(b *testing.B) { benchmarkDeferredUni(dr, 200, b) }
+//func BenchmarkDeferredUni300(b *testing.B) { benchmarkDeferredUni(dr, 300, b) }
+//func BenchmarkDeferredUni400(b *testing.B) { benchmarkDeferredUni(dr, 400, b) }
+//func BenchmarkDeferredUni500(b *testing.B) { benchmarkDeferredUni(dr, 500, b) }
+//func BenchmarkDeferredUni600(b *testing.B) { benchmarkDeferredUni(dr, 600, b) }
+//func BenchmarkDeferredUni700(b *testing.B) { benchmarkDeferredUni(dr, 700, b) }
+//func BenchmarkDeferredUni800(b *testing.B) { benchmarkDeferredUni(dr, 800, b) }
+//func BenchmarkDeferredUni900(b *testing.B) { benchmarkDeferredUni(dr, 900, b) }

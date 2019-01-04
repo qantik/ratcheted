@@ -5,6 +5,7 @@ package sch
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -44,6 +45,7 @@ func alt(n int, b *testing.B) {
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
 	}
+
 }
 
 func deferredUni(n int, b *testing.B) {
@@ -108,22 +110,28 @@ func uni(n int, b *testing.B) {
 func benchmarkUni(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		uni(i, b)
+		fmt.Println("kuSig", sEnc, sDec, sUpPk, sUpSk)
+		fmt.Println("kuPKE", pEnc, pDec, pUpPk, pUpSk)
 	}
 }
 
 func benchmarkDeferredUni(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		deferredUni(i, b)
+		fmt.Println("kuSig", sEnc, sDec, sUpPk, sUpSk)
+		fmt.Println("kuPKE", pEnc, pDec, pUpPk, pUpSk)
 	}
 }
 
 func benchmarkAlt(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		alt(i, b)
+		fmt.Println("kuSig", sEnc, sDec, sUpPk, sUpSk)
+		fmt.Println("kuPKE", pEnc, pDec, pUpPk, pUpSk)
 	}
 }
 
-//func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(50, b) }
+//func BenchmarkAlt50(b *testing.B) { benchmarkAlt(50, b) }
 //func BenchmarkAlt100(b *testing.B) { benchmarkAlt(100, b) }
 //func BenchmarkAlt200(b *testing.B) { benchmarkAlt(200, b) }
 //func BenchmarkAlt300(b *testing.B) { benchmarkAlt(300, b) }
@@ -134,8 +142,7 @@ func benchmarkAlt(i int, b *testing.B) {
 //func BenchmarkAlt800(b *testing.B) { benchmarkAlt(800, b) }
 //func BenchmarkAlt900(b *testing.B) { benchmarkAlt(900, b) }
 
-func BenchmarkUni50(b *testing.B) { benchmarkUni(10, b) }
-
+//func BenchmarkUni50(b *testing.B) { benchmarkUni(50, b) }
 //func BenchmarkUni100(b *testing.B) { benchmarkUni(100, b) }
 //func BenchmarkUni200(b *testing.B) { benchmarkUni(200, b) }
 //func BenchmarkUni300(b *testing.B) { benchmarkUni(300, b) }
@@ -146,7 +153,8 @@ func BenchmarkUni50(b *testing.B) { benchmarkUni(10, b) }
 //func BenchmarkUni800(b *testing.B) { benchmarkUni(800, b) }
 //func BenchmarkUni900(b *testing.B) { benchmarkUni(900, b) }
 
-//func BenchmarkDeferredUni50(b *testing.B) { benchmarkDeferredUni(10, b) }
+func BenchmarkDeferredUni50(b *testing.B) { benchmarkDeferredUni(50, b) }
+
 //func BenchmarkDeferredUni100(b *testing.B) { benchmarkDeferredUni(100, b) }
 //func BenchmarkDeferredUni200(b *testing.B) { benchmarkDeferredUni(200, b) }
 //func BenchmarkDeferredUni300(b *testing.B) { benchmarkDeferredUni(300, b) }
