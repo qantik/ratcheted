@@ -5,7 +5,6 @@ package dratch
 
 import (
 	"crypto/elliptic"
-	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -67,6 +66,9 @@ func NewDRatch(aead encryption.Authenticated,
 	}
 }
 
+var ckaGen = 0
+var fsGen = 0
+
 func (d DRatch) Init() (alice, bob *User, err error) {
 	root, err := d.pp.generate()
 	if err != nil {
@@ -111,6 +113,8 @@ func (d DRatch) Init() (alice, bob *User, err error) {
 		ek: ekb, dk: dkb, vk: vkb, sk: skb,
 		name: "bob",
 	}
+	ckaGen = 0
+	fsGen = 0
 	return
 }
 
@@ -150,6 +154,7 @@ func (d DRatch) Send(user *User, msg []byte) ([]byte, error) {
 		user.V[user.I-1] = nil
 
 		user.I++
+		ckaGen++
 		gamma, t, i, err := d.cka.send(user.Gamma)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable create cka message")
@@ -163,6 +168,7 @@ func (d DRatch) Send(user *User, msg []byte) ([]byte, error) {
 		}
 		user.Root = root
 
+		fsGen++
 		v, _, err := d.fsa.generate(k)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to create fresh fs-aead sender state")
@@ -254,7 +260,6 @@ func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 	if (user.name == "alice" && c.I <= user.I && c.I%2 == 0) ||
 		(user.name == "bob" && c.I <= user.I && c.I%2 == 1) {
 
-		fmt.Println("*")
 		v, msg, err := d.fsa.receive(user.V[c.I], cipher, ad)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to fs-aead decrypt message")
@@ -271,6 +276,7 @@ func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 			user.ek[c.I+1], user.vk[c.I+2] = c.EK, c.VK
 		}
 
+		ckaGen++
 		gamma, i, err := d.cka.receive(user.Gamma, c.T)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to receive cka message")
@@ -283,6 +289,7 @@ func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 		}
 		user.Root = root
 
+		fsGen++
 		_, v, err := d.fsa.generate(k)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to create fresh fs-aead receiver state")

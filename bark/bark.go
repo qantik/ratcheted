@@ -8,6 +8,7 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -52,6 +53,21 @@ func NewBARK(uni lite) *BARK {
 	return &BARK{uni: uni}
 }
 
+func (u User) size() int {
+	s := 0
+	for _, b := range u.Sender {
+		s += len(b)
+	}
+	for _, b := range u.Receiver {
+		s += len(b)
+	}
+	return s + len(u.Hk) + len(u.Hsent) + len(u.Hreceived)
+}
+
+var gen = 0
+var snd = 0
+var rcv = 0
+
 func (b BARK) Init() (alice, bob *User, err error) {
 	sa, ra, err := b.uni.Init()
 	if err != nil {
@@ -78,6 +94,7 @@ func (b BARK) Init() (alice, bob *User, err error) {
 		Sender: [][]byte{sb}, Receiver: [][]byte{ra},
 		Hsent: []byte{}, Hreceived: []byte{},
 	}
+	gen, snd, rcv = 0, 0, 0
 	return
 }
 
@@ -86,6 +103,7 @@ func (b BARK) Send(user *User) (k, ct []byte, err error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	gen++
 	user.Receiver = append(user.Receiver, r)
 
 	k = make([]byte, sessionKeySize)
@@ -107,9 +125,11 @@ func (b BARK) Send(user *User) (k, ct []byte, err error) {
 	}
 
 	u := len(user.Sender) - 1
+	fmt.Println("send", i, u)
 	for j := u; j >= i; j-- {
 		index := []byte(strconv.Itoa(u - j))
-		sj, o, err := b.uni.Send(user.Sender[j], append(index, user.Hsent...), onion, j < u)
+		snd++
+		sj, o, err := b.uni.Send(user.Sender[j], append(index, user.Hsent...), onion, j == u)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -128,7 +148,7 @@ func (b BARK) Send(user *User) (k, ct []byte, err error) {
 		return nil, nil, errors.Wrap(err, "unable to encode bark ciphertext")
 	}
 	user.Hsent = primitives.Digest(hmac.New(sha256.New, user.Hk), ct)
-
+	fmt.Println(len(ct), user.size())
 	return
 }
 
@@ -157,8 +177,10 @@ func (b BARK) Receive(user *User, ct []byte) (k []byte, err error) {
 	onion := c.Onion
 
 	var upds []byte
+	fmt.Println("recv", i, i+n)
 	for j := i; j <= i+n; j++ {
 		index := []byte(strconv.Itoa(i + n - j))
+		rcv++
 		upd, o, err := b.uni.Receive(user.Receiver[j], append(index, user.Hreceived...), onion)
 		if err != nil {
 			return nil, err
@@ -181,5 +203,6 @@ func (b BARK) Receive(user *User, ct []byte) (k []byte, err error) {
 	user.Receiver[i+n] = upds
 	user.Hreceived = primitives.Digest(hmac.New(sha256.New, user.Hk), ct)
 
+	fmt.Println("==", user.size())
 	return
 }

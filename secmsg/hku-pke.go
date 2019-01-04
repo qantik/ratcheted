@@ -66,6 +66,16 @@ type hkuUpdInfo struct {
 	R     int    // R indicates after how many received message the healing applied.
 }
 
+var skuGen = 0
+var skuEnc = 0
+var skuDec = 0
+var skuUpdEk = 0
+var skuUpdDk = 0
+
+var adGen = 0
+var adEnc = 0
+var adDec = 0
+
 // generate creates a fresh hkuPKE sender and receciver state.
 func (h hkuPKE) generate() (s, r []byte, err error) {
 	ekUpd, dkUpd, err := h.sku.generate()
@@ -95,6 +105,8 @@ func (h hkuPKE) generate() (s, r []byte, err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode hkuPKE receiver state")
 	}
+	skuGen, skuEnc, skuDec, skuUpdEk, skuUpdDk = 0, 0, 0, 0, 0
+	adGen, adEnc, adDec = 0, 0, 0
 	return
 }
 
@@ -106,6 +118,7 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	}
 
 	// generate update information
+	skuGen++
 	ue, ud, err := h.sku.updateGen()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to generate skuPKE update information")
@@ -122,10 +135,12 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode message")
 	}
+	skuEnc++
 	c, err := h.sku.encrypt(s.EkUpd, m)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to skuPKE encrypt message")
 	}
+	adEnc++
 	c, err = h.pke.Encrypt(s.EkEph, c, ad)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to PKE encrypt ciphertext")
@@ -139,10 +154,12 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	s.Trace = primitives.Digest(sha256.New(), s.Trace, c, []byte(strconv.Itoa(s.J)), ad)
 
 	// update public keys
+	skuUpdEk++
 	ekUpd, err := h.sku.updatePK(s.Ue[s.S], s.EkUpd)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to update skuPKE public key")
 	}
+	adGen++
 	seed := primitives.Digest(sha256.New(), s.Trace, z)
 	ekEph, _, err := h.pke.Generate(seed)
 	if err != nil {
@@ -173,10 +190,12 @@ func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 	r.R++
 
 	// decrypt ciphertext
+	adDec++
 	c, err := h.pke.Decrypt(r.DkEph[ciphertext.J], ciphertext.C, ad)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to PKE decrypt ciphertext")
 	}
+	skuDec++
 	m, err := h.sku.decrypt(r.DkUpd[ciphertext.J], c)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to skuPKE decrypt ciphertext")
@@ -193,6 +212,7 @@ func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 	)
 
 	// update secret keys
+	adGen++
 	seed := primitives.Digest(sha256.New(), r.Trace, message.Z)
 	_, dkEph, err := h.pke.Generate(seed)
 	if err != nil {
@@ -205,6 +225,7 @@ func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 			r.DkEph[l] = nil
 		} else {
 			r.DkEph[l] = dkEph
+			skuUpdDk++
 			r.DkUpd[l], err = h.sku.updateSK(message.Ud, r.DkUpd[l])
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "unable to update skuPKE private key")
@@ -227,10 +248,12 @@ func (h hkuPKE) updateDK(receiver []byte) (upd, inf []byte, err error) {
 	}
 	r.I++
 
+	skuGen++
 	ekUpd, dkUpd, err := h.sku.generate()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to create skuPKE states")
 	}
+	adGen++
 	ekEph, dkEph, err := h.pke.Generate(nil)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to create PKE states")
@@ -268,6 +291,7 @@ func (h hkuPKE) updateEK(sender, inf []byte) (upd []byte, err error) {
 
 	fmt.Println("upEk", i.R, s.S)
 	for l := i.R; l < s.S; l++ {
+		skuUpdEk++
 		ek, err := h.sku.updatePK(s.Ue[l], s.EkUpd)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to update sku-PKE public key")

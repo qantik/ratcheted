@@ -59,8 +59,10 @@ func (u Uni) Send(state, ad, pt []byte, simple bool) (upd, ct []byte, err error)
 	}
 
 	// Only create new uni-bark state for the inner-most onion layer.
+
 	var us, ur []byte
-	if !simple {
+	if simple {
+		gen++
 		us, ur, err = u.Init()
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "unable to create new uni-bark instance")

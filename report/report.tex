@@ -933,6 +933,10 @@ even epochs are reserved for Alice to send and odd epochs for Bob.
   Whether it is the first message of a new epoch or not the FS-AEAD is
   always updated at the end with when encrypting
   the message where $t_\t{P}$ and $T_\t{cur}$ serve as associated data.
+  Recall that Alice occupies odd epoch numbers while Bob uses even
+  epochs to send messages so at the very beginning of the communication, when both
+  participants have not yet received any messages, Alice
+  will begin a new epoch with her send call while Bob does not.
 \item \textbf{Rcv-P.} Whenever the received messages marks the beginning
   of a new epoch the user has to update his state accordingly (elseif-branch)
   mirroring the operations performed by the partner in his send
@@ -1171,7 +1175,8 @@ can then be safely extrapolated.
   for each message which translates to two signcryption
   encryptions/decryptions. Since the signcryption scheme is spun up by combining
   a regular PKE system and a DSS scheme we have two PKE encryptions/decryptions
-  and two DSS signatures/verifications per message. Also note that
+  and two DSS signatures/verifications per message, excluding
+  the first exchange. Also note that
   only one key generation is performed during the onion encryption.
   Replacing the signcryption algorithm with a symmetric AEAD scheme
   will result in a protocol that has a runtime below one second
@@ -1180,8 +1185,8 @@ can then be safely extrapolated.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
-    \textbf{PKE} & $2n$ & $2n/2n$ & $0/0$ \\ \hline
-    \textbf{Signature} & $2n$ & $2n/2n$ & $0/0$ \\  
+    \textbf{PKE} & $2n$ & $2n-1/2n-1$ & $0/0$ \\ \hline
+    \textbf{Signature} & $2n-1$ & $2n-1/2n-1$ & $0/0$ \\  
     \hline
     \end{tabular}
   \end{center}
@@ -1279,8 +1284,52 @@ expected.
     \hline
     \end{tabular}
   \end{center}
-\item \textbf{DV.}
+\item \textbf{DV.} All messages by Alice have a single onion layer but for
+  the first message in the opposite direction both use $\frac{n}{2}$ onion
+  layers using all accumulated signcryption keys. The resulting runtime
+  is thus slightly better than in the alternating case.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{PKE} & $2n$ & $\frac{3}{2}n/\frac{3}{2}n$ & $0/0$ \\ \hline
+    \textbf{Signature} & $2n$ & $\frac{3}{2}n/\frac{3}{2}n$ & $0/0$ \\  
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{JMM.} Unidirectional traffic does not change the metrics
+  with respect to alternating traffic for this protocol thus we have the
+  same amount of operations for both.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & - \\ \hline
+    \textbf{sku-PKE} & $2n$ & $n/n$ & $n/n$ \\ \hline
+    \textbf{PKE-AD} & $3n$ & $n/n$ & - \\
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{ACD.} Alice starts a new epoch with her first message, the
+  same for Bob with his first message after receiving the $\frac{n}{2}$
+  from Alice. This results in a total of $4$ CKA calls and $4$ FS-AEAD
+  key generations.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{FS-AEAD} & $4$ & $n/n$ & - \\ \hline
+    \textbf{CKA} & $4$ & - & - \\  
+    \hline
+    \end{tabular}
+  \end{center}
 \end{itemize}
+
+We can see that in unidirectional traffic there is a clear separation
+between protocols of Poettering/Rösler and Jaeger/Stepanovs due
+to the quadratic penalty of encryption key updates within
+key-updatable PKE. All the other protocols have more or less
+the same metrics as in alternating traffic.
 
 \clearpage
 
@@ -1327,8 +1376,75 @@ expected.
     \hline
     \end{tabular}
   \end{center}
-
+\item \textbf{DV.} In deferred unidirectional traffic it is easy to see that
+  all message have a single onion layer thus resulting $n$ overall
+  signcryption calls.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{PKE} & $2n$ & $n/n$ & $0/0$ \\ \hline
+    \textbf{Signature} & $2n$ & $n/n$ & $0/0$ \\  
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{JMM.} In deferred unidirectional traffic the protocol
+  has a quadratic sku-PKE key update penalty in \texttt{hku-PKE.Dec} and
+  \texttt{hku-PKE.BcUpdEk} hence it worse than the protocol by Durak
+  and Vaudenay.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & - \\ \hline
+    \textbf{sku-PKE} & $2n$ & $n/n$ & $n+2n^2/n+2n^2$ \\ \hline
+    \textbf{PKE-AD} & $3n$ & $n/n$ & - \\
+    \hline
+    \end{tabular}
+  \end{center}
+\item \textbf{ACD.} We have a similar situation with respect to regular
+  unidirectional traffic. The only difference is that Bob does not
+  start a new epoch with his first message, hence we save two CKA calls
+  and two FS-AEAD key generations.
+  \begin{center}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{FS-AEAD} & $2$ & $n/n$ & - \\ \hline
+    \textbf{CKA} & $2$ & - & - \\  
+    \hline
+    \end{tabular}
+  \end{center}
 \end{itemize}
+
+In deferred unidirectional traffic it now also possible to separate
+the protocols Durak/Vaudenay and Jost/Maurer/Mularczyk due to
+the quadratic key update complexity within the
+secretly key-updatable PKE scheme. The protocol by Poettering
+and Rösler also sees a jump in complexity caused by another
+quadratic update complexity.
+
+\section{Message Size Benchmarks}
+\label{sec:ciph-size-benchm}
+
+The size of the message is another viable metric in order to
+judge a messaging protocol. Smaller messages save disk space,
+are easier to transmit over the network and take generally
+less time to process. We again consider the traffic
+types from the previous section and measure the maximal
+size in bytes that any message reaches. The size
+naturally depends on how much data is packed into the message
+but also on the primitives used to generate this data.
+
+\clearpage
+
+\begin{figure}[H]
+  \centering
+  \input{plots/msg-size.tikz} 
+  \caption{Message Size Benchmark}
+  \label{fig:msg-size}
+\end{figure}
+
 
 % % Put into separate section
 % The whole codebase with all the protocols, the accompanying benchmarks,

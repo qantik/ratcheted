@@ -253,6 +253,12 @@ func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	user.s.K = Ks
 	user.s.L[user.s.s] = append(ad, bytes.Join(C, nil)...)
 
+	size := 0
+	for _, b := range C {
+		size += len(b)
+	}
+	fmt.Println("size ==============", size)
+
 	return ko, C, nil
 }
 
@@ -280,7 +286,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	}
 	user.s.L[rr] = []byte{}
 
-	fmt.Println("upPK", rr+1, user.s.s)
+	//fmt.Println("upPK", rr+1, user.s.s)
 	for i := rr + 1; i <= user.s.s; i++ {
 		pkk++
 		pks, err = b.kuKEM.updatePublicKey(pks, user.s.L[i])
@@ -337,7 +343,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 		user.r.SK[i] = nil
 	}
 	user.r.SK[e] = sk
-	fmt.Println("upSK", e+1, user.r.E1)
+	//fmt.Println("upSK", e+1, user.r.E1)
 	for i := e + 1; i <= user.r.E1; i++ {
 		skk++
 		s, err := b.kuKEM.updateSecretKey(user.r.SK[i], ts)

@@ -177,6 +177,8 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 	user.t = append(user.t, primitives.Digest(sha256.New(), user.hk, msg))
 	user.sk = sks
 
+	fmt.Println(len(msg))
+
 	return msg, nil
 }
 

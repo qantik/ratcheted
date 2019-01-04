@@ -10,6 +10,7 @@ package secmsg
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -56,6 +57,12 @@ type ciphertext struct {
 
 	SigUpd, SigEph []byte
 }
+
+var kuGen = 0
+var kuEnc = 0
+var kuDec = 0
+var kuUpdEk = 0
+var kuUpdDk = 0
 
 // Init creates and returns two User objects which can communicate with each other.
 // Note, that in case of an error during a send or receiver operation both user states
@@ -106,6 +113,7 @@ func (s SecMsg) Init() (*User, *User, error) {
 		s: 0, sAck: 0, r: 0,
 		trace: []byte{}, trans: [][]byte{[]byte{}},
 	}
+	kuGen, kuEnc, kuDec, kuUpdEk, kuUpdDk = 0, 0, 0, 0, 0
 	return alice, bob, nil
 }
 
@@ -137,6 +145,7 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 	}
 
 	// signature
+	kuEnc++
 	data := primitives.Digest(sha256.New(), c, upd, vkEph2, []byte(strconv.Itoa(user.r)))
 	skUpd, sigUpd, err := s.kus.sign(user.skUpd, append(data, user.trace...))
 	if err != nil {
@@ -165,6 +174,7 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encode ciphertext")
 	}
+	fmt.Println(len(c))
 	return c, nil
 }
 
@@ -196,6 +206,7 @@ func (s SecMsg) Receive(user *User, ct []byte) ([]byte, error) {
 	if err := s.sig.Verify(vk, append(data, user.trans[c.R]...), c.SigEph); err != nil {
 		return nil, errors.Wrap(err, "unable to verify ots signature")
 	}
+	kuDec++
 	vkUpd, err := s.kus.verify(user.vkUpd, append(data, user.trans[c.R]...), c.SigUpd)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to verify ku-Sig signature")
