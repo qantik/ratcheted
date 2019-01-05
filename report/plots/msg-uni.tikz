@@ -1,0 +1,86 @@
+\begin{tikzpicture}[scale=1]
+\begin{axis}[
+  %ymode=log,
+%  legend style={font=\tiny, legend columns=4},
+%  scaled ticks=false,
+%  xlabel={Number of Sent Messages},
+%  ylabel={Size (Kilobyte)},
+%  xmin=0, xmax=1000,
+%  ymax=200,
+%  xtick={0,200,400,600,800,1000},
+%  %ytick={0.01,0.1,1,10,100,1000,10000},
+%  ytick={0,20,40,60,80,100,120,140,160,180,200},
+%  legend pos=north west,
+%  ymajorgrids=true,
+%  xminorticks=false,
+%  yminorticks=false,
+%  grid style=dashed,
+%  height=7cm,
+%  width=10cm,
+  ymode=log,
+  legend style={font=\tiny, legend columns=4},
+  scaled ticks=false,
+  xlabel={Number of Sent Messages},
+  ylabel={Size (Kilobyte)},
+  xmin=0, xmax=1000,
+  ymax=1000,
+  xtick={0,200,400,600,800,1000},
+  ytick={0.001,0.01,0.1,1,10,100,1000},
+  %ytick={0,20,40,60,80,100,120,140,160,180,200},
+  legend pos=north west,
+  ymajorgrids=true,
+  xminorticks=false,
+  yminorticks=false,
+  grid style=dashed,
+  height=7cm,
+  width=10cm,
+]
+ 
+\addplot[color=blue,mark=*]
+   coordinates {
+  (50,10.3)(100,21.1)(200,41.3)(300,61.6)(400,81.4)(500,102.4)(600,123.5)
+  (700,144.0)(800,164.5)(900,185.6)
+  };
+
+\addplot[color=red,mark=triangle*]
+  coordinates {
+  (50,2.3)(100,4.4)(200,8.7)(300,12.9)(400,17.2)(500,21.3)
+  (600,25.6)(700,29.9)(800,34.2)(900,38.4)
+  };
+
+\addplot[color=orange,mark=square*]
+  coordinates {
+  (50,5.9)(100,11.0)(200,21.3)(300,31.6)(400,41.6)(500,52.2)
+  (600,62.5)(700,72.8)(800,83.4)(900,93.5)
+  };
+
+
+\addplot[color=black!30!green,mark=x]
+  coordinates {
+  (50,13.7)(100,22.0)(200,38.4)(300,54.9)(400,70.9)(500,86.3)
+  (600,103.7)(700,120.1)(800,136.4)(900,153.3)
+  };
+
+\addplot[color=black,mark=pentagon*]
+  coordinates {
+  (50,1.4)(100,1.4)(200,1.4)(300,1.4)(400,1.4)(500,1.4)
+  (600,1.4)(700,1.4)(800,1.4)(900,1.4)
+  };
+
+\addplot[color=purple,mark=o]
+  coordinates {
+  (50,0.29)(100,0.29)(200,0.29)(300,0.29)(400,0.29)(500,0.29)
+  (600,0.29)(700,0.29)(800,0.29)(900,0.29)
+  };
+
+\addplot[color=yellow,mark=square]
+  coordinates {
+  (50,0.78)(100,0.78)(200,0.78)(300,0.78)(400,0.78)(500,0.78)
+  (600,0.78)(700,0.78)(800,0.78)(900,0.78)
+  };
+
+
+  \legend{DV,DV-lite,PR,JS,JMM,ACD,ACD-PK}
+ 
+\end{axis}
+\end{tikzpicture}

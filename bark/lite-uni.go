@@ -44,7 +44,7 @@ func (l LiteUni) Init() (s, r []byte, err error) {
 
 // Send creates a new state and encrypts it for transmission to another participant.
 func (l LiteUni) Send(state, ad, pt []byte, simple bool) (upd, ct []byte, err error) {
-	if !simple {
+	if simple {
 		upd = make([]byte, liteUniKeySize)
 		if _, err := rand.Read(upd); err != nil {
 			return nil, nil, err

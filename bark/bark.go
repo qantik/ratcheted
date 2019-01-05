@@ -8,7 +8,6 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -125,7 +124,7 @@ func (b BARK) Send(user *User) (k, ct []byte, err error) {
 	}
 
 	u := len(user.Sender) - 1
-	fmt.Println("send", i, u)
+	//fmt.Println("send", i, u)
 	for j := u; j >= i; j-- {
 		index := []byte(strconv.Itoa(u - j))
 		snd++
@@ -148,7 +147,6 @@ func (b BARK) Send(user *User) (k, ct []byte, err error) {
 		return nil, nil, errors.Wrap(err, "unable to encode bark ciphertext")
 	}
 	user.Hsent = primitives.Digest(hmac.New(sha256.New, user.Hk), ct)
-	fmt.Println(len(ct), user.size())
 	return
 }
 
@@ -177,7 +175,7 @@ func (b BARK) Receive(user *User, ct []byte) (k []byte, err error) {
 	onion := c.Onion
 
 	var upds []byte
-	fmt.Println("recv", i, i+n)
+	//fmt.Println("recv", i, i+n)
 	for j := i; j <= i+n; j++ {
 		index := []byte(strconv.Itoa(i + n - j))
 		rcv++
@@ -203,6 +201,5 @@ func (b BARK) Receive(user *User, ct []byte) (k []byte, err error) {
 	user.Receiver[i+n] = upds
 	user.Hreceived = primitives.Digest(hmac.New(sha256.New, user.Hk), ct)
 
-	fmt.Println("==", user.size())
 	return
 }

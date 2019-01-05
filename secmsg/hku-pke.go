@@ -6,7 +6,6 @@ package secmsg
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -218,7 +217,7 @@ func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to create new PKE private key")
 	}
-	fmt.Println("dec", 0, ciphertext.J, r.I)
+	//fmt.Println("dec", 0, ciphertext.J, r.I)
 	for l := 0; l <= r.I; l++ {
 		if l < ciphertext.J {
 			r.DkUpd[l] = nil
@@ -289,7 +288,7 @@ func (h hkuPKE) updateEK(sender, inf []byte) (upd []byte, err error) {
 	}
 	s.EkUpd = i.EkUpd
 
-	fmt.Println("upEk", i.R, s.S)
+	//fmt.Println("upEk", i.R, s.S)
 	for l := i.R; l < s.S; l++ {
 		skuUpdEk++
 		ek, err := h.sku.updatePK(s.Ue[l], s.EkUpd)

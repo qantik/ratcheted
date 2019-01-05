@@ -10,7 +10,6 @@ package secmsg
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -40,6 +39,17 @@ type User struct {
 
 	trace []byte   // trace is the chain hash of all received ciphertexts.
 	trans [][]byte // trans is an array of all hashed ciphertexts (transcript).
+}
+
+func (u User) size() int {
+	size := 0
+	for _, b := range u.vk {
+		size += len(b)
+	}
+	for _, b := range u.trans {
+		size += len(b)
+	}
+	return size + len(u.ek) + len(u.dk) + len(u.vkUpd) + len(u.skUpd) + len(u.vkEph) + len(u.skEph) + len(u.trace)
 }
 
 // message groups the actual plaintext the ephemeral ots private key for encryption.
@@ -174,7 +184,6 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encode ciphertext")
 	}
-	fmt.Println(len(c))
 	return c, nil
 }
 

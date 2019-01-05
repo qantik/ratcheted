@@ -13,7 +13,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -148,7 +147,7 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 	}
 
 	uek := user.ek
-	fmt.Println("upPK", user.ack+1, user.s, user.s-(user.ack+1))
+	//fmt.Println("upPK", user.ack+1, user.s, user.s-(user.ack+1))
 	for i := user.ack + 1; i < user.s; i++ {
 		pUpPk++
 		uek, err = s.kuPKE.updatePublicKey(uek, user.t[i])
@@ -169,6 +168,7 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to sign message")
 	}
+	//fmt.Println(len(c), len(sig), len(vks), len(eks))
 	msg, err := primitives.Encode(&message{C: c, Sig: sig, Aux: aux, L: l})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to decode message")
@@ -176,8 +176,6 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 
 	user.t = append(user.t, primitives.Digest(sha256.New(), user.hk, msg))
 	user.sk = sks
-
-	fmt.Println(len(msg))
 
 	return msg, nil
 }
@@ -204,7 +202,7 @@ func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 	}
 
 	uvk := user.vk
-	fmt.Println("upVK", user.ack+1, msg.Aux.R)
+	//fmt.Println("upVK", user.ack+1, msg.Aux.R)
 	for i := user.ack + 1; i <= msg.Aux.R; i++ {
 		sUpPk++
 		uvk, _ = s.kuDSS.updatePublicKey(uvk, user.t[i])
@@ -237,7 +235,7 @@ func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to update ku-dss private key")
 	}
-	fmt.Println("upDK", user.ack, user.s)
+	//fmt.Println("upDK", user.ack, user.s)
 	for i := user.ack; i <= user.s; i++ {
 		pUpSk++
 		user.dk[i], err = s.kuPKE.updatePrivateKey(user.dk[i], user.tau)

@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha512"
-	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -80,6 +79,24 @@ type s struct {
 	// t is the accumulated transcript of the current communication.
 	// FIXME: It may be better to use a 2-dim array instead of glueing together slices.
 	t []byte
+}
+
+func (u User) size() int {
+	size := 0
+	for _, b := range u.r.SK {
+		size += len(b)
+	}
+	for _, b := range u.r.L {
+		size += len(b)
+	}
+	size += len(u.r.sgk) + len(u.r.K) + len(u.r.t)
+	for _, b := range u.s.PK {
+		size += len(b)
+	}
+	for _, b := range u.s.L {
+		size += len(b)
+	}
+	return size + len(u.s.vfk) + len(u.s.K) + len(u.s.t)
 }
 
 // NewBRKE creates a fresh BRKE protocol instance.
@@ -222,8 +239,6 @@ func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 		ks, C = append(ks, c1...), append(C, c2)
 	}
 
-	//user.kuKEM = user.s.E0 == user.s.E1
-
 	// Sign ciphertext and append it to the history.
 	sig, err := b.signature.Sign(user.r.sgk, append(ad, bytes.Join(C, nil)...))
 	if err != nil {
@@ -252,12 +267,6 @@ func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	user.s.s += 1
 	user.s.K = Ks
 	user.s.L[user.s.s] = append(ad, bytes.Join(C, nil)...)
-
-	size := 0
-	for _, b := range C {
-		size += len(b)
-	}
-	fmt.Println("size ==============", size)
 
 	return ko, C, nil
 }

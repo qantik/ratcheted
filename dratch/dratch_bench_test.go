@@ -23,19 +23,41 @@ var (
 
 	dr   = NewDRatch(gcm, nil, nil)
 	drpk = NewDRatch(gcm, ecies, ecdsa)
+
+	msg = []byte{
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+	}
 )
 
 func alt(dr *DRatch, n int, b *testing.B) {
 	require := require.New(b)
 
-	msg := []byte("dratch")
-
 	alice, bob, err := dr.Init()
 	require.Nil(err)
+
+	max := 0
+	maxs := 0
 
 	for i := 0; i < n/2; i++ {
 		ct, err := dr.Send(alice, msg)
 		require.Nil(err)
+
+		if len(ct) > max {
+			max = len(ct)
+		}
+		if alice.size() > maxs {
+			maxs = alice.size()
+		}
+		if bob.size() > maxs {
+			maxs = bob.size()
+		}
 
 		pt, err := dr.Receive(bob, ct)
 		require.Nil(err)
@@ -44,44 +66,80 @@ func alt(dr *DRatch, n int, b *testing.B) {
 		ct, err = dr.Send(bob, msg)
 		require.Nil(err)
 
+		if len(ct) > max {
+			max = len(ct)
+		}
+		if alice.size() > maxs {
+			maxs = alice.size()
+		}
+		if bob.size() > maxs {
+			maxs = bob.size()
+		}
+
 		pt, err = dr.Receive(alice, ct)
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
 	}
+
+	fmt.Println("size:", max)
+	fmt.Println("state:", maxs)
 }
 
 func uni(dr *DRatch, n int, b *testing.B) {
 	require := require.New(b)
 
-	msg := []byte("dratch")
-
 	alice, bob, err := dr.Init()
 	require.Nil(err)
+
+	max := 0
+	maxs := 0
 
 	for i := 0; i < n/2; i++ {
 		ct, err := dr.Send(alice, msg)
 		require.Nil(err)
+		if len(ct) > max {
+			max = len(ct)
+		}
 
 		pt, err := dr.Receive(bob, ct)
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
+
+		if alice.size() > maxs {
+			maxs = alice.size()
+		}
+		if bob.size() > maxs {
+			maxs = bob.size()
+		}
 
 	}
 
 	for i := 0; i < n/2; i++ {
 		ct, err := dr.Send(bob, msg)
 		require.Nil(err)
+		if len(ct) > max {
+			max = len(ct)
+		}
 
 		pt, err := dr.Receive(alice, ct)
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
+		if alice.size() > maxs {
+			maxs = alice.size()
+		}
+		if bob.size() > maxs {
+			maxs = bob.size()
+		}
 	}
+
+	fmt.Println("size:", max)
+	fmt.Println("state:", maxs)
 }
 
 func deferredUni(dr *DRatch, n int, b *testing.B) {
 	require := require.New(b)
 
-	msg := []byte("dratch")
+	//msg := []byte("dratch")
 
 	alice, bob, err := dr.Init()
 	require.Nil(err)
@@ -131,7 +189,7 @@ func benchmarkDeferredUni(dr *DRatch, i int, b *testing.B) {
 	fmt.Println(ckaGen, fsGen)
 }
 
-//func BenchmarkAlt50(b *testing.B) { benchmarkAlt(dr, 50, b) }
+//func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(dr, 50, b) }
 //func BenchmarkAlt100(b *testing.B) { benchmarkAlt(dr, 100, b) }
 //func BenchmarkAlt200(b *testing.B) { benchmarkAlt(dr, 200, b) }
 //func BenchmarkAlt300(b *testing.B) { benchmarkAlt(dr, 300, b) }
@@ -141,21 +199,19 @@ func benchmarkDeferredUni(dr *DRatch, i int, b *testing.B) {
 //func BenchmarkAlt700(b *testing.B) { benchmarkAlt(dr, 700, b) }
 //func BenchmarkAlt800(b *testing.B) { benchmarkAlt(dr, 800, b) }
 //func BenchmarkAlt900(b *testing.B) { benchmarkAlt(dr, 900, b) }
-//
-//func BenchmarkUni50(b *testing.B) { benchmarkUni(dr, 50, b) }
 
-//func BenchmarkUni100(b *testing.B) { benchmarkUni(dr, 100, b) }
-//func BenchmarkUni200(b *testing.B) { benchmarkUni(dr, 200, b) }
-//func BenchmarkUni300(b *testing.B) { benchmarkUni(dr, 300, b) }
-//func BenchmarkUni400(b *testing.B) { benchmarkUni(dr, 400, b) }
-//func BenchmarkUni500(b *testing.B) { benchmarkUni(dr, 500, b) }
-//func BenchmarkUni600(b *testing.B) { benchmarkUni(dr, 600, b) }
-//func BenchmarkUni700(b *testing.B) { benchmarkUni(dr, 700, b) }
-//func BenchmarkUni800(b *testing.B) { benchmarkUni(dr, 800, b) }
-//func BenchmarkUni900(b *testing.B) { benchmarkUni(dr, 900, b) }
-//
-func BenchmarkDeferredUni50(b *testing.B) { benchmarkDeferredUni(dr, 50, b) }
+func BenchmarkUni50(b *testing.B)  { benchmarkUni(drpk, 50, b) }
+func BenchmarkUni100(b *testing.B) { benchmarkUni(drpk, 100, b) }
+func BenchmarkUni200(b *testing.B) { benchmarkUni(drpk, 200, b) }
+func BenchmarkUni300(b *testing.B) { benchmarkUni(drpk, 300, b) }
+func BenchmarkUni400(b *testing.B) { benchmarkUni(drpk, 400, b) }
+func BenchmarkUni500(b *testing.B) { benchmarkUni(drpk, 500, b) }
+func BenchmarkUni600(b *testing.B) { benchmarkUni(drpk, 600, b) }
+func BenchmarkUni700(b *testing.B) { benchmarkUni(drpk, 700, b) }
+func BenchmarkUni800(b *testing.B) { benchmarkUni(drpk, 800, b) }
+func BenchmarkUni900(b *testing.B) { benchmarkUni(drpk, 900, b) }
 
+//func BenchmarkDeferredUni50(b *testing.B) { benchmarkDeferredUni(dr, 50, b) }
 //func BenchmarkDeferredUni100(b *testing.B) { benchmarkDeferredUni(dr, 100, b) }
 //func BenchmarkDeferredUni200(b *testing.B) { benchmarkDeferredUni(dr, 200, b) }
 //func BenchmarkDeferredUni300(b *testing.B) { benchmarkDeferredUni(dr, 300, b) }

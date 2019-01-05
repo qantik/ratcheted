@@ -23,19 +23,49 @@ var (
 	gentry = hibe.NewGentry()
 
 	brke = NewBRKE(gentry, ecdsa)
+
+	ad = []byte{
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+	}
 )
+
+func size(m [][]byte) int {
+	size := 0
+	for _, b := range m {
+		size += len(b)
+	}
+	return size
+}
 
 func alt(n int, b *testing.B) {
 	require := require.New(b)
 
-	ad := []byte("associated-data")
-
 	alice, bob, err := brke.Init()
 	require.Nil(err)
+
+	max := 0
+	maxs := 0
 
 	for i := 0; i < n/2; i++ {
 		ka, c, err := brke.Send(alice, ad)
 		require.Nil(err)
+
+		if size(c) > max {
+			max = size(c)
+		}
+		if alice.size() > maxs {
+			maxs = alice.size()
+		}
+		if bob.size() > maxs {
+			maxs = alice.size()
+		}
 
 		kb, err := brke.Receive(bob, ad, c)
 		require.Nil(err)
@@ -44,24 +74,41 @@ func alt(n int, b *testing.B) {
 		kb, c, err = brke.Send(bob, ad)
 		require.Nil(err)
 
+		if size(c) > max {
+			max = size(c)
+		}
+		if alice.size() > maxs {
+			maxs = alice.size()
+		}
+		if bob.size() > maxs {
+			maxs = alice.size()
+		}
+
 		ka, err = brke.Receive(alice, ad, c)
 		require.Nil(err)
 		require.True(bytes.Equal(ka, kb))
 	}
+
+	fmt.Println()
+	fmt.Println("size:", max)
+	fmt.Println("state:", maxs)
 }
 
 func deferredUni(n int, b *testing.B) {
 	require := require.New(b)
 
-	ad := []byte("associated-data")
-
 	alice, bob, err := brke.Init()
 	require.Nil(err)
+
+	max := 0
 
 	var ks [1000][]byte
 	var cs [1000][][]byte
 	for i := 0; i < n/2; i++ {
 		k, c, err := brke.Send(alice, ad)
+		if size(c) > max {
+			max = size(c)
+		}
 		require.Nil(err)
 		ks[i] = k
 		cs[i] = c
@@ -70,6 +117,9 @@ func deferredUni(n int, b *testing.B) {
 	for i := 0; i < n/2; i++ {
 		kb, c, err := brke.Send(bob, ad)
 		require.Nil(err)
+		if size(c) > max {
+			max = size(c)
+		}
 
 		ka, err := brke.Receive(alice, ad, c)
 		require.Nil(err)
@@ -81,19 +131,31 @@ func deferredUni(n int, b *testing.B) {
 		require.Nil(err)
 		require.True(bytes.Equal(ks[i], k))
 	}
+	fmt.Println("size:", max)
 }
 
 func uni(n int, b *testing.B) {
 	require := require.New(b)
 
-	ad := []byte("associated-data")
-
 	alice, bob, err := brke.Init()
 	require.Nil(err)
+
+	max := 0
+	maxs := 0
 
 	for i := 0; i < n/2; i++ {
 		ka, c, err := brke.Send(alice, ad)
 		require.Nil(err)
+
+		if size(c) > max {
+			max = size(c)
+		}
+		if alice.size() > maxs {
+			maxs = alice.size()
+		}
+		if bob.size() > maxs {
+			maxs = alice.size()
+		}
 
 		kb, err := brke.Receive(bob, ad, c)
 		require.Nil(err)
@@ -104,10 +166,23 @@ func uni(n int, b *testing.B) {
 		kb, c, err := brke.Send(bob, ad)
 		require.Nil(err)
 
+		if size(c) > max {
+			max = size(c)
+		}
+
 		ka, err := brke.Receive(alice, ad, c)
 		require.Nil(err)
 		require.True(bytes.Equal(ka, kb))
+		if alice.size() > maxs {
+			maxs = alice.size()
+		}
+		if bob.size() > maxs {
+			maxs = alice.size()
+		}
 	}
+
+	fmt.Println("size:", max)
+	fmt.Println("state:", maxs)
 }
 
 func benchmarkAlt(i int, b *testing.B) {
@@ -131,21 +206,19 @@ func benchmarkUni(i int, b *testing.B) {
 	fmt.Println(enc, dec, pkk, skk)
 }
 
-//func BenchmarkAlt50(b *testing.B) { benchmarkAlt(50, b) }
-//func BenchmarkAlt100(b *testing.B) { benchmarkAlt(100, b) }
-//func BenchmarkAlt200(b *testing.B) { benchmarkAlt(200, b) }
+func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(50, b) }
+func BenchmarkAlt100(b *testing.B) { benchmarkAlt(100, b) }
+func BenchmarkAlt200(b *testing.B) { benchmarkAlt(200, b) }
+func BenchmarkAlt300(b *testing.B) { benchmarkAlt(300, b) }
+func BenchmarkAlt400(b *testing.B) { benchmarkAlt(400, b) }
+func BenchmarkAlt500(b *testing.B) { benchmarkAlt(500, b) }
+func BenchmarkAlt600(b *testing.B) { benchmarkAlt(600, b) }
+func BenchmarkAlt700(b *testing.B) { benchmarkAlt(700, b) }
+func BenchmarkAlt800(b *testing.B) { benchmarkAlt(800, b) }
+func BenchmarkAlt900(b *testing.B) { benchmarkAlt(900, b) }
 
-//func BenchmarkAlt300(b *testing.B) { benchmarkAlt(300, b) }
-//func BenchmarkAlt400(b *testing.B) { benchmarkAlt(400, b) }
-//func BenchmarkAlt500(b *testing.B) { benchmarkAlt(500, b) }
-//func BenchmarkAlt600(b *testing.B) { benchmarkAlt(600, b) }
-//func BenchmarkAlt700(b *testing.B) { benchmarkAlt(700, b) }
-//func BenchmarkAlt800(b *testing.B) { benchmarkAlt(800, b) }
-//func BenchmarkAlt900(b *testing.B) { benchmarkAlt(900, b) }
-
-func BenchmarkDeferredUni50(b *testing.B)  { benchmarkDeferredUni(50, b) }
-func BenchmarkDeferredUni100(b *testing.B) { benchmarkDeferredUni(100, b) }
-
+//func BenchmarkDeferredUni50(b *testing.B)  { benchmarkDeferredUni(50, b) }
+//func BenchmarkDeferredUni100(b *testing.B) { benchmarkDeferredUni(100, b) }
 //func BenchmarkDeferredUni200(b *testing.B) { benchmarkDeferredUni(200, b) }
 //func BenchmarkDeferredUni300(b *testing.B) { benchmarkDeferredUni(300, b) }
 //func BenchmarkDeferredUni400(b *testing.B) { benchmarkDeferredUni(400, b) }
@@ -154,10 +227,9 @@ func BenchmarkDeferredUni100(b *testing.B) { benchmarkDeferredUni(100, b) }
 //func BenchmarkDeferredUni700(b *testing.B) { benchmarkDeferredUni(700, b) }
 //func BenchmarkDeferredUni800(b *testing.B) { benchmarkDeferredUni(800, b) }
 //func BenchmarkDeferredUni900(b *testing.B) { benchmarkDeferredUni(900, b) }
-//
+
 //func BenchmarkUni50(b *testing.B)  { benchmarkUni(50, b) }
 //func BenchmarkUni100(b *testing.B) { benchmarkUni(100, b) }
-
 //func BenchmarkUni200(b *testing.B) { benchmarkUni(200, b) }
 //func BenchmarkUni300(b *testing.B) { benchmarkUni(300, b) }
 //func BenchmarkUni400(b *testing.B) { benchmarkUni(400, b) }

@@ -1,11 +1,12 @@
-\begin{tikzpicture}[scale=1]
+\begin{tikzpicture}[scale=.75]
   \begin{axis} [
     ybar, axis on top,
-    ymode=log,
+    bar width= 20pt,
     legend pos=north west,
     ylabel={Size (Kilobyte)},
-    symbolic x coords={Alternating,Unidirectional,Def. Unidirectional},
+    symbolic x coords={PT,JS,DV, DV-lite, JMM, ACD, ACD-PK},
     xtick=data,
+    ytick={0,1,2,3,4,5,6},
     nodes near coords={},
     grid style=dashed,
     ymajorgrids=true,
@@ -16,7 +17,7 @@
     %xticklabel style = {rotate=75},
     height=7cm,
     width=\textwidth,
-    enlarge x limits=0.3,
+    enlarge x limits=0.15,
   ]
 
    y=-0.5cm,      \addplot [
@@ -24,72 +25,75 @@
       opacity=0.7,
       area legend,
     ] coordinates {
-        (Alternating,1) +- (0,592.258861)
-        (Unidirectional,11000) +- (0,1429.674333)
-        (Def. Unidirectional,131962.165976) +- (0,911.453089)
+        (PT,0.98)
+        (JS,5.9)
+        (DV,1.5)
+	(DV-lite,0.33)
+        (JMM,1.4)
+        (ACD,0.29)
+        (ACD-PK,0.78)
     };
 
-    
-    \addplot [
-      fill=purple,
-      opacity=0.7,
-      area legend,
-    ] coordinates {
-        (Alternating,3260.4) +- (0,47.432291)
-        (Unidirectional,6148.4) +- (0,112.415104)
-        (Def. Unidirectional,10852.9) +- (0,43.195807)
-    };
-    
-    \addplot [
-      fill=red,
-      opacity=0.7,
-      area legend,
-    ] coordinates {
-        (Alternating,33459.41112) +- (0,592.258861)
-        (Unidirectional,64690.703011) +- (0,1429.674333)
-        (Def. Unidirectional,131962.165976) +- (0,911.453089)
-    };
+%    \addplot [
+%      fill=purple,
+%      opacity=0.7,
+%      area legend,
+%    ] coordinates {
+%        (Alternating,3260.4) +- (0,47.432291)
+%        (Unidirectional,6148.4) +- (0,112.415104)
+%        (Def. Unidirectional,10852.9) +- (0,43.195807)
+%    };
+%    
+%    \addplot [
+%      fill=red,
+%      opacity=0.7,
+%      area legend,
+%    ] coordinates {
+%        (Alternating,33459.41112) +- (0,592.258861)
+%        (Unidirectional,64690.703011) +- (0,1429.674333)
+%        (Def. Unidirectional,131962.165976) +- (0,911.453089)
+%    };
+%
+%   \addplot [
+%      fill=red,
+%      opacity=0.7,
+%      area legend,
+%    ] coordinates {
+%        (Alternating,33459.41112) +- (0,592.258861)
+%        (Unidirectional,64690.703011) +- (0,1429.674333)
+%        (Def. Unidirectional,131962.165976) +- (0,911.453089)
+%    };
+%
+%       \addplot [
+%      fill=orange,
+%      opacity=0.7,
+%      area legend,
+%    ] coordinates {
+%        (Alternating,33459.41112) +- (0,592.258861)
+%        (Unidirectional,64690.703011) +- (0,1429.674333)
+%        (Def. Unidirectional,131962.165976) +- (0,911.453089)
+%    };
+%
+%       \addplot [
+%      fill=yellow,
+%      opacity=0.7,
+%      area legend,
+%    ] coordinates {
+%        (Alternating,33459.41112) +- (0,592.258861)
+%        (Unidirectional,64690.703011) +- (0,1429.674333)
+%        (Def. Unidirectional,131962.165976) +- (0,911.453089)
+%    };
+%
+%     \addplot [
+%      fill=green,
+%      opacity=0.7,
+%      area legend,
+%    ] coordinates {
+%        (Alternating,33459.41112) +- (0,592.258861)
+%        (Unidirectional,64690.703011) +- (0,1429.674333)
+%        (Def. Unidirectional,131962.165976) +- (0,911.453089)
+%    };
 
-   \addplot [
-      fill=red,
-      opacity=0.7,
-      area legend,
-    ] coordinates {
-        (Alternating,33459.41112) +- (0,592.258861)
-        (Unidirectional,64690.703011) +- (0,1429.674333)
-        (Def. Unidirectional,131962.165976) +- (0,911.453089)
-    };
-
-       \addplot [
-      fill=orange,
-      opacity=0.7,
-      area legend,
-    ] coordinates {
-        (Alternating,33459.41112) +- (0,592.258861)
-        (Unidirectional,64690.703011) +- (0,1429.674333)
-        (Def. Unidirectional,131962.165976) +- (0,911.453089)
-    };
-
-       \addplot [
-      fill=yellow,
-      opacity=0.7,
-      area legend,
-    ] coordinates {
-        (Alternating,33459.41112) +- (0,592.258861)
-        (Unidirectional,64690.703011) +- (0,1429.674333)
-        (Def. Unidirectional,131962.165976) +- (0,911.453089)
-    };
-
-     \addplot [
-      fill=green,
-      opacity=0.7,
-      area legend,
-    ] coordinates {
-        (Alternating,33459.41112) +- (0,592.258861)
-        (Unidirectional,64690.703011) +- (0,1429.674333)
-        (Def. Unidirectional,131962.165976) +- (0,911.453089)
-    };
-
-    \legend{PR, JS, DV, DV-lite, JMM, ACD, ACD-PK}
+%    \legend{PR, JS, DV, DV-lite, JMM, ACD, ACD-PK}
   \end{axis}
 \end{tikzpicture}

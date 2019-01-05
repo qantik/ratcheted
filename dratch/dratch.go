@@ -54,6 +54,27 @@ type User struct {
 	name string
 }
 
+func (u User) size() int {
+	size := 0
+	for _, b := range u.V {
+		size += len(b)
+	}
+	for _, b := range u.ek {
+		size += len(b)
+	}
+	for _, b := range u.dk {
+		size += len(b)
+	}
+	for _, b := range u.vk {
+		size += len(b)
+	}
+	for _, b := range u.sk {
+		size += len(b)
+	}
+
+	return size + len(u.Gamma) + len(u.T) + len(u.Root)
+}
+
 // NewDRatch returns a fresh double ratchet instance for a given AEAD scheme.
 func NewDRatch(aead encryption.Authenticated,
 	pke encryption.Asymmetric,
@@ -269,7 +290,7 @@ func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 		return msg, nil
 	} else if (user.name == "alice" && c.I == user.I+1 && user.I%2 == 1) ||
 		(user.name == "bob" && c.I == user.I+1 && user.I%2 == 0) {
-
+		user.V[c.I-2] = nil
 		user.I++
 		if d.pke != nil && d.dss != nil {
 			user.sk[c.I-1], user.ek[c.I], user.vk[c.I+1] = nil, nil, nil

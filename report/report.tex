@@ -996,7 +996,9 @@ the Go garbage collector has been disable to reduce the
 overhead created by its sweeps.
 The benchmarks can be categorized into three types.
 \begin{enumerate}
-\item \textbf{Runtime.} How long it takes to exchange $n$ message.
+\item \textbf{Runtime.} How long it takes to exchange $n$ message executed
+  on a single machine ignoring potential latency that would occur
+  in a network.
 \item \textbf{Ciphertext Size.} How the size of the ciphertext changes
   throughout the exchange of $n$ messages.
 \item \textbf{State Size.} How does the memory footprint changes
@@ -1428,22 +1430,173 @@ quadratic update complexity.
 \label{sec:ciph-size-benchm}
 
 The size of the message is another viable metric in order to
-judge a messaging protocol. Smaller messages save disk space,
+judge a messaging or key-agreement protocol. Smaller messages save disk space,
 are easier to transmit over the network and take generally
 less time to process. We again consider the traffic
 types from the previous section and measure the maximal
 size in bytes that any message reaches. The size
 naturally depends on how much data is packed into the message
 but also on the primitives used to generate this data.
+For the messaging protocols the plaintext and associated
+data size is fixed at \textbf{64 bytes}.
 
 \clearpage
+
+\subsection{Alternating Traffic}
+\label{sec:alternating-traffic-1}
 
 \begin{figure}[H]
   \centering
   \input{plots/msg-size.tikz} 
-  \caption{Message Size Benchmark}
+  \caption{Message Size Benchmark Alternating Traffic}
   \label{fig:msg-size}
 \end{figure}
+
+In alternating traffic the states are continuously flushed causing the
+message size to be constant for all number of number
+of exchanged messages. The large number of the JS protocol
+is primarily caused by the forward-secure signature scheme
+whose keys and signatures are larger than in a regular signature scheme.
+Also note that in the DV protocol two onion encryptions
+are performed for each message causing a swollen
+ciphertext. Naturally, the two protocol using
+symmetric primitives compete for the lowest message size.
+
+\subsection{Unidirectional Traffic}
+\label{sec:unid-traff-1}
+
+\begin{figure}[H]
+  \centering
+  \input{plots/msg-uni.tikz} 
+  \caption{Message Size Benchmark Unidirectional Traffic}
+  \label{fig:msg-size-uni}
+\end{figure}
+
+Note that we have a constant ciphertext size for the JMM and ACD
+protocols.
+The effects of the onion encryption are now clearly visible
+in the DV protocol. Recall that in unidirectional traffic
+the first message in the opposite direction requires $\frac{n}{2}$
+onion encryptions incurring a large ciphertext size for
+this particular message.
+There similar situation takes place in the PR protocol where
+the first message in the opposite direction
+will have $\frac{n}{2}$ ciphertexts attached to the message.
+Finally, the quadratic key updates in the JS protocol
+have a deep HIBE hierarchy as a consequence that
+enlarges the ciphertexts as well as the HIBE
+keys.
+
+\subsection{Deferred Unidirectional Traffic}
+\label{sec:deferr-unid-traff}
+
+\begin{figure}[H]
+  \centering
+  \input{plots/msg-def.tikz} 
+  \caption{Message Size Benchmark Deferred Unidirectional Traffic}
+  \label{fig:msg-size-def}
+\end{figure}
+
+In deferred unidirectional traffic the DV and PR now also
+have a constant message size so the protocol by
+Jaeger and Stepanovs is the only one with a linearly
+growing message size due to the repeated key updates
+during unidirectional traffic.
+
+\section{State Size Benchmarks}
+\label{sec:state-size-benchm}
+
+The last metric we investigate is the size of a user state during
+alternating, unidirectional and deferred unidirectional
+traffic. Preferably, a state should only occupy small amounts of
+memory making the surrounding protocol suitable for small devices with
+limited amounts of memory otherwise data needs to be swapped from and
+to the disk degrading the overall performance. Again we only
+measure the maximal size in bytes a state reaches during the benchmark.
+
+\subsection{Alternating Traffic}
+\label{sec:alternating-traffic-2}
+
+\begin{figure}[H]
+  \centering
+  \input{plots/state-alt.tikz} 
+  \caption{State Size Benchmark Alternating Traffic}
+  \label{fig:state-size-alt}
+\end{figure}
+
+In alternating traffic there is no accumulation of keys,
+hence the constant state sizes for the JS, DV and ACD protocols.
+Both the PT and JMM protocols however require that the
+entire message transcript is kept in the user states
+resulting in a linear growth of the states.
+
+\subsection{(Deferred) Unidirectional Traffic}
+\label{sec:unid-traff-2}
+
+\begin{figure}[H]
+  \centering
+  \input{plots/state-uni.tikz} 
+  \caption{State Size Benchmark Unidirectional Traffic}
+  \label{fig:state-size-uni}
+\end{figure}
+
+In all protocols, except ACD, we now have the accumulation
+of keys that let the states grow linearly. It is then not
+hard to see that we get the same results for deferred
+unidirectional traffic so the corresponding figure
+is omitted.
+
+\section{Installation}
+\label{sec:installation}
+
+The code for all the protocols in located in a
+publicly available repository
+\footnote{\url{https://github.com/qantik/ratcheted/}} and
+can be freely altered and run. Currently, only Linux
+or MacOS are supported platforms.
+
+\subsection{Requirements}
+\label{sec:requirements}
+
+Only a handful of auxiliary software is required to
+be able to run the program.
+\begin{enumerate}
+\item \textbf{Go.} A working installation of the
+  Go programming language of the latest version, 1.11 as of
+  January 2019. Go is freely available through any
+  system package manager.
+\item \textbf{Dep.} Dep is the Go dependency
+  manager~\footnote{\url{https://golang.github.io/dep/}}. Dep
+  is required to download all the dependencies used
+  in the codebase.
+\item \textbf{PBC.} The Stanford Pairing-Based Cryptography library
+  for the HIBE constructions. It should be available through any
+  system package manager, otherwise it can be installed by
+  hand~\footnote{\url{https://crypto.stanford.edu/pbc/}}.
+\end{enumerate}
+Please, see the repository \texttt{README} file for a
+step-by-step manual for downloading and setting
+up the codebase.
+
+\subsection{Repository Structure}
+\label{sec:repository-structure}
+
+The codebase is divided, as it is Go practice, into several
+packages. The \texttt{PR}, \texttt{JS}, \texttt{DV},
+\texttt{JMM} and \texttt{ACD} packages contain
+the code of the protocols together with the test-suite
+and the benchmarks. The \texttt{primitives} packages
+contains the code for the hand-coded primitives
+like the Gentry-Silverberg HIBE or the Bellare
+et al.~forward-secure signature scheme. Furthermore,
+there is the \texttt{report} package containing
+the \LaTeX{} source of this very report and the
+\texttt{slides} package with the \LaTeX{} source
+for the slides accompanying the report. Last but
+not least the entire documentation of the
+codebase is also available
+online~\footnote{\url{https://godoc.org/github.com/qantik/ratcheted}}.
+
 
 
 % % Put into separate section
