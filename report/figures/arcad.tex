@@ -5,7 +5,7 @@
   {\fontsize{10}{12}\selectfont
 
     \begin{algorithmic}[1]
-    \Procedure{uniARCAD.Init}{}
+    \Procedure{Init}{}
     \State $(sk_\t{S},pk_\t{S}) \gets$ \Call{\texttt{PKE.Gen}}{}
     \State $(sk_\t{R},pk_\t{R}) \gets$ \Call{\texttt{DS.Gen}}{}
 
@@ -19,7 +19,7 @@
     \vspace{10pt}
 
     \begin{algorithmic}[1]
-    \Procedure{uniARCAD.Receive}{$st_\t{R}, ad, ct$}
+    \Procedure{Receive}{$st_\t{R}, ad, ct$}
     \State $(sk_\t{R},pk_\t{S}) \gets st_\t{R}$ 
     \State $pt' \gets$ \Call{\texttt{Dec}}{$sk_\t{R},pk_\t{S},ad,ct$}
     \If{$pt' = \perp$}
@@ -37,7 +37,7 @@
   {\fontsize{10}{12}\selectfont
 
   \begin{algorithmic}[1]
-    \Procedure{uniARCAD.Send}{$st_\t{S}, ad, pt, \t{flag}$}
+    \Procedure{Send}{$st_\t{S}, ad, pt, \t{flag}$}
     \State $(sk_\t{S},pk_\t{R}) \gets st_\t{S}$ 
     \If{$\t{flag} = \t{true}$}
     \State $(sk_\t{S}',pk_\t{S}') \gets$ \Call{\texttt{PKE.Gen}}{}

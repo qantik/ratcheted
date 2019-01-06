@@ -106,14 +106,13 @@ the LASEC laboratory.
 \label{chap:protocols}
 
 As laid out in the introduction the Signal~\cite{perrin2016double}
-protocol created and deployed well before the establishment of a
+protocol was created and deployed well before the establishment of a
 serious secure messaging definition thus it was lacking any form of
 formal security proof. The subsequent analysis in 2017~\cite{cohn2017formal}
 was then more concerned with proving the security of specific Signal
-instances than treating the general case of securing
+instances than treating the general case of secure
 messaging. Formally, ratcheted messaging attempts to satisfy some
 correctness and security notions.
-
 
 \section{Ratcheted Messaging}
 \label{sec:ratcheted-messaging}
@@ -139,7 +138,7 @@ distributed by a trusted party, these states are updated with each
 send or receive operation. In the case of a key-agreement protocol the
 update information corresponding to the created key of the sender
 should generate the same key at the receiver when the update message
-is received. Analogous, for a messaging protocol where a encrypted
+is received. Analogous, for a messaging protocol where an encrypted
 message should be correctly deciphered by the receiver upon
 arrival. In figure for example the message sent by Alice at time $t_0$
 is only received by Bob at time $t_8$ but should nonetheless produce a
@@ -151,7 +150,7 @@ meantime that have updated Bob's state.
 
 These continuous updates of the states are supposed to be irreversible
 such that past states may not be derived from any future state thus
-yielding forward security protecting past messages from being
+yielding forward security which in turn protects past messages from being
 compromised. This was the original goal that ratcheting tried to
 achieve. Naively, a ratchet can be constructed through the usage of a
 one-way function the simply updates the states of the communicating
@@ -162,7 +161,7 @@ some randomness is included in the creation of an updated state we can
 protect future states from being recreated by an adversary after an
 exposure yielding future secrecy or post-compromise security. Another
 way is the usage of some key-agreement protocol to schedule the
-creation of new states between the parties~\cite{cohn2016post}.  Again
+creation of new states between the parties~\cite{cohn2016post}. Again
 both constructions come at the cost of losing asynchronous
 communications. Asynchronous communications is thus a challenging
 obstacle that significantly complicates the design and analysis
@@ -192,7 +191,7 @@ succeed. If for example Bob's state is exposed right before he
 receives a message then an adversary can easily recover the plaintext
 from the message in a messaging protocol or compute the session key
 from the message in a key-agreement protocol. It is exactly the
-identification of such trivial attacks that pose the greatest
+identification of such attacks pose the greatest
 challenge in the analysis of ratcheted protocols implying that the security games
 have to be modified to disallow these trivial attacks. Naturally,
 the fewer attacks are excluded by the games the securer the overall
@@ -315,16 +314,19 @@ into authenticity and confidentiality.
 \end{itemize}
 In section~\ref{sec:jost-maur-mularczyk} we will see a protocol
 that comes close to providing full post-impersonation security
-if some properties are satisfied while only relying on
+if some additional properties are satisfied while only relying on
 public-key cryptography instead of the extremely inefficient
-primitives in this and the following protocol.
+primitives in this and the following protocol. It is conjectured
+that the security level achieved by BRKE and the protocol
+in the next section is optimal, setting the upper-bound
+on what a ratcheted protocol can reach.
 
 \subsection{Primitives}
 \label{sec:primitives}
 
 The protocol proposes a new cryptographic primitive that extends the
 functionality of an ordinary key-encapsulation mechanism with
-key update algorithms and is the principal tool with with the
+key update algorithms and is the principal tool with whom the
 protocol achieves forward and future secrecy as well as
 post-impersonation resilience.
 \begin{itemize}
@@ -348,7 +350,7 @@ In security terms a ku-KEM should satisfy the guarantees of regular
 key-encapsulation mechanisms in addition to forward security that
 protecting past keys from state exposures. A ku-KEM can be constructed
 out of any hierarchical identity-based encryption scheme
-(HIBE)~\cite{gentry2002hierarchical}. Contrary to an ordinate
+(HIBE)~\cite{gentry2002hierarchical}. Contrary to an ordinary
 identity-based encryption scheme where there is a single central
 authority handing out secret keys to the users, a HIBE consists
 of hierarchical tree structure of many authorities on different levels
@@ -391,9 +393,9 @@ Prolonged periods of unidirectional traffic will enlarge the
 difference between $(E_R^\vdash,E_R^\dashv)$ for the sending
 party and $(E_S^\vdash,E_S^\dashv)$ for the receiving party.
 In other words the participants are constantly exchanging
-ku-KEM and Signature keys. If some messages are delay such
+ku-KEM and Signature keys. If some messages are delayed such
 that a participants receives a message from a previous epoch
-then both users will perform key updates to ensure forward-security.
+then both users will perform key-updates to ensure forward-security.
 
 \begin{itemize}
 \item \textbf{Init.} Two sets of ku-KEM, DS and hashing keys are generated
@@ -657,8 +659,10 @@ the full BARK protocol as shown in figure~\ref{fig:bark}.
   after a long period of unidirectional messages the direction
   of traffic changes after this message the participants will
   then have sync-up again thus further messages will then
-  have again few onion layers. Note that the chain-hash
+  have again few onion layers. The chain-hash
   of all sent and received messages is to ensure recover security.
+  Note that during the onion encryption old sender states are
+  deleted.
 \item \textbf{Receive.} The operation during a receive call
   mirror the ones in the send routine. The receiver extracts
   the signcryption sender state from the ciphertext and appends
@@ -683,7 +687,7 @@ the full BARK protocol as shown in figure~\ref{fig:bark}.
 \clearpage
 
 \section[Jost, Maurer and Mularczyk]
-{Jost, Maurer and Mularczyk~\cite{jostefficient}}
+{Secure Channel (Jost, Maurer and Mularczyk)~\cite{jostefficient}}
 \label{sec:jost-maur-mularczyk}
 
 This secure messaging protocol was published in the paper
@@ -691,25 +695,24 @@ This secure messaging protocol was published in the paper
 in early October 2018. It offers near-optimal security guarantees similar
 to the protocols by Poettering, Rösler and Jaeger, Stepanovs while
 deploying lighter primitives than the latter two. Effectively, the protocol
-only excludes some special cases of post-impersonation security,
-for example it requires that the message directly before
+only excludes some special cases of post-impersonation security.
+For example it requires that the message directly before
 the injection remains confidential in order to maintain
-post-impersonation authenticity and confidentiality. This choice
-enabled to authors to only rely on public-key cryptography in
+post-impersonation authenticity and confidentiality. If this
+information is not confidential the adversary can
+recreate the state of the victim before the injected message overwrote it.
+This choice enabled the authors to only rely on public-key cryptography in
 the construction of their primitives. The protocol further
 offers recover security as defined by Durak and Vaudenay.
 In terms of security the protocol therefore sits somewhere in
 between the sub-optimal construction from section~\ref{sec:durak-vaudenay}
 and the optimal approaches from section~\ref{sec:poettering-roesler}
 and section~\ref{sec:jaeger-stepanovs}. The same is true
-for when it comes to efficiency although the protocol aimed
-to be as efficient or even faster than the BARK protocol by
-Durak and Vaudenay we will see a particular case where it
-actually performs much worse.
-The protocol is resilient to the leakage of random coins
-after the send send operations. Furthermore, all
-security proofs are in the random oracle model contrary
-to the proofs by Durak and Vaudenay which are in the standard model 
+for when it comes to efficiency. Although the protocol originally aimed
+to be as efficient or even faster than the BARK protocol,
+we will see a particular case where it actually performs significantly worse.
+Furthermore, all security proofs are in the random oracle model contrary
+to the standard model analysis by Durak and Vaudenay.
 
 \subsection{Primitives}
 \label{sec:primitives-3}
@@ -718,7 +721,7 @@ The protocol proposes several novel cryptographic primitives that can all be
 mounted by regular public-key key cryptosystems to extend them
 with key-update routines.
 \begin{itemize}
-\item \textbf{Key-Updating Signature (KuSig).} This primitive consists of
+\item \textbf{Key-Updating Signature (ku-Sig).} This primitive consists of
   three routines. A key generation algorithm \texttt{Gen}, a signing function
   \texttt{Sign}, and its corresponding verification procedure.
   \begin{align*}
@@ -732,11 +735,12 @@ with key-update routines.
   respectively.
 \end{itemize}
 
-As the security level we require resistance against universal forgeries
-with added forward security in case of state exposures.
+A key-updating signature scheme can be constructed out of a regular
+digital signature scheme where each signature operation generates
+a fresh key pair with the verification key as part of the signature.
 
 \begin{itemize}
-\item \textbf{Secretly Key-Updatable Public-Key Encryption (SkuPke).} This
+\item \textbf{Secretly Key-Updatable Public-Key Encryption (sku-PKE).} This
   primitive consists of six routines. A key generation algorithm \texttt{Gen},
   an encryption routine \texttt{Enc} and its corresponding decryption function
   \texttt{Dec}. Furthermore, there is an algorithm that generate key update
@@ -759,14 +763,15 @@ with added forward security in case of state exposures.
 
 The intuition behind this primitive is that the key pair can be
 updated independently with update information not linked to any
-key where the update information for the encryption key can be freely
+key through the creation of update information by calling
+\texttt{UpdGen}. The update information for the encryption key can be freely
 exposed while the update information for the decryption should
-remain hidden and only change hands through a back-channel.
-This scheme can be constructed out of a vanilla components
-of the ElGamal cryptosystem. The SkuPke scheme serves to
-create another primitive.
+remain hidden and only change hands through a secure back-channel.
+This scheme can be constructed out of the vanilla components
+of the ElGamal cryptosystem. The secretly key-updatable public-key
+encryption scheme serves to mount another novel primitive.
 \begin{itemize}
-\item \textbf{Healable And Key-Updating Public-Key Encryption (HkuPke).} This
+\item \textbf{Healable And Key-Updating Public-Key Encryption (hku-PKE).} This
   primitive consists of five routines. A key generation algorithm \texttt{Gen},
   an encryption routine \texttt{Enc} and the respective decryption function
   \texttt{Dec}. Furthermore, there are two key update algorithms one
@@ -786,21 +791,25 @@ create another primitive.
   and $\Delta$ is the update information domain.
 \end{itemize}
 
-The purpose of the HkuPke scheme is similar to the SkuPke scheme with the difference
+The purpose of the hku-PKE scheme is similar to the sku-PKE scheme with the difference
 that we now still allow the decryption of messages for any arbitrary sequence
 of \texttt{BcUpDk} calls where only a prefix of the used update information
-has been used in \texttt{BcUpEk} calls. The receiver can thus
-instigate key updates via a back-channel to start the healing process.
-Finally, the protocol also needs standard digital signature scheme Sig
-with the functions (\texttt{Gen,Sign,Verify}) and some collision-resistant
-hash function H.
+has been used in \texttt{BcUpEk} calls. All the key-update primitives
+we have seen so far required that the updates calls are synchronized. The receiver can thus
+instigate key updates via a secure back-channel to start the healing process.
+Finally, the protocol further needs a standard digital signature scheme Sig
+(\texttt{Gen,Sign,Verify}) and some collision-resistant hash function H.
 
 \subsection{Construction}
 \label{sec:construction-3}
 
-Figure~\ref{fig:secmsg} shows the SecMsg protocol based on a healable and key-updating
-public-key encryption scheme HkuPke, a key-updatable signature scheme KuSig,
+Figure~\ref{fig:secmsg} shows the Secure Channel protocol based on a healable and key-updating
+public-key encryption scheme hku-PKE, a key-updatable signature scheme ku-Sig,
 a regular digital signature scheme Sig and a collision-resistant hash function H.
+Although superficially the protocol looks relatively simple most of the
+complexity is hidden away within the hku-PKE scheme. Unfortunately, the hku-PKE
+construction is much more involved than the actual Secure Channel protocol so
+its depiction exceeds the scope of this report.
 \begin{itemize}
 \item \textbf{Init.} The initialization routine creates two sets of key pairs
   for each primitive and distributes them to the participants. It further
@@ -815,24 +824,33 @@ a regular digital signature scheme Sig and a collision-resistant hash function H
   and one for the partner sign his response $(sk_1^\t{eph},vk_1^\t{eph})$ thus
   implying that $sk_1^\t{eph}$ is part of the ciphertext and $vk_2^\t{eph}$ is
   sent alongside the ciphertext. The sender then updates his
-  HkuPke decryption key $dk$ and includes the update information $upd$
+  hku-PKE decryption key $dk$ and includes the update information $upd$
   in the sent message. After encrypting the message with the mentioned
   side information the resulting ciphertext is signed twice once
-  by the KuSig and once by the regular signature scheme. The two signatures
-  and the ciphertext are sent to the partner. The two signatures are
+  by the ku-Sig and once by the regular signature scheme. The two signatures
+  and the ciphertext are then sent over the channel. The two signatures are
   necessary to provide post-impersonation authentication while
   maintaining post-compromise
-  security. Note the first message of a cascade of message to be sent
+  security. The first message of a cascade of messages to be sent
   without any replies in between will use the signing key provided in
   the last received message the following messages in the cascade
   will use the keys generated at the beginning of the procedure. This
   is the reason why $vk_1^\t{eph}$ is stored in an array.
+  Note that the users accumulate all the chain-hash of all sent
+  messages in the $TR$ array which is never cleaned up. On the flip-side
+  the protocol ensures that the messages are of constant size in all
+  forms of traffic.
 \item \textbf{Receive.} The receive routine mirrors the operations performed
   during the send call. This means it unpacks the signature keys
   $(vk_\t{msg}^\t{eph},sk_\t{msg}^\t{eph})$ and retrieves the plaintext while
-  updating its HkuPke encryption key. Further note that the chain-hash
+  updating its HkuPke encryption key. The chain-hash
   of the communication transcript is included in both signature ensuring
-  that messages of a hijacked participants are rejected.
+  that messages of a participant that received a injected message are rejected.
+  Note that when receiving the replies to some messages the participant
+  uses the verification keys created when the messages were sent
+  $VK^\t{eph}[s_\t{msg}]$ until
+  the partner has caught up $s_\t{ack} = s_\t{msg}$, from then on
+  the verification key $vk^\t{eph}$ from the last received message is used.
 \end{itemize}
 
 \begin{figure}[p]
@@ -850,7 +868,7 @@ a regular digital signature scheme Sig and a collision-resistant hash function H
 \clearpage
 
 \section[Alwen, Coretti and Dodis]
-{Alwen, Coretti and Dodis~\cite{alwen2018double}}
+{Double Ratchet (Alwen, Coretti and Dodis)~\cite{alwen2018double}}
 \label{sec:alwen-coretti-dodis}
 
 This secure messaging protocol was published in the paper \textit{The
@@ -972,9 +990,9 @@ even epochs are reserved for Alice to send and odd epochs for Bob.
 \item \textbf{Send-P.} At the start of each epoch (if-branch) the user
   generates a new CKA update message $T_\t{cur}$ and update information $I$
   to create fresh FS-AEAD state. Furthermore, old FS-AEAD states from previous
-  epochs of the user are erased from memory (not depicted in the figure).
+  epochs of the user are erased from memory.
   Whether it is the first message of a new epoch or not the FS-AEAD is
-  always updated at the end with when encrypting
+  always updated at the end when encrypting
   the message where $t_\t{P}$ and $T_\t{cur}$ serve as associated data.
   Recall that Alice occupies odd epoch numbers while Bob uses even
   epochs to send messages so at the very beginning of the communication, when both

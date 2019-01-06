@@ -4,7 +4,7 @@
 \begin{minipage}{\linewidth}
   {\fontsize{10}{12}\selectfont
   \begin{algorithmic}[1]
-    \Procedure{BARK.Init}{}
+    \Procedure{Init}{}
     \State $(st_\t{A}^\t{send},st_\t{B}^\t{rec}) \gets$ \Call{\texttt{uniBARK.Init}}{}
     \State $(st_\t{B}^\t{send},st_\t{A}^\t{rec}) \gets$ \Call{\texttt{uniBARK.Init}}{}
     \State pick $hk$ at random
@@ -15,7 +15,7 @@
     
     \item[]
     
-    \Procedure{BARK.Send}{$st_\t{P}$}
+    \Procedure{Send}{$st_\t{P}$}
     \State pick $k$ at random
     \State $(hk, [st_\t{P}^\t{send,1},...,st_\t{P}^\t{send,u}],
                  [st_\t{P}^\t{rec,1},...,st_\t{P}^\t{rec,v}],
@@ -41,7 +41,7 @@
     
     \item[] % blank line
     
-    \Procedure{BARK.Receive}{$st_\t{P}, \t{upd}$}
+    \Procedure{Receive}{$st_\t{P}, \t{upd}$}
     \State $(hk, [st_\t{P}^\t{send,1},...,st_\t{P}^\t{send,u}],
                  [st_\t{P}^\t{rec,1},...,st_\t{P}^\t{rec,v}],
     \t{Hsent}, \t{Hreceived}) \gets st_\t{P}$

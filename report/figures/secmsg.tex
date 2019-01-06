@@ -5,8 +5,8 @@
   \begin{algorithmic}[1]
     \Procedure{SecMsg.Init}{}
     \For{$u \in \{A,B\}$}
-      \State $(ek_u,dk_u) \gets$ \Call{\texttt{HkuPke.Gen}}{}
-      \State $(sk_u^\t{upd},vk_u^\t{upd}) \gets$ \Call{\texttt{KuSig.Gen}}{}
+      \State $(ek_u,dk_u) \gets$ \Call{\texttt{hku-PKE.Gen}}{}
+      \State $(sk_u^\t{upd},vk_u^\t{upd}) \gets$ \Call{\texttt{ku-Sig.Gen}}{}
       \State $(sk_u^\t{eph},vk_u^\t{eph}) \gets$ \Call{\texttt{Sig.Gen}}{}
     \EndFor
     \For{$u \in \{A,B\}$}
@@ -26,11 +26,11 @@
     \State $(sk_1^\t{eph},vk_1^\t{eph}) \gets$ \Call{\texttt{Sig.Gen}}{}
     \State $(sk_2^\t{eph},vk_2^\t{eph}) \gets$ \Call{\texttt{Sig.Gen}}{}
 
-    \State $(dk,upd) \gets$ \Call{\texttt{HkuPke.BcUpDk}}{$dk$}
-    \State $(ek,c) \gets$ \Call{\texttt{HkuPke.Enc}}{$ek,m||sk_1^\t{eph},upd||vk_2^\t{eph}||r$}
+    \State $(dk,upd) \gets$ \Call{\texttt{hku-PKE.BcUpDk}}{$dk$}
+    \State $(ek,c) \gets$ \Call{\texttt{hku-PKE.Enc}}{$ek,m||sk_1^\t{eph},upd||vk_2^\t{eph}||r$}
     \State $c' \gets c||upd||vk_2^\t{eph}||r$
-    \State $(sk^\t{upd},\sigma_\t{upd}) \gets$ \Call{\texttt{KuSig.Sign}}{$sk^\t{upd},c'||tr$}
-    \State $\sigma_\t{eph} \gets$ \Call{\texttt{Sig.Sign}}{$sk^\t{eph},c'||tr$}
+    \State $(sk^\t{upd},\sigma_\t{upd}) \gets$ \Call{\texttt{ku-Sig.Sign}}{$sk^\t{upd},c'||tr$}
+    \State $\sigma_\t{eph} \gets$ \Call{\texttt{ku-Sig.Sign}}{$sk^\t{eph},c'||tr$}
 
     \State $s \gets s+1$
     \State $VK[s] \gets vk_1^\t{eph}$
@@ -59,14 +59,14 @@
     \EndIf
 
     \State $v_\t{eph} \gets$
-    \Call{\texttt{Sig.Verify}}{$vk^\t{upd},c'||TR[s_\t{msg}],\sigma_\t{eph}$}
+    \Call{\texttt{Sig.Verify}}{$vk,c'||TR[s_\t{msg}],\sigma_\t{eph}$}
     \State $(vk^\t{upd},v_\t{upd}) \gets$
-    \Call{\texttt{KuSig.Verify}}{$vk^\t{upd},c', \sigma_\t{upd}$}
+    \Call{\texttt{ku-Sig.Verify}}{$vk^\t{upd},c', \sigma_\t{upd}$}
     \State \textbf{assert} $v_\t{eph} \wedge v_\t{upd}$
 
-    \State $ek \gets$ \Call{\texttt{HkuPke.BcUpEk}}{$ek,upd$} 
+    \State $ek \gets$ \Call{\texttt{hku-PKE.BcUpEk}}{$ek,upd$} 
     \State $(dk, (m,sk_\t{msg}^\t{eph})) \gets$
-    \Call{\texttt{HkuPke.Dec}}{$dk,c,upd||vk_\t{msg}^\t{eph}||s_\t{msg}$}
+    \Call{\texttt{hku-PKE.Dec}}{$dk,c,upd||vk_\t{msg}^\t{eph}||s_\t{msg}$}
     \State $r \gets r +1$
     \State $tr \gets$ \Call{\texttt{H}}{$tr||c'$}
     
