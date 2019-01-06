@@ -280,7 +280,7 @@ $A[...,i]$ are used to
 denote an operation on multiple array elements and last but not least
 $\leftarrow$ is the assignment operator.
 
-\section[Poettering and Rösler]
+\section[BARK (Poettering and Rösler)]
 {BRKE (Poettering and Rösler)~\cite{poettering2018towards}}
 \label{sec:poettering-roesler}
 
@@ -442,7 +442,7 @@ then both users will perform key-updates to ensure forward-security.
 
 \clearpage
 
-\section[Jaeger and Stepanovs]
+\section[Secure Channel (Jaeger and Stepanovs)]
 {Secure Channel (Jaeger and Stepanovs)~\cite{jaeger2018optimal}}
 \label{sec:jaeger-stepanovs}
 
@@ -557,7 +557,7 @@ generally is slower due to each usage of two key-update primitives.
 
 \clearpage
 
-\section[Durak and Vaudenay]
+\section[BARK (Durak and Vaudenay)]
 {BARK (Durak and Vaudenay)~\cite{durak2018bidirectional}}
 \label{sec:durak-vaudenay}
 
@@ -686,7 +686,7 @@ the full BARK protocol as shown in figure~\ref{fig:bark}.
 
 \clearpage
 
-\section[Jost, Maurer and Mularczyk]
+\section[Secure Channel (Jost, Maurer and Mularczyk)]
 {Secure Channel (Jost, Maurer and Mularczyk)~\cite{jostefficient}}
 \label{sec:jost-maur-mularczyk}
 
@@ -867,7 +867,7 @@ its depiction exceeds the scope of this report.
 
 \clearpage
 
-\section[Alwen, Coretti and Dodis]
+\section[Double Ratchet (Alwen, Coretti and Dodis)]
 {Double Ratchet (Alwen, Coretti and Dodis)~\cite{alwen2018double}}
 \label{sec:alwen-coretti-dodis}
 
@@ -1658,21 +1658,60 @@ not least the entire documentation of the
 codebase is also available
 online~\footnote{\url{https://godoc.org/github.com/qantik/ratcheted}}.
 
-
-
-% % Put into separate section
-% The whole codebase with all the protocols, the accompanying benchmarks,
-% auxiliary primitives and installation instructions is
-% open-source \footnote{\url{https://github.com/qantik/ratcheted/}}
-% and be freely altered.
-
 \chapter{Conclusion}
 \label{chap:conclusion}
 
+\section{Future Work}
+\label{sec:future-work}
+
+Although the benchmarks already reveal a lot regarding the feasibility
+of the protocols, they still are rather constructed. It would be thus
+interesting to see how the protocols behave in a real-world context
+especially in combination with some lower level communication
+protocol. One could even envision a fork of the Signal Android
+application that replaces the double ratchet with the protocols
+treated in this project \footnote{\url{https://github.com/signalapp/Signal-Android}}.
+Although Go is already a fast compiled language it does
+not reach the efficiency of a C/C++ program so additional performance
+gains are within reach. The protocols themselves offer
+the possibility of further tinkering. Can some of them be made
+more efficient by changing the algorithms or replacing
+heavy primitives with lighter alternatives without compromising
+the security guarantees? Finally, the protocols are prime starting
+points for the construction of new ratcheting protocols.
+
+\section{Gained Knowledge}
+\label{sec:gained-knowledge}
+
+The project familiarized me with the theoretical and practical aspects
+of ratcheting protocols.  It deepened my understanding of the standard
+tools, like games and reduction, used to evaluate and proof the
+security guarantees of a protocol. It was an enlightening experience
+to see how the composition of many components eventually leads to
+advanced multifaceted protocols that can be put to the test in an
+implementation. Since none of the protocols were alike often deploying
+widely different primitives it offered me the possibility to get to
+know some more obscure primitives likes HIBE schemes or forward-secure
+signatures. On a more practical note I could further solidify my
+programming skills with the implementation, debugging and benchmarking
+of the protocols that were more often than not of rather complex
+nature culminating in several thousand lines of code. It was further
+my first time I could actually roll out my own crypto implementation
+motivated by the lack of existing implementation like the
+pairing-based HIBE schemes. The schedule especially during the first
+weeks of the semester was often tight and some results had to be
+obtained on short notice, all of which helped me broaden my ability to
+digest complex and long papers and concepts in small time intervals, which
+I think is a very valuable skill that also finds its applications outside of
+school. It was then especially motivating to see the obtained result
+become part of further work. I am also very grateful for the excellent
+support by my supervisor that made this project thoroughly enjoyable
+experience.
 
 \bibliographystyle{plainurl}
 \bibliography{bibliography}
 
+\addcontentsline{toc}{chapter}{\listfigurename}
 \listoffigures
 
 \end{document}
