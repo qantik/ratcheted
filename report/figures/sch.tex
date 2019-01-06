@@ -6,8 +6,10 @@
 
   \begin{algorithmic}[1]
     \Procedure{Init}{}
-    \State $(sk_\t{I},vk_\t{R}) \gets \t{DS.Gen}, \ (ek_\t{I},dk_\t{R}[0]) \gets \texttt{PKE.Gen}$
-    \State $(sk_\t{R},vk_\t{I}) \gets \t{DS.Gen}, \ (ek_\t{R},dk_\t{I}[0]) \gets \texttt{PKE.Gen}$
+    \State $(sk_\t{I},vk_\t{R}) \gets \t{ku-DS.Gen}, \ (ek_\t{I},dk_\t{R}[0]) \gets
+    \texttt{ku-PKE.Gen}$
+    \State $(sk_\t{R},vk_\t{I}) \gets \t{ku-DS.Gen}, \ (ek_\t{R},dk_\t{I}[0]) \gets
+    \texttt{ku-PKE.Gen}$
     \State $st_\t{I} \gets \t{H.Gen}, \ T_\t{R} \gets [\cdot], \ T_\t{S}[0] \gets \perp$
     \State $s \gets 0, \ r \gets 0, \ r^\t{ack} \gets 0$
     \State $st_\t{I} \gets (s,r,r^\t{ack},sk_\t{I},vk_\t{I},ek_\t{I},dk_\t{I},hk,T_\t{R},T_\t{S})$
@@ -19,15 +21,15 @@
     \Procedure{Send}{$st, ad,m$}
     \State $(s,r,r^\t{ack},sk,vk,ek,dk,hk,T_\t{R},T_\t{S}) \gets st$
     \State $s \gets s+1$
-    \State $(sk',vk') \gets \texttt{DS.Gen}, \ (ek',dk[s]) \gets \texttt{PKE.Gen}$
+    \State $(sk',vk') \gets \texttt{ku-DS.Gen}, \ (ek',dk[s]) \gets \texttt{ku-PKE.Gen}$
     \State $l \gets (s,r,ad,vk',ek',T_\t{R},T_\t{S}[s-1])$
     \State $ek' \gets ek$
     \For{$i \gets r^\t{ack}+1$ to $s$}
-    \State $ek' \gets$ \Call{\texttt{PKE.UpdEk}}{$ek', T_\t{S}[i]$}
+    \State $ek' \gets$ \Call{\texttt{ku-PKE.UpdEk}}{$ek', T_\t{S}[i]$}
     \EndFor
-    \State $c' \gets$ \Call{\texttt{PKE.Enc}}{$ek',l,m,T_\t{S}$}
-    \State $v \gets (c',l), \ \sigma \gets \texttt{DS.Sign}(sk,v)$
-    \State $c \gets (\sigma,v), \ T_\t{S}[s] \gets \t{H.Ev}(hk,c)$
+    \State $c' \gets$ \Call{\texttt{ku-PKE.Enc}}{$ek',l,m,T_\t{S}$}
+    \State $v \gets (c',l), \ \sigma \gets \texttt{ku-DS.Sign}(sk,v)$
+    \State $c \gets (\sigma,v), \ T_\t{S}[s] \gets \texttt{H}(hk,c)$
     \State $st \gets (s,r,r^\t{ack},sk',vk,ek,dk,hk,T_\t{R},T_\t{S})$
     \State \Return $(st,c)$
     \EndProcedure
@@ -40,14 +42,14 @@
     \State $(s',r',ad',vk',ek',T_\t{R}',T_\t{S}') \gets l$
     \State $vk'' \gets vk$
     \For{$i \gets r^\t{ack}$ to r'}
-    \State $vk'' \gets$ \Call{\texttt{DS.UpdVk}}{$vk'', T_\t{S}[i]$}
+    \State $vk'' \gets$ \Call{\texttt{ku-DS.UpdVk}}{$vk'', T_\t{S}[i]$}
     \EndFor
-    \State \textbf{assert} \Call{\texttt{DS.Verify}}{$vk'',\sigma,v,T_\t{S}$}
-    \State $r \gets r+1, \ r^\t{ack} \gets r' , \ m \gets \texttt{PKE.Dec}(dk[r^\t{ack}],l,c')$
+    \State \textbf{assert} \Call{\texttt{ku-DS.Verify}}{$vk'',\sigma,v,T_\t{S}$}
+    \State $r \gets r+1, \ r^\t{ack} \gets r' , \ m \gets \texttt{ku-PKE.Dec}(dk[r^\t{ack}],l,c')$
     \State $T_\t{S}[...,r^\t{ack}] \gets \perp, \ dk_\t{S}[...,r^\t{ack}] \gets \perp$
-    \State $T_\t{R} \gets \t{H.Ev}(hk,c), \ sk \gets \texttt{DS.UpdSk}(sk,T_\t{R})$
+    \State $T_\t{R} \gets \texttt{H}(hk,c), \ sk \gets \texttt{ku-DS.UpdSk}(sk,T_\t{R})$
     \For{$i = r^\t{ack}$ to $s$}
-    \State $dk[i] \gets$ \Call{\texttt{PKE.UpdDk}}{$dk[i],T_\t{R}$}
+    \State $dk[i] \gets$ \Call{\texttt{ku-PKE.UpdDk}}{$dk[i],T_\t{R}$}
     \EndFor
     \State $st \gets (s,r,r^\t{ack},sk,vk',ek',dk,hk,T_\t{R},T_\t{S})$
     \State \Return $(st,m)$
