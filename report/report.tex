@@ -43,9 +43,9 @@ devastating since in a naive protocol it would not only enable him to
 recover past messages but also allow decryption of future messages as
 well as impersonations of the victim.
 % \begin{figure}[h]
-\begin{wrapfigure}{r}{0.5\textwidth}
+\begin{wrapfigure}{r}{0.46\textwidth}
   \centering
-  \includegraphics[width=0.45\textwidth]{figures/ratchet-icon.eps}
+  \includegraphics[width=0.42\textwidth]{figures/ratchet-icon.eps}
   \caption[Symbolic Ratchet Wheel]{Symbolic Ratchet Wheel\footnotemark}
   \label{fig:ratchet-wheel}
   % \end{figure}
@@ -90,7 +90,8 @@ chapter~\ref{chap:protocols} the notion of secure messaging and
 especially ratcheting is briefly reviewed before each protocol is
 summarized in terms of composition, primitives and security levels, then in
 chapter~\ref{chap:benchmarks} the protocols are measured and compared
-on the basis of several benchmarks.
+on the basis of several benchmarks. The report is then concluded
+in the last chapter with some general remarks.
 
 \section{Circumstances}
 \label{sec:circumstances}
@@ -190,7 +191,7 @@ succeed. If for example Bob's state is exposed right before he
 receives a message then an adversary can easily recover the plaintext
 from the message in a messaging protocol or compute the session key
 from the message in a key-agreement protocol. It is exactly the
-identification of such attacks pose the greatest
+identification of such attacks that pose the greatest
 challenge in the analysis of ratcheted protocols implying that the security games
 have to be modified to disallow these trivial attacks. Naturally,
 the fewer attacks are excluded by the games the securer the overall
@@ -254,7 +255,7 @@ security level than \cite{durak2018bidirectional}, though not reaching
 \cite{poettering2018towards,jaeger2018optimal}, but is slower in
 comparison. The currently last protocol in the line is a secure messaging construction
 from Alwen, Coretti, and Dodis~\cite{alwen2018double}. It takes
-a different approach then the other protocol by building an
+a different approach than the other protocols by building an
 improved version of the original Signal protocol instead of
 coming up with an entirely new protocol. It is an efficient protocol
 that does not quite hold up with the other protocols in terms of
@@ -262,7 +263,7 @@ security but is the only one that offers \textit{immediate decryption},
 the ability to decipher messages even if messages are lost or arrive in
 a different order that than they were initially sent in.
 In the following sections we will look more closely into all
-above described protocols except~\cite{bellare2017ratcheted}.
+above described protocols, except~\cite{bellare2017ratcheted}.
 
 \section{Notation}
 \label{sec:notation}
@@ -513,11 +514,11 @@ a key-updatable digital signature scheme ku-DS. Some non-critical
 control-branches not necessary for the benchmarks in the next chapter
 have been omitted. The protocol is simpler than
 its brother in spirit from the previous section, however it
-generally is slower due to each usage of two key-update primitives.
+generally is slower due to the usage of two key-update primitives.
 \begin{itemize}
 \item \textbf{Init.} Two sets of ku-PKE and ku-DSS are generated
-  distributed to each user next to shared hashing key $hk$. Furthermore,
-  each user has counter of sent messages $s$, a counter for received messages
+  distributed to each user next to a shared hashing key $hk$. Furthermore,
+  each user has a counter of sent messages $s$, a counter for received messages
   $r$ and a counter for sent messages that were received by the partner
   $r^\t{ack}$. Both users keep chain-hashes of sent $T_\t{S}$ and received
   messages $T_\t{R}$.
@@ -529,7 +530,7 @@ generally is slower due to each usage of two key-update primitives.
   the function. Also note that each message in the same direction
   without receiving one in between increments the number of key-updates
   that are performed before arriving at the actual encryption key. This
-  means the protocol performs significantly worse in than the previous
+  means the protocol performs significantly worse than the previous
   protocol where in unidirectional traffic it continuously switches
   out the keys.
 \item \textbf{Receive.} The receive function mirrors the operations
@@ -604,9 +605,9 @@ a signcryption algorithm.
   \begin{align*}
     \texttt{PKE.Gen} & : \ \rightarrow \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{R} \\
     \texttt{DS.Gen} & : \ \rightarrow \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{S} \\
-    \texttt{Enc} & : \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{R} \times
-                   \rightarrow \mathcal{C} \\
-    \texttt{Dec} & : \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{S}
+    \texttt{Enc} & : \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{R} \times \mathcal{M} \times
+                   \mathcal{AD} \rightarrow \mathcal{C} \\
+    \texttt{Dec} & : \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{S} \times
   \mathcal{C} \times \mathcal{AD} \rightarrow \mathcal{M}
   \end{align*}
   $(\mathcal{PK}_\t{R},\mathcal{SK}_\t{R})$ are the PKE key domains,
@@ -656,8 +657,8 @@ the full BARK protocol as shown in figure~\ref{fig:bark}.
   creates new signcryption states of which only the one from
   the inner-most layer is kept. The onion has many layers when
   after a long period of unidirectional messages the direction
-  of traffic changes after this message the participants will
-  then have sync-up again thus further messages will then
+  of traffic changes, after this message the participants will
+  then have synced-up again thus further messages will then
   have again few onion layers. The chain-hash
   of all sent and received messages is to ensure recover security.
   Note that during the onion encryption old sender states are
@@ -699,7 +700,7 @@ For example it requires that the message directly before
 the injection remains confidential in order to maintain
 post-impersonation authenticity and confidentiality. If this
 information is not confidential the adversary can
-recreate the state of the victim before the injected message overwrote it.
+recreate the state of the victim before the injected message would have overwritten it.
 This choice enabled the authors to only rely on public-key cryptography in
 the construction of their primitives. The protocol further
 offers recover security as defined by Durak and Vaudenay.
@@ -742,7 +743,7 @@ a fresh key pair with the verification key as part of the signature.
 \item \textbf{Secretly Key-Updatable Public-Key Encryption (sku-PKE).} This
   primitive consists of six routines. A key generation algorithm \texttt{Gen},
   an encryption routine \texttt{Enc} and its corresponding decryption function
-  \texttt{Dec}. Furthermore, there is an algorithm that generate key update
+  \texttt{Dec}. Furthermore, there is an algorithm that generates key update
   information \texttt{UpdGen} that feeds two key update procedures
   one for the encryption key \texttt{UpdEk} and one for the
   decryption key \texttt{UpdDk}.
@@ -789,7 +790,6 @@ encryption scheme serves to mount another novel primitive.
   domain, $\mathcal{AD}$ is the associated data domain
   and $\Delta$ is the update information domain.
 \end{itemize}
-
 Next to the sku-PKE scheme the hku-PKE also requires a regular public-key
 encryption system PKE-AD that can treat associated data. The purpose
 of the hku-PKE scheme is similar to the sku-PKE scheme with the
@@ -809,8 +809,8 @@ hash function H.
 Figure~\ref{fig:secmsg} shows the Secure Channel protocol.
 Although superficially the protocol looks relatively simple most of the
 complexity is hidden away within the hku-PKE scheme. Unfortunately, the hku-PKE
-construction is much more involved than the actual Secure Channel protocol so
-its depiction exceeds the scope of this report.
+construction is much more involved than the actual Secure Channel protocol
+exceeding the scope of this report.
 \begin{itemize}
 \item \textbf{Init.} The initialization routine creates two sets of key pairs
   for each primitive and distributes them to the participants. It further
@@ -834,7 +834,7 @@ its depiction exceeds the scope of this report.
   maintaining post-compromise
   security. The first message of a cascade of messages to be sent
   without any replies in between will use the signing key provided in
-  the last received message the following messages in the cascade
+  the last received message, the following messages in the cascade
   will use the keys generated at the beginning of the procedure. This
   is the reason why $vk_1^\t{eph}$ is stored in an array.
   Note that the users accumulate all the chain-hash of all sent
@@ -844,8 +844,8 @@ its depiction exceeds the scope of this report.
 \item \textbf{Receive.} The receive routine mirrors the operations performed
   during the send call. This means it unpacks the signature keys
   $(vk_\t{msg}^\t{eph},sk_\t{msg}^\t{eph})$ and retrieves the plaintext while
-  updating its HkuPke encryption key. The chain-hash
-  of the communication transcript is included in both signature ensuring
+  updating its hku-PKE encryption key. The chain-hash
+  of the communication transcript is included in both signatures ensuring
   that messages of a participant that received a injected message are rejected.
   Note that when receiving the replies to some messages the participant
   uses the verification keys created when the messages were sent
@@ -962,7 +962,6 @@ and a pseudo-random number generator.
   $\mathcal{K}$ is the key domain, $\Sigma$ is the state domain and
   $\mathcal{I}$ is the update information domain.
 \end{itemize}
-
 The intuition behind a PRF-PRNG is that on input some update information
 it refreshes its state and yields a pseudo-random output exactly like
 a normal PRNG, furthermore a PRF-PRNG behaves like a PRF in the sense
@@ -1652,8 +1651,8 @@ be able to run the program.
   in the codebase.
 \item \textbf{PBC.} The Stanford Pairing-Based Cryptography library
   for the HIBE constructions. It should be available through any
-  system package manager, otherwise it can be installed by
-  hand~\footnote{\url{https://crypto.stanford.edu/pbc/}}.
+  system package manager, otherwise it can be installed
+  manually~\footnote{\url{https://crypto.stanford.edu/pbc/}}.
 \end{enumerate}
 Please, see the repository \texttt{README} file for a
 step-by-step manual for downloading and setting
