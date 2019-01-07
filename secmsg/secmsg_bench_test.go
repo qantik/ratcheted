@@ -226,13 +226,14 @@ func benchmarkUni(i int, b *testing.B) {
 //func BenchmarkDeferredUni800(b *testing.B) { benchmarkDeferredUni(800, b) }
 //func BenchmarkDeferredUni900(b *testing.B) { benchmarkDeferredUni(900, b) }
 
-func BenchmarkUni50(b *testing.B)  { benchmarkUni(50, b) }
-func BenchmarkUni100(b *testing.B) { benchmarkUni(100, b) }
-func BenchmarkUni200(b *testing.B) { benchmarkUni(200, b) }
-func BenchmarkUni300(b *testing.B) { benchmarkUni(300, b) }
-func BenchmarkUni400(b *testing.B) { benchmarkUni(400, b) }
-func BenchmarkUni500(b *testing.B) { benchmarkUni(500, b) }
-func BenchmarkUni600(b *testing.B) { benchmarkUni(600, b) }
-func BenchmarkUni700(b *testing.B) { benchmarkUni(700, b) }
-func BenchmarkUni800(b *testing.B) { benchmarkUni(800, b) }
-func BenchmarkUni900(b *testing.B) { benchmarkUni(900, b) }
+func BenchmarkUni50(b *testing.B) { benchmarkUni(50, b) }
+
+//func BenchmarkUni100(b *testing.B) { benchmarkUni(100, b) }
+//func BenchmarkUni200(b *testing.B) { benchmarkUni(200, b) }
+//func BenchmarkUni300(b *testing.B) { benchmarkUni(300, b) }
+//func BenchmarkUni400(b *testing.B) { benchmarkUni(400, b) }
+//func BenchmarkUni500(b *testing.B) { benchmarkUni(500, b) }
+//func BenchmarkUni600(b *testing.B) { benchmarkUni(600, b) }
+//func BenchmarkUni700(b *testing.B) { benchmarkUni(700, b) }
+//func BenchmarkUni800(b *testing.B) { benchmarkUni(800, b) }
+//func BenchmarkUni900(b *testing.B) { benchmarkUni(900, b) }

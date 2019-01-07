@@ -4,8 +4,7 @@
 \usepackage{graphicx,xcolor,float}
 \usepackage{amssymb,amsmath,array}
 \usepackage{setspace,algpseudocode}
-\usepackage{subcaption}
-\usepackage{wrapfig}
+\usepackage{wrapfig,subcaption}
 
 \usepackage{pgfplots,tikz}
 \usetikzlibrary{positioning,arrows}
@@ -791,21 +790,23 @@ encryption scheme serves to mount another novel primitive.
   and $\Delta$ is the update information domain.
 \end{itemize}
 
-The purpose of the hku-PKE scheme is similar to the sku-PKE scheme with the difference
-that we now still allow the decryption of messages for any arbitrary sequence
-of \texttt{BcUpDk} calls where only a prefix of the used update information
-has been used in \texttt{BcUpEk} calls. All the key-update primitives
-we have seen so far required that the updates calls are synchronized. The receiver can thus
-instigate key updates via a secure back-channel to start the healing process.
-Finally, the protocol further needs a standard digital signature scheme Sig
-(\texttt{Gen,Sign,Verify}) and some collision-resistant hash function H.
+Next to the sku-PKE scheme the hku-PKE also requires a regular public-key
+encryption system PKE-AD that can treat associated data. The purpose
+of the hku-PKE scheme is similar to the sku-PKE scheme with the
+difference that we now still allow the decryption of messages for any
+arbitrary sequence of \texttt{BcUpDk} calls where only a prefix of the
+used update information has been used in \texttt{BcUpEk} calls. All
+the key-update primitives we have seen so far required that the
+updates calls are synchronized. The receiver can thus instigate key
+updates via a secure back-channel to start the healing process.
+Finally, the protocol further needs a standard digital signature
+scheme Sig (\texttt{Gen,Sign,Verify}) and some collision-resistant
+hash function H.
 
 \subsection{Construction}
 \label{sec:construction-3}
 
-Figure~\ref{fig:secmsg} shows the Secure Channel protocol based on a healable and key-updating
-public-key encryption scheme hku-PKE, a key-updatable signature scheme ku-Sig,
-a regular digital signature scheme Sig and a collision-resistant hash function H.
+Figure~\ref{fig:secmsg} shows the Secure Channel protocol.
 Although superficially the protocol looks relatively simple most of the
 complexity is hidden away within the hku-PKE scheme. Unfortunately, the hku-PKE
 construction is much more involved than the actual Secure Channel protocol so
@@ -1037,7 +1038,7 @@ titles~\cite{durak2018bidirectional,jostefficient} or
 attempt to be as efficient as the Signal protocol~\cite{alwen2018double}.
 We can further grasp what it really means, in terms
 of efficiency degradation, to use a HIBE as part
-of a protocol~\cite{poettering2018towards,jaeger2018optimal}.
+of the protocol~\cite{poettering2018towards,jaeger2018optimal}.
 
 \section{Setup}
 \label{sec:setup}
@@ -1060,10 +1061,12 @@ The benchmarks can be categorized into three types.
 \item \textbf{Runtime.} How long it takes to exchange $n$ message executed
   on a single machine ignoring potential latency that would occur
   in a network.
-\item \textbf{Ciphertext Size.} How the size of the ciphertext changes
-  throughout the exchange of $n$ messages.
-\item \textbf{State Size.} How does the memory footprint changes
-  throughout the exchange of $n$ messages.
+\item \textbf{Message Size.} The maximal size of a messages
+  throughout the exchange of $n$ messages. A message designates the data that is sent
+  over the channel.
+\item \textbf{State Size.} The maximal size of a user state
+  throughout the exchange of $n$ messages. The state designates
+  all the data kept in memory by a user.
 \end{enumerate}
 Each category itself will be tested on three canonical ways
 traffic can be shaped when two participants are communicating,
@@ -1072,9 +1075,9 @@ all depicted in figure~\ref{fig:picto}.
 \item \textbf{Alternating}. Alice and Bob take turns sending messages. Alice
   sends the odd-numbered messages and Bob sends the even-numbered messages.
 \item \textbf{Unidirectional.} Alice first sends $\frac{n}{2}$ messages
-  to Bob after receiving them Bob responds with the remaining $\frac{n}{2}$ messages.
+  to Bob, after receiving them Bob responds with the remaining $\frac{n}{2}$ messages.
 \item \textbf{Deferred Unidirectional.} Alice first sends $\frac{n}{2}$ messages
-  to Bob but before he receives them Bob he sends his share of $\frac{n}{2}$
+  to Bob but before he receives them, Bob sends his share of $\frac{n}{2}$
   messages to Alice.
 \end{enumerate}
 
@@ -1116,7 +1119,7 @@ exchanged if the need arises.
   library \footnote{\url{https://golang.org/pkg/crypto/sha256/}}.
 \item \textbf{AES-GCM~\cite{mcgrew2004security}.} As the authenticated
   encryption scheme with
-  associated-data used in the FS-AEAD scheme in \cite{alwen2018double}.
+  associated-data used among others in the FS-AEAD scheme in \cite{alwen2018double}.
   AES-GCM is also part of the Go standard
   library \footnote{\url{https://golang.org/pkg/crypto/aes/}}.
 \item \textbf{Gentry-Silverberg HIBE~\cite{gentry2002hierarchical}.} As
@@ -1161,7 +1164,7 @@ the signcryption scheme with a symmetric-key variant in
 this case an authenticated encryption scheme with associated
 data, i.e.~AES-GCM in our case. Such a construction cannot provide
 any post-compromise security but it significantly faster
-than the regular protocol. The ACD-PK protocol goes to other way around
+than the regular protocol. The ACD-PK protocol goes the other way around
 by adding a public-key encryption scheme and a digital signature
 algorithm to the regular ACD protocol to plug some
 of the post-compromise security holes caused by
@@ -1186,11 +1189,13 @@ benchmarks the Go profiler runs the benchmarks repeatedly
 until the average time over all runs stabilizes. Usually
 earlier runs serve as warm-ups to bring all the program
 data into the cache for faster access in later runs.
-Note that due to the large differences in terms
+Due to the large differences in terms
 of runtimes between the protocols the y-axis is
-in logarithmic scale. Also note that the measurements
-were only conducted up to 900 messages anything beyond
-can then be safely extrapolated.
+in logarithmic scale.
+Note that in the below listings invocations of
+hash functions have been omitted.
+Also note that the measurements were only conducted up
+to 900 messages anything beyond can then be safely extrapolated.
 
 \subsection{Alternating Traffic}
 \label{sec:alternating-traffic}
@@ -1203,7 +1208,7 @@ can then be safely extrapolated.
 \end{figure}
 
 \begin{itemize}
-\item \textbf{PR.} Since the unidirectional period is exactly one
+\item \textbf{PR.} Since the unidirectional period is exactly one,
   the epoch counters $(E_S,E_R)$ for both user also have difference one
   thus each user will perform exactly two encryptions, except for the
   first exchange, for each message.
@@ -1239,10 +1244,10 @@ can then be safely extrapolated.
   encryptions/decryptions. Since the signcryption scheme is spun up by combining
   a regular PKE system and a DSS scheme we have two PKE encryptions/decryptions
   and two DSS signatures/verifications per message, excluding
-  the first exchange. Also note that
+  the first message by Alice. Also note that
   only one key generation is performed during the onion encryption.
   Replacing the signcryption algorithm with a symmetric AEAD scheme
-  will result in a protocol that has a runtime below one second
+  will result in a protocol that has a runtime well below one second
   even for 900 messages.
   \begin{center}
     \begin{tabular}{ | l | l | l | l |}
@@ -1253,9 +1258,9 @@ can then be safely extrapolated.
     \hline
     \end{tabular}
   \end{center}
-\item \textbf{JMM.} Superficially we have single calls to the HkuPke, KuSig and
-  Sig primitives but the magic happens under the hood within HkuPke and can
-  be checked in the original paper. We have the following distribution
+\item \textbf{JMM.} Superficially we have single calls to the hku-PKE, ku-Sig and
+  Sig primitives but the magic happens under the hood within the hku-PKE and can
+  be checked in the original paper (see page 23). We have the following distribution
   of operations throughout the primitives. To keep the notation lightweight
   the generation of update information \texttt{UpdGen} as part
   of the hku-PKE scheme is counted as a key generation call.
@@ -1270,10 +1275,10 @@ can then be safely extrapolated.
     \end{tabular}
   \end{center}
 \item \textbf{ACD.} The protocol only contains loops for housekeeping operations
-  like the deletion of state but not for cryptographic operations. It performs
+  like the deletion of states but not for cryptographic operations. It performs
   better than the previous two protocols due to only using public-key cryptography
   for the continuous key agreement primitive. The CKA operations are counted
-  as key generation calls. Also since the participants are alternating
+  as key generation calls. Also since the participants are alternating,
   each message marks the start of a new epoch thus the key agreement and
   FS-AEAD key generations are executed with each call. The addition
   of public-key schemes in ACD-PK adds two generation calls, an PKE encryption call,
@@ -1328,15 +1333,15 @@ expected.
     \hline
     \end{tabular}
   \end{center}
-\item  \textbf{JS.} Contrary to all other this protocol incurs a
-  quadratic ku-PKE key update penalty for repeated sending without receiving.
+\item  \textbf{JS.} Contrary to all others the protocol by Jaeger and Stepanovs incurs a
+  quadratic ku-PKE key-update penalty for repeated sending without receiving.
   Each send operation will perform one \texttt{ku-PKE.UpdEk} call more than the previous
   one since the partner will update the corresponding decryption key
   in any case. This gives $\frac{(n-1)n}{2}$ \texttt{ku-PKE.UpdEk} and
   $\frac{n}{2}$ \texttt{ku-PKE.UpdDk} updates per user. Furthermore,
   since Bob updates his ku-Sig signature key in every receive, Alice
   has to perform $n$ \texttt{ku-Sig.UpdVk} calls when she receives the
-  first message from Bob. The protocol thus performs worse in unidirectional
+  first message from Bob. The protocol thus performs significantly worse in unidirectional
   traffic than alternating.
   \begin{center}
     \begin{tabular}{ | l | l | l | l |}
@@ -1347,8 +1352,9 @@ expected.
     \hline
     \end{tabular}
   \end{center}
-\item \textbf{DV.} All messages by Alice have a single onion layer but for
-  the first message in the opposite direction both use $\frac{n}{2}$ onion
+\item \textbf{DV.} All messages by Alice have a single onion layer except
+  the first message travelling in the opposite direction for which both
+  participants use $\frac{n}{2}$ onion
   layers using all accumulated signcryption keys. The resulting runtime
   is thus slightly better than in the alternating case.
   \begin{center}
@@ -1362,7 +1368,10 @@ expected.
   \end{center}
 \item \textbf{JMM.} Unidirectional traffic does not change the metrics
   with respect to alternating traffic for this protocol thus we have the
-  same amount of operations for both.
+  same amount of operations for both. This is due to the fact that in
+  the hku-PKE the sku-PKE key pairs are only updated once per transmission
+  if there are no messages in delay as it is the case with alternating
+  and unidirectional traffic.
   \begin{center}
     \begin{tabular}{ | l | l | l | l |}
     \hline
@@ -1376,7 +1385,8 @@ expected.
 \item \textbf{ACD.} Alice starts a new epoch with her first message, the
   same for Bob with his first message after receiving the $\frac{n}{2}$
   from Alice. This results in a total of $4$ CKA calls and $4$ FS-AEAD
-  key generations.
+  key generations making it even faster than it already was in alternating
+  traffic.
   \begin{center}
     \begin{tabular}{ | l | l | l | l |}
     \hline
@@ -1441,7 +1451,10 @@ the same metrics as in alternating traffic.
   \end{center}
 \item \textbf{DV.} In deferred unidirectional traffic it is easy to see that
   all message have a single onion layer thus resulting $n$ overall
-  signcryption calls.
+  signcryption calls. Note however that the first message
+  by either participant after receiving all message will perform
+  $\frac{n}{2}$ onion encryptions. This is not captured
+  by this benchmark.
   \begin{center}
     \begin{tabular}{ | l | l | l | l |}
     \hline
@@ -1453,8 +1466,9 @@ the same metrics as in alternating traffic.
   \end{center}
 \item \textbf{JMM.} In deferred unidirectional traffic the protocol
   has a quadratic sku-PKE key update penalty in \texttt{hku-PKE.Dec} and
-  \texttt{hku-PKE.BcUpdEk} hence it worse than the protocol by Durak
-  and Vaudenay.
+  \texttt{hku-PKE.BcUpdEk}. For each received message
+  both participants update all the accumulated keys, hence it performs
+  significantly worse than the protocol by Durak and Vaudenay.
   \begin{center}
     \begin{tabular}{ | l | l | l | l |}
     \hline
@@ -1483,9 +1497,15 @@ the same metrics as in alternating traffic.
 In deferred unidirectional traffic it now also possible to separate
 the protocols Durak/Vaudenay and Jost/Maurer/Mularczyk due to
 the quadratic key update complexity within the
-secretly key-updatable PKE scheme. The protocol by Poettering
+hku-PKE scheme. The protocol by Poettering
 and Rösler also sees a jump in complexity caused by another
-quadratic update complexity.
+quadratic update complexity. In summary, it is now obvious that
+the protocols by Poettering/Rösler and Jaeger/Stepanovs are prohibitively
+inefficient especially in unidirectional traffic. Furthermore,
+as expected the Double Ratchet outperform the other protocols,
+although offering weaker security guarantees. It then boils down
+to a case-by-base decision on how to choose the
+proper trade off between security and performance.
 
 \section{Message Size Benchmarks}
 \label{sec:ciph-size-benchm}
@@ -1520,7 +1540,7 @@ is primarily caused by the forward-secure signature scheme
 whose keys and signatures are larger than in a regular signature scheme.
 Also note that in the DV protocol two onion encryptions
 are performed for each message causing a swollen
-ciphertext. Naturally, the two protocol using
+ciphertext. Naturally, the two protocols using
 symmetric primitives compete for the lowest message size.
 
 \subsection{Unidirectional Traffic}

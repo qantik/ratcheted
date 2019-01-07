@@ -6,6 +6,7 @@ package secmsg
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -225,6 +226,7 @@ func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 		} else {
 			r.DkEph[l] = dkEph
 			skuUpdDk++
+			fmt.Println("ffffffffffff")
 			r.DkUpd[l], err = h.sku.updateSK(message.Ud, r.DkUpd[l])
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "unable to update skuPKE private key")
@@ -290,6 +292,7 @@ func (h hkuPKE) updateEK(sender, inf []byte) (upd []byte, err error) {
 
 	//fmt.Println("upEk", i.R, s.S)
 	for l := i.R; l < s.S; l++ {
+		fmt.Println("hhhhhhhhhhhhhhhhhhh")
 		skuUpdEk++
 		ek, err := h.sku.updatePK(s.Ue[l], s.EkUpd)
 		if err != nil {
