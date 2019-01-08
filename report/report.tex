@@ -165,7 +165,7 @@ exposure yielding future secrecy or post-compromise security. Another
 way is the usage of some key-agreement protocol to schedule the
 creation of new states between the parties~\cite{cohn2016post}. Again
 both constructions come at the cost of losing asynchronous
-communications. Asynchronous communications is thus a challenging
+communication. Asynchronous communication is thus a challenging
 obstacle that significantly complicates the design and analysis
 of ratcheted key-agreement or messaging protocols.
 
@@ -287,7 +287,7 @@ $\leftarrow$ is the assignment operator.
 
 This asynchronous key-agreement protocol was released in the paper
 \textit{Asynchronous Ratcheted Key Exchange} in May 2018.
-The fact that sets this protocol, and the protocol in the following
+One fact that sets this protocol, and the protocol in the following
 section, apart from the others is the notion of post-impersonation security
 also called fine-grained post-compromise security,
 meaning that there still remain some security guarantees concerning
@@ -452,7 +452,7 @@ This secure messaging protocol was published in the paper
 in June 2018 and targets similar a security level as the protocol by
 Poettering and Rösler although aiming at secure communication instead
 of key-agreement. This means that the protocol also achieves
-post-impersonation security at the cost of an increased running time due
+post-impersonation security among others at the cost of an increased running time due
 to the usage of inefficient primitives. 
 
 \subsection{Primitives}
@@ -1163,7 +1163,7 @@ the original protocol by Durak and Vaudenay it only replaces
 the signcryption scheme with a symmetric-key variant in
 this case an authenticated encryption scheme with associated
 data, i.e.~AES-GCM in our case. Such a construction cannot provide
-any post-compromise security but it significantly faster
+any post-compromise security but is significantly faster
 than the regular protocol. The ACD-PK protocol goes the other way around
 by adding a public-key encryption scheme and a digital signature
 algorithm to the regular ACD protocol to plug some
@@ -1725,7 +1725,7 @@ digest complex and long papers and concepts in small time intervals, which
 I think is a very valuable skill that also finds its applications outside of
 school. It was then especially motivating to see the obtained result
 become part of further work. I am also very grateful for the excellent
-support by my supervisors that made this project thoroughly enjoyable
+support by my supervisors that made this project a thoroughly enjoyable
 experience.
 
 \bibliographystyle{plainurl}
