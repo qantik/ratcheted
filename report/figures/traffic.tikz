@@ -2,7 +2,7 @@
   box/.style={rectangle,draw,inner sep=5pt,minimum height=1cm,minimum width=2cm,thick},
   node distance=2cm,
   ->,>=stealth',
-  scale=0.5, every node/.style={scale=0.5}
+  scale=0.45, every node/.style={scale=0.45}
 ]
 
   % Box t0
@@ -101,7 +101,7 @@
   \path (ta9) edge[dotted, thick] node [] {} (taa9);
   \node [coordinate,below right=-0.125cm and 0cm of t9,node distance=1cm] (tb9) {};
   \node [right=2cm of tb9] (tbb9) {$m_6$};
-  \path (tb9) edge[dotted, thick] node [] {} (tbb9);
+  \path (tbb9) edge[dotted, thick] node [] {} (tb9);
 
 
   \node [box,below of=t9] (t10) {Receive};

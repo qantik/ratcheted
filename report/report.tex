@@ -77,12 +77,10 @@ part in the construction of messaging protocols. Even though on paper
 the attained levels of security in these new protocol often only
 differ marginally the effects on performance metrics are of a
 different kind with sometimes huge differences between the protocols.
-
-% Add some more text here.
-
-\section{Contributions}
-\label{sec:contributions}
-
+%
+%\section{Contributions}
+%\label{sec:contributions}
+%
 This project is concerned with surveying and solidifying the
 performance differences of seven new secure messaging or key-agreement
 protocols that have been proposed throughout 2018. In
@@ -92,9 +90,12 @@ summarized in terms of composition, primitives and security levels, then in
 chapter~\ref{chap:benchmarks} the protocols are measured and compared
 on the basis of several benchmarks. The report is then concluded
 in the last chapter with some general remarks.
+%
+%\section{Circumstances}
+%\label{sec:circumstances}
+%
 
-\section{Circumstances}
-\label{sec:circumstances}
+\bigskip
 
 This project has been conducted as part of the third master semester optional
 semester project in computer science course (CS-596) offered by the
@@ -133,17 +134,18 @@ the actual protocols are described.
   \label{fig:traffic}
 \end{figure}
 Figure~\ref{fig:traffic} shows an example asynchronous traffic
-transcript. The initial states of Alice and Bob are created and
-distributed by a trusted party, these states are updated with each
-send or receive operation. In the case of a key-agreement protocol the
-update information corresponding to the created key of the sender
-should generate the same key at the receiver when the update message
-is received. Analogous, for a messaging protocol where an encrypted
-message should be correctly deciphered by the receiver upon
-arrival. In figure for example the message sent by Alice at time $t_0$
-is only received by Bob at time $t_8$ but should nonetheless produce a
-correct key or plaintext regardless of the messages sent by Bob in the
-meantime that have updated Bob's state.
+transcript for both messaging and key-agreement. The initial states of
+Alice and Bob are created and distributed by a trusted party, these
+states are updated with each send or receive operation. In the case of
+a key-agreement protocol the update information corresponding to the
+created key of the sender should generate the same key at the receiver
+when the update message is received. Analogous, for a messaging
+protocol where an encrypted message should be correctly deciphered by
+the receiver upon arrival. In figure~\ref{fig:traffic} for example,
+the message sent by Alice at time $t_0$ is only received by Bob at
+time $t_8$ but should nonetheless produce a correct key or plaintext
+regardless of the messages sent by Bob in the meantime that have
+updated Bob's state.
 
 \section{Ratchet Security}
 \label{sec:ratchet-security}
@@ -172,8 +174,7 @@ of ratcheted key-agreement or messaging protocols.
 The adversary in ratcheted protocols is quite powerful and can be both
 passive and to a certain extend active. This means he has access to
 the full message transcript, can expose the states of both
-participants, corrupt the states or impersonate users and in some
-cases even choose the randomness used by the participants. As it is
+participants and corrupt the states. As it is
 usual in such cases we assess the advantage of any adversary as part
 of some key indistinguishability (KIND) or ciphertext (CIND)
 indistinguishability game where the adversarial algorithm $\mathcal{A}$
@@ -274,7 +275,7 @@ papers only omitting lines that are not necessary
 to understand the benchmark results. The pseudo-code should be self-contained
 but there are nonetheless
 some special symbols. We let $\perp$ denote the \texttt{null} symbol.
-$||$ represents the concatenation of two byte arrays. An empty
+$||$ represents the concatenation of two byte strings. An empty
 array is described by $[\cdot]$. Ellipses in the array selector
 $A[...,i]$ are used to
 denote an operation on multiple array elements and last but not least
@@ -295,9 +296,9 @@ impersonation attempt. Post-impersonation security can be further divided
 into authenticity and confidentiality.
 \begin{itemize}
 \item \textbf{Post-Impersonation Authentication.} Assume the adversary
-  managed to inject a message to Bob thus is impersonating Alice.
+  managed to inject a message to Bob effectively impersonating Alice.
   Post-impersonation authenticity makes sure that any further message
-  from Bob will be rejected by Alice. This should even hold if
+  from Bob or the adversary will be rejected by Alice. This should even hold if
   Bob's state is compromised after the injection. Chain-hashing
   the communication transcript is a simple way to reject messages from
   Bob after an injection for the case where Bob's state has not
@@ -348,7 +349,7 @@ post-impersonation resilience.
 \end{itemize}
 In security terms a ku-KEM should satisfy the guarantees of regular
 key-encapsulation mechanisms in addition to forward security that
-protecting past keys from state exposures. A ku-KEM can be constructed
+protecting past keys from state exposures. A ku-KEM can be generically constructed
 out of any hierarchical identity-based encryption scheme
 (HIBE)~\cite{gentry2002hierarchical}. Contrary to an ordinary
 identity-based encryption scheme where there is a single central
@@ -394,15 +395,15 @@ difference between $(E_R^\vdash,E_R^\dashv)$ for the sending
 party and $(E_S^\vdash,E_S^\dashv)$ for the receiving party.
 In other words the participants are constantly exchanging
 ku-KEM and Signature keys. If some messages are delayed such
-that a participants receives a message from a previous epoch
+that a participant receives a message from a previous epoch
 then both users will perform key-updates to ensure forward-security.
 
 \begin{itemize}
 \item \textbf{Init.} Two sets of ku-KEM, DS and hashing keys are generated
   and distributed to the participants. Furthermore, each user has a counter
   for sent messages $s$ and for received messages $r$ next to the epoch
-  counters unified under the variable $E$. Due to epochs the ku-KEM keys
-  are stored in arrays (SK,PK) with $(L_S,L_R,t)$ storing the transcript
+  counters unified under the variable $E$. The accumulated ku-KEM keys
+  are stored in the arrays (SK,PK) with $(L_S,L_R,t)$ storing the transcript
   of sent and received messages.
 \item \textbf{Send}. Each send operation generates a new set of
   ku-KEM and DS keys where the encapsulation key $pk^*$ and the
@@ -510,7 +511,7 @@ implementations in the public domain.
 Figure~\ref{fig:secure-channel} depicts the secure channel
 protocol (SCh) based on a collision-resistant
 hash function H, a key-updatable public-key encryption scheme ku-PKE and
-a key-updatable digital signature scheme ku-DS. Some non-critical
+a key-updatable digital signature scheme ku-DSS. Some non-critical
 control-branches not necessary for the benchmarks in the next chapter
 have been omitted. The protocol is simpler than
 its brother in spirit from the previous section, however it
@@ -536,7 +537,7 @@ generally is slower due to the usage of two key-update primitives.
 \item \textbf{Receive.} The receive function mirrors the operations
   performed during sending. At every call the signing key $sk$ is updated
   thus when this key is then used in a subsequent sending operation the
-  partner has to perform a corresponding loop of \texttt{DSS.UpdVk}
+  partner has to perform a corresponding loop of \texttt{ku-DSS.UpdVk}
   calls to equalize its verification key. Again these updates
   are not kept in memory upon exiting the function. Further note
   that the transcripts and ku-PKE decryption keys corresponding to messages
@@ -620,7 +621,7 @@ There exist dedicated signcryption constructions~\cite{zheng1997digital}
 however for the BARK protocol
 it is enough to simply chain a regular digital signature scheme DS and
 public-key encryption scheme PKE
-such that $\t{Enc}(sk_S,pk_R,ad,m) = \t{PKE.Enc}(pk_R,m || \t{DSS.Sign}(sk_S,ad || m))$.
+such that $\t{Enc}(sk_S,pk_R,ad,m) = \t{PKE.Enc}(pk_R,m || \t{DS.Sign}(sk_S,ad || m))$.
 
 \subsection{Construction}
 \label{sec:construction-2}
@@ -1234,7 +1235,7 @@ to 900 messages anything beyond can then be safely extrapolated.
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
     \textbf{ku-PKE} & $0$ & $n/n$ & $0/n$ \\ \hline
-    \textbf{ku-Sig} & $0$ & $n/n$ & $n/n$ \\  
+    \textbf{ku-Sig} & $0$ & $n/n$ & $n-1/n$ \\  
     \hline
     \end{tabular}
   \end{center}
@@ -1399,7 +1400,7 @@ expected.
 
 We can see that in unidirectional traffic there is a clear separation
 between protocols of Poettering/Rösler and Jaeger/Stepanovs due
-to the quadratic penalty of encryption key updates within
+to the quadratic penalty of encryption key updates within the
 key-updatable PKE. All the other protocols have more or less
 the same metrics as in alternating traffic.
 
@@ -1449,7 +1450,7 @@ the same metrics as in alternating traffic.
     \end{tabular}
   \end{center}
 \item \textbf{DV.} In deferred unidirectional traffic it is easy to see that
-  all message have a single onion layer thus resulting $n$ overall
+  all messages have a single onion layer thus resulting $n$ overall
   signcryption calls. Note however that the first message
   by either participant after receiving all message will perform
   $\frac{n}{2}$ onion encryptions. This is not captured
@@ -1501,7 +1502,7 @@ and Rösler also sees a jump in complexity caused by another
 quadratic update complexity. In summary, it is now obvious that
 the protocols by Poettering/Rösler and Jaeger/Stepanovs are prohibitively
 inefficient especially in unidirectional traffic. Furthermore,
-as expected the Double Ratchet outperform the other protocols,
+as expected the Double Ratchet outperforms the other protocols,
 although offering weaker security guarantees. It then boils down
 to a case-by-base decision on how to choose the
 proper trade off between security and performance.
@@ -1724,7 +1725,7 @@ digest complex and long papers and concepts in small time intervals, which
 I think is a very valuable skill that also finds its applications outside of
 school. It was then especially motivating to see the obtained result
 become part of further work. I am also very grateful for the excellent
-support by my supervisor that made this project thoroughly enjoyable
+support by my supervisors that made this project thoroughly enjoyable
 experience.
 
 \bibliographystyle{plainurl}
