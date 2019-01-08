@@ -12,21 +12,18 @@ import (
 	"github.com/qantik/ratcheted/primitives/encryption"
 )
 
-func TestLiteUni(t *testing.T) {
+func TestLiteUniARCAD(t *testing.T) {
 	require := require.New(t)
 
-	lu := NewLiteUni(encryption.NewGCM())
+	lu := NewLiteUniARCAD(encryption.NewGCM())
 
 	s, r, err := lu.Init()
 	require.Nil(err)
 
-	pt := []byte("lite-bark")
-	ad := []byte("associated-data")
-
-	su, ct, err := lu.Send(s, ad, pt, false)
+	su, ct, err := lu.Send(s, pt, pt, false)
 	require.Nil(err)
 
-	ru, pt1, err := lu.Receive(r, ad, ct)
+	ru, pt1, err := lu.Receive(r, pt, ct)
 	require.Nil(err)
 	require.True(bytes.Equal(su, ru))
 	require.True(bytes.Equal(pt, pt1))

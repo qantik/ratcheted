@@ -5,24 +5,10 @@ package bark
 
 import (
 	"bytes"
-	"crypto/elliptic"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/qantik/ratcheted/primitives/encryption"
-	"github.com/qantik/ratcheted/primitives/signature"
-)
-
-var (
-	curve = elliptic.P256()
-	ecies = encryption.NewECIES(curve)
-	ecdsa = signature.NewECDSA(curve)
-	gcm   = encryption.NewGCM()
-
-	bark     = NewBARK(NewUni(&signcryption{ecies, ecdsa}))
-	liteBARK = NewBARK(NewLiteUni(gcm))
 )
 
 func alt(bark *BARK, n int, b *testing.B) {
@@ -114,7 +100,7 @@ func deferredUni(bark *BARK, n int, b *testing.B) {
 	fmt.Println("size", max)
 }
 
-func uni(bark *BARK, n int, b *testing.B) {
+func unidirectional(bark *BARK, n int, b *testing.B) {
 	require := require.New(b)
 
 	alice, bob, err := bark.Init()
@@ -166,21 +152,18 @@ func benchmarkAlt(bark *BARK, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		alt(bark, i, b)
 	}
-	fmt.Println(gen, snd, rcv)
 }
 
 func benchmarkUni(bark *BARK, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		uni(bark, i, b)
+		unidirectional(bark, i, b)
 	}
-	fmt.Println(gen, snd, rcv)
 }
 
 func benchmarkDeferredUni(bark *BARK, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		deferredUni(bark, i, b)
 	}
-	fmt.Println(gen, snd, rcv)
 }
 
 //func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(liteBARK, 50, b) }

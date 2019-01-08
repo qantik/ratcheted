@@ -25,8 +25,7 @@ const (
 // BRKE designates the PT18 protocol object defined by a ku-KEM scheme and a
 // one-time signature algorithm.
 type BRKE struct {
-	kuKEM *kuKEM
-	//kem       encryption.Encapsulation
+	kuKEM     *kuKEM
 	signature signature.Signature
 }
 
@@ -40,7 +39,6 @@ type User struct {
 	r *r
 	s *s
 
-	kems, kemr []byte
 	// User identifier string.
 	name string
 }
@@ -59,7 +57,6 @@ type r struct {
 	K   []byte // K is one of the two created chaining keys.
 
 	// t is the accumulated transcript of the current communication.
-	// FIXME: It may be better to use a 2-dim array instead of glueing together slices.
 	t []byte
 }
 
@@ -77,7 +74,6 @@ type s struct {
 	K   []byte // K is one of the two crated chaining keys.
 
 	// t is the accumulated transcript of the current communication.
-	// FIXME: It may be better to use a 2-dim array instead of glueing together slices.
 	t []byte
 }
 
@@ -100,20 +96,11 @@ func (u User) size() int {
 }
 
 // NewBRKE creates a fresh BRKE protocol instance.
-//
-// TODO: Make RNG a parameter.
 func NewBRKE(hibe hibe.HIBE, signature signature.Signature) *BRKE {
 	return &BRKE{kuKEM: &kuKEM{hibe: hibe}, signature: signature}
 }
 
-var enc = 0
-var dec = 0
-var pkk = 0
-var skk = 0
-
 // Init creates two fresh users objects that can communicate with each other.
-//
-// TODO: Decide on what to do with the names.
 func (b BRKE) Init() (*User, *User, error) {
 	// Generate two sets of signature key pairs.
 	vfka, sgka, err := b.signature.Generate()
@@ -130,7 +117,6 @@ func (b BRKE) Init() (*User, *User, error) {
 	if _, err := rand.Read(seed[:]); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
-	//pkaa, skaa, _ := b.kem.generate(seed[:])
 	pka, ska, err := b.kuKEM.generate(seed[:])
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error while generating kem keys")
@@ -138,7 +124,6 @@ func (b BRKE) Init() (*User, *User, error) {
 	if _, err := rand.Read(seed[:]); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to poll prng")
 	}
-	//pkbb, skbb, _ := b.kem.generate(seed[:])
 	pkb, skb, err := b.kuKEM.generate(seed[:])
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error while generating kem keys")
@@ -188,8 +173,6 @@ func (b BRKE) Init() (*User, *User, error) {
 	}
 	ub := &User{r: rb, s: sb, name: "bob"}
 
-	enc, dec, pkk, skk = 0, 0, 0, 0
-
 	return ua, ub, nil
 }
 
@@ -229,9 +212,7 @@ func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	// the generated ciphers to the above ciphertext.
 	ks := []byte{}
 
-	//fmt.Println("send", user.s.E0, user.s.E1)
 	for i := user.s.E0; i <= user.s.E1; i++ {
-		enc++
 		c1, c2, err := b.kuKEM.encrypt(user.s.PK[i])
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "error while encapsulating key")
@@ -258,7 +239,6 @@ func (b BRKE) Send(user *User, ad []byte) ([]byte, [][]byte, error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error while generating kem keys")
 	}
-	//user.kems = pk
 	for i := 0; i < user.s.E1; i++ {
 		user.s.PK[i] = nil
 	}
@@ -295,9 +275,7 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	}
 	user.s.L[rr] = []byte{}
 
-	//fmt.Println("upPK", rr+1, user.s.s)
 	for i := rr + 1; i <= user.s.s; i++ {
-		pkk++
 		pks, err = b.kuKEM.updatePublicKey(pks, user.s.L[i])
 		if err != nil {
 			return nil, errors.Wrap(err, "error while updating kem public key")
@@ -324,19 +302,15 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	// and ku-KEM secret key as the initiating party.
 	ks := []byte{}
 
-	//fmt.Println("recv", user.r.E0, e)
 	for i := user.r.E0; i <= e; i++ {
 		c := C[0]
 		C = C[1:]
-		dec++
 		k, err := b.kuKEM.decrypt(user.r.SK[i], c)
 		if err != nil {
 			return nil, errors.Wrap(err, "error while decapsulating key")
 		}
 		ks = append(ks, k...)
 	}
-
-	//user.kem = user.r.E0 == e
 
 	user.r.t = append(user.r.t, ts...)
 	ko, Kr, coins := oracle(user.r.K, ks, user.r.t)
@@ -345,16 +319,13 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error while genereting kem keys")
 	}
-	//user.kemr = sk
 
 	// Delete old ku-KEM secret keys and update those which are still active.
 	for i := 0; i <= e-1; i++ {
 		user.r.SK[i] = nil
 	}
 	user.r.SK[e] = sk
-	//fmt.Println("upSK", e+1, user.r.E1)
 	for i := e + 1; i <= user.r.E1; i++ {
-		skk++
 		s, err := b.kuKEM.updateSecretKey(user.r.SK[i], ts)
 		if err != nil {
 			return nil, errors.Wrap(err, "error while updating kem secret key")

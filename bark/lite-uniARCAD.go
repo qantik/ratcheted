@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 
 	"github.com/pkg/errors"
+
 	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/encryption"
 )
@@ -14,8 +15,8 @@ import (
 // Fix symmetric lite uniBARK key (state) size at 128 bits.
 const liteUniKeySize = 16
 
-// LiteUni implements the lite uniBARK protocol.
-type LiteUni struct {
+// LiteUniARCAD implements the lite-uniARCAD protocol.
+type LiteUniARCAD struct {
 	encryption encryption.Authenticated
 }
 
@@ -24,13 +25,13 @@ type liteUniBlock struct {
 	Key, Message []byte
 }
 
-// NewLiteUni creates a fresh LiteUni instance with a given authenticated encryption scheme.
-func NewLiteUni(encryption encryption.Authenticated) *LiteUni {
-	return &LiteUni{encryption: encryption}
+// NewLiteUniARCAD creates a fresh LiteUni instance for a given authenticated encryption scheme.
+func NewLiteUniARCAD(encryption encryption.Authenticated) *LiteUniARCAD {
+	return &LiteUniARCAD{encryption: encryption}
 }
 
-// Init returns fresh lite uniBARK sender and receiver states.
-func (l LiteUni) Init() (s, r []byte, err error) {
+// Init returns fresh lite-uniARCAD sender and receiver states.
+func (l LiteUniARCAD) Init() (s, r []byte, err error) {
 	s = make([]byte, liteUniKeySize)
 	if _, err := rand.Read(s); err != nil {
 		return nil, nil, err
@@ -42,9 +43,10 @@ func (l LiteUni) Init() (s, r []byte, err error) {
 	return
 }
 
-// Send creates a new state and encrypts it for transmission to another participant.
-func (l LiteUni) Send(state, ad, pt []byte, simple bool) (upd, ct []byte, err error) {
-	if simple {
+// Send invokes the lite-uniARCAD send routine for a given sender state, associated data
+// and a plaintext. Ratchet indicates whether the sender state is updated or not.
+func (l LiteUniARCAD) Send(state, ad, pt []byte, ratchet bool) (upd, ct []byte, err error) {
+	if ratchet {
 		upd = make([]byte, liteUniKeySize)
 		if _, err := rand.Read(upd); err != nil {
 			return nil, nil, err
@@ -60,8 +62,9 @@ func (l LiteUni) Send(state, ad, pt []byte, simple bool) (upd, ct []byte, err er
 	return
 }
 
-// Receive decrypts the ciphertext to get the updated state.
-func (l LiteUni) Receive(state, ad, ct []byte) (upd, pt []byte, err error) {
+// Receive invokes the lite-uniARCAD receive routine for a given receiver state,
+// associated data and a ciphertext.
+func (l LiteUniARCAD) Receive(state, ad, ct []byte) (upd, pt []byte, err error) {
 	dec, err := l.encryption.Decrypt(state, ct, ad)
 	if err != nil {
 		return nil, nil, err

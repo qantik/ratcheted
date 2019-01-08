@@ -13,57 +13,103 @@ import (
 	"github.com/qantik/ratcheted/primitives/signature"
 )
 
-func TestSCh_Synchronous(t *testing.T) {
+var (
+	fsg    = signature.NewBellare()
+	gentry = hibe.NewGentry()
+
+	sch = NewSCh(fsg, gentry)
+
+	msg = []byte{
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0,
+	}
+)
+
+func TestSCh_Alternating(t *testing.T) {
 	require := require.New(t)
 
 	s := NewSCh(signature.NewBellare(), hibe.NewGentry())
 
-	ua, ub, err := s.Init()
+	alice, bob, err := s.Init()
 	require.Nil(err)
 
-	msg := []byte("SCh")
-	ad := []byte("associated")
-
 	for i := 0; i < 10; i++ {
-		m, err := s.Send(ua, ad, msg)
+		m, err := s.Send(alice, msg, msg)
 		require.Nil(err)
 
-		pt, err := s.Receive(ub, ad, m)
+		pt, err := s.Receive(bob, msg, m)
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
 
-		m, err = s.Send(ub, ad, msg)
+		m, err = s.Send(bob, msg, msg)
 		require.Nil(err)
 
-		pt, err = s.Receive(ua, ad, m)
+		pt, err = s.Receive(alice, msg, m)
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
 	}
 }
 
-func TestSCh_Asynchronous(t *testing.T) {
+func TestSCh_Unidirectional(t *testing.T) {
 	require := require.New(t)
 
 	s := NewSCh(signature.NewBellare(), hibe.NewGentry())
 
-	ua, ub, err := s.Init()
+	alice, bob, err := s.Init()
 	require.Nil(err)
 
-	msg := []byte("SCh")
-	ad := []byte("associated")
-
 	for i := 0; i < 10; i++ {
-		m1, err := s.Send(ua, ad, msg)
+		ct, err := sch.Send(alice, msg, msg)
 		require.Nil(err)
 
-		m2, err := s.Send(ub, ad, msg)
-		require.Nil(err)
-
-		pt, err := s.Receive(ub, ad, m1)
+		pt, err := sch.Receive(bob, msg, ct)
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
+	}
 
-		pt, err = s.Receive(ua, ad, m2)
+	for i := 0; i < 10; i++ {
+		ct, err := sch.Send(bob, msg, msg)
+		require.Nil(err)
+
+		pt, err := sch.Receive(alice, msg, ct)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+	}
+}
+
+func TestSCh_DefUnidirectional(t *testing.T) {
+	require := require.New(t)
+
+	s := NewSCh(signature.NewBellare(), hibe.NewGentry())
+
+	alice, bob, err := s.Init()
+	require.Nil(err)
+
+	var cts [10][]byte
+	for i := 0; i < 10; i++ {
+		ct, err := sch.Send(alice, msg, msg)
+
+		require.Nil(err)
+		cts[i] = ct
+	}
+
+	for i := 0; i < 10; i++ {
+		ct, err := sch.Send(bob, msg, msg)
+		require.Nil(err)
+
+		pt, err := sch.Receive(alice, msg, ct)
+		require.Nil(err)
+		require.True(bytes.Equal(msg, pt))
+	}
+
+	for i := 0; i < 10; i++ {
+		pt, err := sch.Receive(bob, msg, cts[i])
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
 	}

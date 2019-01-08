@@ -9,27 +9,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/qantik/ratcheted/primitives/hibe"
-	"github.com/qantik/ratcheted/primitives/signature"
-)
-
-var (
-	fsg    = signature.NewBellare()
-	gentry = hibe.NewGentry()
-
-	sch = NewSCh(fsg, gentry)
-
-	msg = []byte{
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-	}
 )
 
 func alt(n int, b *testing.B) {
@@ -174,24 +153,18 @@ func uni(n int, b *testing.B) {
 func benchmarkUni(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		uni(i, b)
-		fmt.Println("kuSig", sEnc, sDec, sUpPk, sUpSk)
-		fmt.Println("kuPKE", pEnc, pDec, pUpPk, pUpSk)
 	}
 }
 
 func benchmarkDeferredUni(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		deferredUni(i, b)
-		fmt.Println("kuSig", sEnc, sDec, sUpPk, sUpSk)
-		fmt.Println("kuPKE", pEnc, pDec, pUpPk, pUpSk)
 	}
 }
 
 func benchmarkAlt(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		alt(i, b)
-		fmt.Println("kuSig", sEnc, sDec, sUpPk, sUpSk)
-		fmt.Println("kuPKE", pEnc, pDec, pUpPk, pUpSk)
 	}
 }
 

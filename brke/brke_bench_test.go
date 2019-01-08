@@ -5,35 +5,10 @@ package brke
 
 import (
 	"bytes"
-	"crypto/elliptic"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/qantik/ratcheted/primitives/encryption"
-	"github.com/qantik/ratcheted/primitives/hibe"
-	"github.com/qantik/ratcheted/primitives/signature"
-)
-
-var (
-	curve  = elliptic.P256()
-	ecies  = encryption.NewECIES(curve)
-	ecdsa  = signature.NewECDSA(curve)
-	gentry = hibe.NewGentry()
-
-	brke = NewBRKE(gentry, ecdsa)
-
-	ad = []byte{
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-	}
 )
 
 func size(m [][]byte) int {
@@ -189,21 +164,18 @@ func benchmarkAlt(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		alt(i, b)
 	}
-	fmt.Println(enc, dec, pkk, skk)
 }
 
 func benchmarkDeferredUni(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		deferredUni(i, b)
 	}
-	fmt.Println(enc, dec, pkk, skk)
 }
 
 func benchmarkUni(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		uni(i, b)
 	}
-	fmt.Println(enc, dec, pkk, skk)
 }
 
 func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(50, b) }

@@ -65,16 +65,6 @@ func NewSCh(signature signature.ForwardSignature, hibe hibe.HIBE) *SCh {
 	return &SCh{kuDSS: &kuDSS{signature: signature}, kuPKE: &kuPKE{hibe: hibe}}
 }
 
-var sEnc = 0
-var sDec = 0
-var sUpPk = 0
-var sUpSk = 0
-
-var pEnc = 0
-var pDec = 0
-var pUpPk = 0
-var pUpSk = 0
-
 // Init creates and returns two User objects which can communicate with each other.
 // Note, that in case of an error during a send or receiver operation both user states
 // are considered corrupt thus requiring a fresh protocol initialization in order to
@@ -112,9 +102,6 @@ func (s SCh) Init() (*User, *User, error) {
 		s: 0, r: 0, ack: 0,
 	}
 
-	pEnc, pDec, pUpPk, pUpSk = 0, 0, 0, 0
-	sEnc, sDec, sUpPk, sUpSk = 0, 0, 0, 0
-
 	return ua, ub, nil
 }
 
@@ -147,16 +134,13 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 	}
 
 	uek := user.ek
-	//fmt.Println("upPK", user.ack+1, user.s, user.s-(user.ack+1))
 	for i := user.ack + 1; i < user.s; i++ {
-		pUpPk++
 		uek, err = s.kuPKE.updatePublicKey(uek, user.t[i])
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to update ku-pke public key")
 		}
 	}
 	c, err := s.kuPKE.encrypt(uek, pt)
-	pEnc++
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encrypt message")
 	}
@@ -164,11 +148,9 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 	// Sign the ciphertext and the marshalled auxiliary data before
 	// marshalling the resulting object.
 	sig, err := s.kuDSS.sign(user.sk, append(c, l...))
-	sEnc++
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to sign message")
 	}
-	//fmt.Println(len(c), len(sig), len(vks), len(eks))
 	msg, err := primitives.Encode(&message{C: c, Sig: sig, Aux: aux, L: l})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to decode message")
@@ -202,12 +184,9 @@ func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 	}
 
 	uvk := user.vk
-	//fmt.Println("upVK", user.ack+1, msg.Aux.R)
 	for i := user.ack + 1; i <= msg.Aux.R; i++ {
-		sUpPk++
 		uvk, _ = s.kuDSS.updatePublicKey(uvk, user.t[i])
 	}
-	sDec++
 	if err := s.kuDSS.verify(uvk, append(msg.C, msg.L...), msg.Sig); err != nil {
 		return nil, errors.Wrap(err, "unable to verify signature")
 	}
@@ -215,7 +194,6 @@ func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 	user.r += 1
 	user.ack = msg.Aux.R
 
-	pDec++
 	pt, err := s.kuPKE.decrypt(user.dk[user.ack], msg.C)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to decrypt ciphertext")
@@ -230,14 +208,11 @@ func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 
 	user.tau = primitives.Digest(sha256.New(), user.hk, ct)
 
-	sUpSk++
 	sks, err := s.kuDSS.updatePrivateKey(user.sk, user.tau)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to update ku-dss private key")
 	}
-	//fmt.Println("upDK", user.ack, user.s)
 	for i := user.ack; i <= user.s; i++ {
-		pUpSk++
 		user.dk[i], err = s.kuPKE.updatePrivateKey(user.dk[i], user.tau)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to udpate ku-pke private key")

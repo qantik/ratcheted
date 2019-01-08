@@ -7,18 +7,23 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
+	"github.com/qantik/ratcheted/primitives/encryption"
+	"github.com/qantik/ratcheted/primitives/signature"
 )
 
-type Uni struct {
+// Uni is the uniARCAD object handler.
+type uniARCAD struct {
 	sc *signcryption
 }
 
+// sender is the uniARCAD sender state.
 type sender struct {
-	SKS, PKR []byte
+	SKS, PKR []byte // SKS, PKR are the signcryption encryption and signature keys.
 }
 
+// receiver is the uniARCAD receiver state.
 type receiver struct {
-	SKR, PKS []byte
+	SKR, PKS []byte // SKR, PKS are the signcryption decryption and verification keys.
 }
 
 // uniBlock bundles the updated receiver state with a plaintext message.
@@ -26,11 +31,15 @@ type uniBlock struct {
 	R, Message []byte
 }
 
-func NewUni(sc *signcryption) *Uni {
-	return &Uni{sc: sc}
+// NewUniARCAD returns a fresh uniARCAD instance for a given public-key encryption
+// scheme and a digital signature scheme.
+func NewUniARCAD(enc encryption.Asymmetric, sig signature.Signature) *uniARCAD {
+	return &uniARCAD{sc: &signcryption{encryption: enc, signature: sig}}
 }
 
-func (u Uni) Init() (s, r []byte, err error) {
+// Init generates initialized the uniARCAD protocol, returning
+// both a sender and receiver state.
+func (u uniARCAD) Init() (s, r []byte, err error) {
 	sks, skr, err := u.sc.generateSignKeys()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to generate signcryption signature keys")
@@ -52,17 +61,16 @@ func (u Uni) Init() (s, r []byte, err error) {
 	return
 }
 
-func (u Uni) Send(state, ad, pt []byte, simple bool) (upd, ct []byte, err error) {
+// Send invokes the uniARCAD send routine for a given sender state, associated data
+// and a plaintext. Ratchet indicates whether the sender state is updated or not.
+func (u uniARCAD) Send(state, ad, pt []byte, ratchet bool) (upd, ct []byte, err error) {
 	var s sender
 	if err := primitives.Decode(state, &s); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode uni-bark sender state")
 	}
 
-	// Only create new uni-bark state for the inner-most onion layer.
-
 	var us, ur []byte
-	if simple {
-		gen++
+	if ratchet {
 		us, ur, err = u.Init()
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "unable to create new uni-bark instance")
@@ -82,7 +90,9 @@ func (u Uni) Send(state, ad, pt []byte, simple bool) (upd, ct []byte, err error)
 	return
 }
 
-func (u Uni) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
+// Receive invokes the uniARCAD receive routine for a given receiver state,
+// associated data and a ciphertext.
+func (u uniARCAD) Receive(str, ad, ct []byte) (upd, pt []byte, err error) {
 	var r receiver
 	if err := primitives.Decode(str, &r); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode uni-bark receiver state")
