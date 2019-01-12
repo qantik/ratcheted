@@ -1,6 +1,13 @@
 // (c) 2018 EPFL
 // This code is licensed under MIT license (see LICENSE.txt for details)
 
+// Package dratch implements the double ratchet protocol specified by
+// Joël Alwen, Sandro Coretti and Yevgeniy Dodis in their paper
+// The Double Ratchet:  Security Notions, Proofs, and
+// Modularization for the Signal Protocol (https://eprint.iacr.org/2018/1037.pdf).
+// The scheme relies on novel cryptographic primitives like a forward-secure
+// authenticated encryption scheme with associated data (FS-AEAD), a
+// continuous key-agreement protocol (CKA) and a PRF-PRNG construction.
 package dratch
 
 import (
@@ -16,6 +23,8 @@ import (
 
 const keySize = 16
 
+// DRatch designates the the secure channel protocol defined by a
+// FS-AEAD scheme, a CKA construction and a PRF-PRNG algorithm.
 type DRatch struct {
 	pp  *prfPRNG
 	fsa *fsAEAD
@@ -90,6 +99,7 @@ func NewDRatch(aead encryption.Authenticated,
 var ckaGen = 0
 var fsGen = 0
 
+// Init intializes the double ratchet protocol and returns two user states.
 func (d DRatch) Init() (alice, bob *User, err error) {
 	root, err := d.pp.generate()
 	if err != nil {
@@ -170,6 +180,7 @@ func (d DRatch) genOpt() (eka, dka, vka, ska, ekb, dkb, vkb, skb map[int][]byte,
 	return
 }
 
+// Send calls the double ratchet send routine for a given user and message.
 func (d DRatch) Send(user *User, msg []byte) ([]byte, error) {
 	if (user.name == "alice" && user.I%2 == 0) || (user.name == "bob" && user.I%2 == 1) {
 		user.V[user.I-1] = nil
@@ -255,6 +266,7 @@ func (d DRatch) Send(user *User, msg []byte) ([]byte, error) {
 	return ct, nil
 }
 
+// Receive calls the double ratchet receive routine for a given user and ciphertext.
 func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 	var c dratchCiphertext
 	if err := primitives.Decode(ct, &c); err != nil {

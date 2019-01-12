@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -105,6 +106,8 @@ func (s SCh) Init() (*User, *User, error) {
 	return ua, ub, nil
 }
 
+var count = 0
+
 // Send encrypts and signs a given plaintext and associated data. It further advances
 // the sender state one step forward (ratchet). The function returns a message object
 // that contains the ciphertext, auxiliary data and a signature.
@@ -185,6 +188,7 @@ func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 
 	uvk := user.vk
 	for i := user.ack + 1; i <= msg.Aux.R; i++ {
+		//fmt.Println("sdf", count, user.ack+1, msg.Aux.R)
 		uvk, _ = s.kuDSS.updatePublicKey(uvk, user.t[i])
 	}
 	if err := s.kuDSS.verify(uvk, append(msg.C, msg.L...), msg.Sig); err != nil {
@@ -212,7 +216,9 @@ func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to update ku-dss private key")
 	}
+	fmt.Println(user.ack, user.s)
 	for i := user.ack; i <= user.s; i++ {
+		count++
 		user.dk[i], err = s.kuPKE.updatePrivateKey(user.dk[i], user.tau)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to udpate ku-pke private key")
