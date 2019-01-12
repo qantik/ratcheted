@@ -582,11 +582,114 @@ components of the ElGamal cryptosystem.
 \subsection{Double Ratchet (Alwen, Coretti \& Dodis)}
 \label{sec:double-ratchet-alwen}
 
-\begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis)}
-  
+\begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis) I.}
+  \begin{itemize}
+  \item Attempt to formalize and modularize Signal's double ratchet protocol.
+  \item Unlike the other protocols, it uses private-key cryptography to ensure
+    forward-secrecy hence it does not reach the same security guarantees.
+  \item However, this approach yields a very efficient protocol.
+  \end{itemize}
 \end{frame}
 
+\begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis) II.}
+  A forward-secure authenticated encryption scheme with associated data (FS-AEAD)
+  provides forward security.
+  \begin{align*}
+    \t{FS-Init-S} & : \mathcal{K} \rightarrow \mathcal{V}_S \\
+    \t{FS-Init-R} & : \mathcal{K} \rightarrow \mathcal{V}_R \\
+    \t{FS-Send} & : \mathcal{V}_S \times \mathcal{AD} \times \mathcal{M}
+                                \rightarrow \mathcal{V}_S \times \mathcal{C} \\
+    \t{FS-Rcv} & : \mathcal{V}_R \times \mathcal{AD} \times \mathcal{C}
+                                \rightarrow \mathcal{V}_R \times \mathcal{C}.
+  \end{align*}
+  A FS-AEAD can be mounted with AES-GCM.
+\end{frame}
 
+\begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis) III.}
+  As in the Signal protocol there is a key-agreement protocol for periodically
+  renegotiating symmetric keys, called continuous key-agreement (CKA).
+  \begin{align*}
+    \texttt{CKA-Init-S} & : \mathcal{K} \rightarrow \mathcal{V}_A \\
+    \texttt{CKA-Init-R} & : \mathcal{K} \rightarrow \mathcal{V}_B \\
+    \texttt{CKA-S} & : \mathcal{V}_A \rightarrow
+                \mathcal{V}_A \times \mathcal{T} \times \mathcal{I} \\
+    \texttt{CKA-R} & : \mathcal{V}_B \times \mathcal{T} \rightarrow
+                \mathcal{V}_B \times \mathcal{I}.
+  \end{align*}
+  The CKA is synchronized, meaning that the parties take turns instigating
+  key-agreements. It can be constructed out of a generic KEM based on
+  the decisional Diffie-Hellman assumption.
+\end{frame}
+
+\begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis) IV.}
+  Finally, to generate the same randomness for both participants a stateful
+  blend between a PRF and PRNG is constructed.
+  \begin{align*}
+    \t{P-Init} & : \mathcal{K} \rightarrow \Sigma \\
+    \t{P-Up} & : \Sigma \times \mathcal{I} \rightarrow \Sigma \times \mathcal{I}.
+  \end{align*}
+  A PRF-PRNG can be instantiated with a HKDF.
+\end{frame}
+
+\begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis) V.}
+  \scriptsize
+   \begin{minipage}[h]{0.49\textwidth}
+      \begin{figure}[h]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.7}{%
+        \fbox{%
+          \input{figures/dratch-init.tex}
+        }
+      }
+    \end{figure}
+    \end{minipage}
+   \begin{minipage}[h]{0.49\textwidth}
+      \begin{itemize}
+      \item Key distribution.
+      \end{itemize}
+  \end{minipage}
+\end{frame}
+
+\begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis) VI.}
+  \scriptsize
+   \begin{minipage}[h]{0.49\textwidth}
+      \begin{figure}[h]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.7}{%
+        \fbox{%
+          \input{figures/dratch-send.tex}
+        }
+      }
+    \end{figure}
+    \end{minipage}
+   \begin{minipage}[h]{0.49\textwidth}
+      \begin{itemize}
+      \item Key distribution.
+      \end{itemize}
+  \end{minipage}
+\end{frame}
+
+\begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis) VII.}
+  \scriptsize
+   \begin{minipage}[h]{0.49\textwidth}
+      \begin{figure}[h]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.7}{%
+        \fbox{%
+          \input{figures/dratch-receive.tex}
+        }
+      }
+    \end{figure}
+    \end{minipage}
+   \begin{minipage}[h]{0.49\textwidth}
+      \begin{itemize}
+      \item Key distribution.
+      \end{itemize}
+  \end{minipage}
+\end{frame}
 
 
 \end{document}

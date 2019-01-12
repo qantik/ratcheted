@@ -1,0 +1,21 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+\begin{minipage}{1\linewidth}
+  {\fontsize{8}{10}\selectfont
+
+  \begin{algorithmic}[1]
+    \Procedure{Init-A}{$k$}
+    \State $(k_\t{root},k_\t{CKA}) \gets k$
+    \State $\sigma_\t{root} \gets$ \Call{\texttt{P-Init}}{$k_\t{root}$}
+    \State $v \gets []$
+    \State $(\sigma_\t{root},k) \gets$ \Call{\texttt{P-Up}}{$\sigma_\t{root},\perp$}
+    \State $v[0] \gets$ \Call{\texttt{FS-Init-R}}{$k$}
+    \State $\gamma \gets$ \Call{\texttt{CKA-Init-A}}{$k_\t{CKA}$}
+    \State $T_\t{cur} \gets \perp, \ t_\t{A} \gets 0$
+    \State $st_\t{A} \gets (\sigma_\t{root},v,\gamma,T_\t{cur},t_\t{A})$
+    \State \Return $st_\t{A}$
+    \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}
