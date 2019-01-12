@@ -68,7 +68,7 @@ security analysis in 2017~\cite{cohn2017formal}
 and since then several novel protocols with various degrees of
 security guarantees have been proposed. Among others
 these protocols also attempt the satisfy the notion of
-\textit{future secrecy} or post-compromise security in which future states and
+\textit{future secrecy} or \textit{post-compromise security} in which future states and
 messages remain secure after a state exposure. Furthermore, a secure messaging
 protocol should be efficient enough to run smoothly even on
 computationally inferior devices thus the choice of fast primitives
@@ -288,8 +288,7 @@ $\leftarrow$ is the assignment operator.
 This asynchronous key-agreement protocol was released in the paper
 \textit{Asynchronous Ratcheted Key Exchange} in May 2018.
 One fact that sets this protocol, and the protocol in the following
-section, apart from the others is the notion of post-impersonation security
-also called fine-grained post-compromise security,
+section, apart from the others is the notion of post-impersonation security,
 meaning that there still remain some security guarantees concerning
 messages that follow a successful
 impersonation attempt. Post-impersonation security can be further divided
@@ -332,7 +331,7 @@ protocol achieves forward and future secrecy as well as
 post-impersonation resilience.
 \begin{itemize}
 \item \textbf{Key-Updatable Key-Encapsulation Mechanism (ku-KEM).} The primitive
-  consists of four procedures, a initial key generation algorithm \texttt{Gen}, an
+  consists of four procedures, a initial key generation algorithm \texttt{Gen}, a
   key-encapsulation procedure \texttt{Enc}, a corresponding decapsulation
   procedure \texttt{Dec} and
   update procedures for both the public \texttt{UpdPk} and secret key \texttt{UpdSk}.
@@ -580,7 +579,7 @@ Such an injection can happen after Alice's state has been leaked to the adversar
 thus if the participants simply recover from the exposure they may
 never detect that there was an active impersonation attack in place.
 The protocol advocates to detect such forgeries right after a
-state exposure following an injection and immediately cut the communication as a
+state exposure following and immediately cut the communication as a
 consequence. Such recover security can easily be achieved with a
 collision resistant hash function that chain hashes the entire
 communication transcript. As the cherry on cake the papers shows that
@@ -712,8 +711,6 @@ and section~\ref{sec:jaeger-stepanovs}. The same is true
 for when it comes to efficiency. Although the protocol originally aimed
 to be as efficient or even faster than the BARK protocol,
 we will see a particular case where it actually performs significantly worse.
-Furthermore, all security proofs are in the random oracle model contrary
-to the standard model analysis by Durak and Vaudenay.
 
 \subsection{Primitives}
 \label{sec:primitives-3}
@@ -1003,7 +1000,7 @@ even epochs are reserved for Alice to send and odd epochs for Bob.
   of a new epoch the user has to update his state accordingly (elseif-branch)
   mirroring the operations performed by the partner in his send
   routine. Again in this case old FS-AEAD states can be erased
-  from memory (not depicted). In every case the FS-AEAD state
+  from memory. In every case the FS-AEAD state
   is then updated when decrypting the ciphertext.
 \end{itemize}
 

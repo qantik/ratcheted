@@ -1,9 +1,9 @@
 \algrenewcommand\textproc{}
 \algrenewcommand\algorithmicprocedure{\textbf{func}}
 
-\begin{minipage}{1\linewidth}
+\begin{minipage}{1.2\linewidth}
   {\fontsize{8}{10}\selectfont
-
+    \begin{multicols}{2}
   \begin{algorithmic}[1]
     \Procedure{Receive}{$ST,ad,C$}
     \State $(R,S) \gets ST$
@@ -38,5 +38,6 @@
     \State \Return $(ST,k.o)$ 
     \EndProcedure
   \end{algorithmic}
+  \end{multicols}
   }
 \end{minipage}

@@ -1,0 +1,36 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+\begin{minipage}{\linewidth}
+  {\fontsize{10}{12}\selectfont
+  \begin{algorithmic}[1]
+    \Procedure{Receive}{$st,ct$}
+    \State $(r,s,s_\t{ack},dk,ek,sk^\t{upd},vk^\t{upd},
+                        sk^\t{eph},vk^\t{eph},VK^\t{eph},tr,TR) \gets st$
+    \State $(c',\sigma_\t{upd},\sigma_\t{eph}) \gets ct$
+    \State $(c,upd,vk_\t{msg}^\t{eph},s_\t{msg}) \gets c'$
+    \If{$s_\t{msg} > s_\t{ack}$}
+    \State $vk \gets VK^\t{eph}[s_\t{msg}]$
+    \Else
+    \State $vk \gets vk^\t{eph}$
+    \EndIf
+
+    \State $v_\t{eph} \gets$
+    \Call{\texttt{Sig.Verify}}{$vk,c'||TR[s_\t{msg}],\sigma_\t{eph}$}
+    \State $(vk^\t{upd},v_\t{upd}) \gets$
+    \Call{\texttt{ku-Sig.Verify}}{$vk^\t{upd},c', \sigma_\t{upd}$}
+    \State \textbf{assert} $v_\t{eph} \wedge v_\t{upd}$
+
+    \State $ek \gets$ \Call{\texttt{hku-PKE.BcUpEk}}{$ek,upd$} 
+    \State $(dk, (m,sk_\t{msg}^\t{eph})) \gets$
+    \Call{\texttt{hku-PKE.Dec}}{$dk,c,upd||vk_\t{msg}^\t{eph}||s_\t{msg}$}
+    \State $r \gets r +1$
+    \State $tr \gets$ \Call{\texttt{H}}{$tr||c'$}
+    
+    \State $st \gets (r,s,s_\t{msg},dk,ek,sk^\t{upd},vk^\t{upd},
+                        sk_\t{msg}^\t{eph},vk_\t{msg}^\t{ep},VK^\t{eph},tr,TR)$
+
+    \State \Return $(st,m)$
+    \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}

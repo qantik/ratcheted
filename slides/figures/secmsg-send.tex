@@ -1,0 +1,30 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+\begin{minipage}{\linewidth}
+  {\fontsize{10}{12}\selectfont
+  \begin{algorithmic}[1]
+    \Procedure{Send}{$st,m$}
+    \State $(r,s,s_\t{ack},dk,ek,sk^\t{upd},vk^\t{upd},
+                        sk^\t{eph},vk^\t{eph},VK^\t{eph},tr,TR) \gets st$
+    \State $(sk_1^\t{eph},vk_1^\t{eph}) \gets$ \Call{\texttt{Sig.Gen}}{}
+    \State $(sk_2^\t{eph},vk_2^\t{eph}) \gets$ \Call{\texttt{Sig.Gen}}{}
+
+    \State $(dk,upd) \gets$ \Call{\texttt{hku-PKE.BcUpDk}}{$dk$}
+    \State $c \gets$ \Call{\texttt{hku-PKE.Enc}}{$ek,m||sk_1^\t{eph},upd||vk_2^\t{eph}||r$}
+    \State $c' \gets c||upd||vk_2^\t{eph}||r$
+    \State $(sk^\t{upd},\sigma_\t{upd}) \gets$ \Call{\texttt{ku-Sig.Sign}}{$sk^\t{upd},c'||tr$}
+    \State $\sigma_\t{eph} \gets$ \Call{\texttt{Sig.Sign}}{$sk^\t{eph},c'||tr$}
+
+    \State $s \gets s+1$
+    \State $VK[s] \gets vk_1^\t{eph}$
+    \State $TR[s] \gets$ \Call{\texttt{H}}{$Tr[s-1]||c'$}
+    
+    
+    \State $st \gets (r,s,s_\t{ack},dk,ek,sk^\t{upd},vk^\t{upd},
+                        sk_2^\t{eph},vk^\t{ep},VK^\t{eph},tr,TR)$
+    
+    \State \Return $(st, (c',\sigma_\t{upd},\sigma_\t{eph}))$
+    \EndProcedure
+   \end{algorithmic}
+  }
+\end{minipage}

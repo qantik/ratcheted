@@ -1,0 +1,20 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+\begin{minipage}{1\linewidth}
+  {\fontsize{8}{10}\selectfont
+
+  \begin{algorithmic}[1]
+    \Procedure{Init}{}
+    \State $(sk_\t{I},vk_\t{R}) \gets \texttt{ku-DS.Gen}$
+    \State $(ek_\t{I},dk_\t{R}[0]) \gets \texttt{ku-PKE.Gen}$
+    \State $(sk_\t{R},vk_\t{I}) \gets \texttt{ku-DS.Gen}$
+    \State $(ek_\t{R},dk_\t{I}[0]) \gets \texttt{ku-PKE.Gen}$
+    \State $st_\t{I} \gets \t{H.Gen}, \ T_\t{R} \gets [\cdot], \ T_\t{S}[0] \gets \perp$
+    \State $s \gets 0, \ r \gets 0, \ r^\t{ack} \gets 0$
+    \State $st_\t{I} \gets (s,r,r^\t{ack},sk_\t{I},vk_\t{I},ek_\t{I},dk_\t{I},hk,T_\t{R},T_\t{S})$
+    \State $st_\t{R} \gets (s,r,r^\t{ack},sk_\t{R},vk_\t{R},ek_\t{R},dk_\t{R},hk,T_\t{R},T_\t{S})$
+    \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}

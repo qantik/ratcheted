@@ -1,0 +1,20 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+\begin{minipage}{\linewidth}
+  {\fontsize{10}{12}\selectfont
+  \begin{algorithmic}[1]
+    \Procedure{Init}{}
+    \For{$u \in \{A,B\}$}
+      \State $(ek_u,dk_u) \gets$ \Call{\texttt{hku-PKE.Gen}}{}
+      \State $(sk_u^\t{upd},vk_u^\t{upd}) \gets$ \Call{\texttt{ku-Sig.Gen}}{}
+      \State $(sk_u^\t{eph},vk_u^\t{eph}) \gets$ \Call{\texttt{Sig.Gen}}{}
+    \EndFor
+    \For{$u \in \{A,B\}$}
+    \State $st_u \gets (0,0,0,dk_u,ek_{\bar{u}},sk_u^\t{upd},vk_{\bar{u}}^\t{upd},
+                        sk_u^\t{eph},vk_{\bar{u}}^\t{ep},[\cdot],\perp,[\cdot])$
+    \EndFor
+    \State \Return $(st_\t{A},st_\t{B})$
+    \EndProcedure
+   \end{algorithmic}
+  }
+\end{minipage}

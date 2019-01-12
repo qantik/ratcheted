@@ -1,0 +1,37 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+\begin{minipage}{\linewidth}
+  {\fontsize{8}{10}\selectfont
+  \begin{algorithmic}[1]
+    \Procedure{Receive}{$st_\t{P}, \t{upd}$}
+    \State $(hk, [st_\t{P}^\t{send,1},...,st_\t{P}^\t{send,u}],
+                 [st_\t{P}^\t{rec,1},...,st_\t{P}^\t{rec,v}],
+    \t{Hsent}, \t{Hreceived}) \gets st_\t{P}$
+    \State $(n,h,\t{onion}) \gets \t{upd}$
+    \If{$h \neq \t{Hreceived}$}
+    \State \Return $(\t{false},st_\t{P},\perp)$
+    \EndIf
+    \State find smallest i such that $st_\t{P}^\t{rec,i} \neq \perp$
+    \For{$j \gets i$ to $i+n$}
+    \State $(\t{acc},st_\t{P}^\t{rec,j'},\t{onion}) \gets$ \Call{\texttt{uniARCAD.Receive}}
+    {$st_\t{P}^\t{rec,j}$}
+    \If{$\t{acc} = \t{false}$}
+    \State \Return $(\t{false},st_\t{P},\perp)$
+    \EndIf
+    \EndFor
+
+    \State $(st_\t{P}^\t{send,u+1},k) \gets \t{onion}$
+    \For{$j \gets i$ to $i+n-1$}
+    \State $st_\t{P}^\t{rec,j} \gets \perp$
+    \EndFor
+    \State $st_\t{P}^\t{rec,i+n} \gets st_\t{P}^\t{rec,i+n'}$
+    \State $\t{Hreceived}' \gets$ \Call{\texttt{H}}{$hk,\t{upd}$}
+    \State $st_\t{P}' \gets (hk,[st_\t{P}^\t{send,1},...,st_\t{P}^\t{send,u+1}],
+                 [st_\t{P}^\t{rec,1},...,st_\t{P}^\t{rec,v}], \t{Hsent}, \t{Hreceived}')$
+
+    \State \Return $(\t{true}, st_\t{P}',k)$
+    \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}

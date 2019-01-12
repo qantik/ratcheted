@@ -1,0 +1,17 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+\begin{minipage}{\linewidth}
+  {\fontsize{8}{10}\selectfont
+  \begin{algorithmic}[1]
+    \Procedure{Init}{}
+    \State $(st_\t{A}^\t{send},st_\t{B}^\t{rec}) \gets$ \Call{\texttt{uniBARK.Init}}{}
+    \State $(st_\t{B}^\t{send},st_\t{A}^\t{rec}) \gets$ \Call{\texttt{uniBARK.Init}}{}
+    \State pick $hk$ at random
+    \State $st_\t{A} \gets (hk, [st_\t{A}^\t{send}], [st_\t{A}^\t{rec}],\perp,\perp)$ 
+    \State $st_\t{B} \gets (hk, [st_\t{B}^\t{send}], [st_\t{B}^\t{rec}],\perp,\perp)$ 
+    \State \Return $(st_\t{A},st_\t{B})$
+    \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}

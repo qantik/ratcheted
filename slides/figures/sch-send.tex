@@ -1,0 +1,25 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+\begin{minipage}{1\linewidth}
+  {\fontsize{8}{10}\selectfont
+  \begin{algorithmic}[1]
+    \Procedure{Send}{$st, ad,m$}
+    \State $(s,r,r^\t{ack},sk,vk,ek,dk,hk,T_\t{R},T_\t{S}) \gets st$
+    \State $s \gets s+1$
+    \State $(sk',vk') \gets \texttt{ku-DS.Gen}$
+    \State $(ek',dk[s]) \gets \texttt{ku-PKE.Gen}$
+    \State $l \gets (s,r,ad,vk',ek',T_\t{R},T_\t{S}[s-1])$
+    \State $ek' \gets ek$
+    \For{$i \gets r^\t{ack}+1$ to $s$}
+    \State $ek' \gets$ \Call{\texttt{ku-PKE.UpdEk}}{$ek', T_\t{S}[i]$}
+    \EndFor
+    \State $c' \gets$ \Call{\texttt{ku-PKE.Enc}}{$ek',l,m,T_\t{S}$}
+    \State $v \gets (c',l), \ \sigma \gets \texttt{ku-DS.Sign}(sk,v)$
+    \State $c \gets (\sigma,v), \ T_\t{S}[s] \gets \texttt{H}(hk,c)$
+    \State $st \gets (s,r,r^\t{ack},sk',vk,ek,dk,hk,T_\t{R},T_\t{S})$
+    \State \Return $(st,c)$
+    \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}

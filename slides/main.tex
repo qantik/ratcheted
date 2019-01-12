@@ -7,6 +7,7 @@
 \usepackage{setspace,algpseudocode}
 \usepackage{wrapfig,subcaption}
 \usepackage{chronosys}
+\usepackage{multicol}
 
 \usepackage{pgfplots,tikz}
 \usetikzlibrary{positioning,arrows}
@@ -21,7 +22,7 @@
 
 % Table of contents bullet points.
 \setbeamertemplate{section in toc}[ball unnumbered]
-\setbeamertemplate{subsection in toc}[square]
+\setbeamertemplate{subsection in toc}[ball]
 
 % Prevent \maketitle warning caused by bug in the Metropolis theme.
 \def\titlepage{%
@@ -113,7 +114,7 @@
 \begin{frame}{Security III.}
   \begin{itemize}
   \item Powerful adversary.
-  \item Many many attacks that lead to trivial victories.
+  \item Many attacks that lead to trivial victories.
   \item Games have to be adapted to exclude these attacks.
   \item The fewer attacks a game disallows the securer the protocol.
   \item Assess advantage of any adversary.
@@ -143,49 +144,449 @@
 
 \begin{frame}{Timeline II.}
   \begin{enumerate}
-  \item \textbf{05/2018.} Poettering and Rösler. Optimally secure bidirectional
+  \item[5.] \textbf{05/2018.} Poettering and Rösler. Optimally secure bidirectional
     key-agreement protocol (BRKE).
-  \item \textbf{06/2018.} Jager and Stepanovs. Optimally secure messaging protocol.
-  \item \textbf{09/2018.} Durak and Vaudenay. Sub-optimally secure, efficient key-agreement
+  \item[6.] \textbf{06/2018.} Jager and Stepanovs. Optimally secure messaging protocol.
+  \item[7.] \textbf{09/2018.} Durak and Vaudenay. Sub-optimally secure, efficient key-agreement
     protocol (BARK).
-  \item \textbf{10/2018.} Jost, Maurer and Mularczyk. Almost-optimally secure messaging
+  \item[8.] \textbf{10/2018.} Jost, Maurer and Mularczyk. Almost-optimally secure messaging
     protocol.
-  \item \textbf{10/2018.} Alwen, Coretti and Dodis. Modularization of Signal Double
+  \item[9.] \textbf{10/2018.} Alwen, Coretti and Dodis. Modularization of Signal Double
     Ratchet.
   \end{enumerate}
 \end{frame}
 
+\subsection{BRKE (Poettering and Rösler)}
+\label{sec:brke-poett-rosl}
 
-% \begin{frame}{Security}
-% \begin{columns}
-% \column{0.6\linewidth}
-%   \begin{figure}[ht]
-%     \centering
-%     \setlength{\fboxsep}{10pt}
-%     \scalebox{0.5}{%
-%     \fbox{%
-%       \input{figures/brke-receive.tex}
-%     }
-%   }
-% \end{figure}
+\begin{frame}{BRKE (Poettering and Rösler) I.}
+  \begin{itemize}
+  \item Optimally secure key-agreement protocol.
+    \begin{itemize}
+    \item Post-impersonation authenticity.
+    \item Post-impersonation confidentiality.
+    \end{itemize}
+  \item Leverages hierarchical identity-based encryption scheme,
+    causing efficiency degradation.
+  \end{itemize}
+\end{frame}
 
-% \column{0.5\linewidth}
-% \begin{itemize}
-%   \item asdfsa
-%   \item saldfjasf
-%   \item sdlfkjsadf l
-% \end{itemize}
+\begin{frame}{BRKE (Poettering and Rösler) II.}
+  The HIBE is used the mount a key-updatable key encapsulation mechanism (ku-KEM).
+  \begin{align*}
+    \texttt{Gen} & : \ \rightarrow \mathcal{SK} \times \mathcal{VK} \\
+    \texttt{Enc} & : \mathcal{PK} \rightarrow \mathcal{K} \times \mathcal{C} \\ 
+    \texttt{Dec} & : \mathcal{SK} \times \mathcal{C} \rightarrow \mathcal{K} \\
+    \texttt{UpdPk} & : \mathcal{PK} \times \Delta \rightarrow \mathcal{PK} \\
+    \texttt{UpdSk} & : \mathcal{SK} \times \Delta \rightarrow \mathcal{SK}
+  \end{align*}
+  The protocol further requires a digital signature scheme DS and a random
+  oracle H.
+\end{frame}
 
-% \end{columns}
-% \end{frame}
+\begin{frame}{BRKE (Poettering and Rösler) III.}
+  \scriptsize
+   \begin{minipage}[h]{0.59\textwidth}
+      \begin{figure}[h]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.7}{%
+        \fbox{%
+          \input{figures/brke-init.tex}
+        }
+      }
+    \end{figure}
+    \end{minipage}
+   \begin{minipage}[h]{0.40\textwidth}
+      \begin{itemize}
+      \item Key distribution.
+      \item Parameter initialization.
+      \end{itemize}
+  \end{minipage}
+\end{frame}
 
-% \section{Protocols}
-% \label{sec:protocols}
+\begin{frame}{BRKE (Poettering and Rösler) IV.}
+  \scriptsize
+  \begin{figure}[h]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.6}{%
+        \fbox{%
+          \input{figures/brke-send.tex}
+        }
+      }
+    \end{figure}
+       \begin{itemize}
+       \item Protocol proceeds in epochs $(E^\vdash,E^\dashv)$.
+       \item Continuous exchange of ku-KEM and DS keys.
+       \item Unidirectional traffic accumulates ku-KEM keys.
+       \end{itemize}
 
-% \section{Benchmarks}
-% \label{sec:benchmarks}
 
-% \section{Conclusion}
-% \label{sec:conclusion}
+  %  \begin{minipage}[h]{0.59\textwidth}
+  %   %\column{0\textwidth}
+  %     \begin{figure}[h]
+  %       \centering
+  %       \setlength{\fboxsep}{10pt}
+  %       \scalebox{0.6}{%
+  %       \fbox{%
+  %         \input{figures/brke-send.tex}
+  %       }
+  %     }
+  %   \end{figure}
+  % \end{minipage}%
+  %  \begin{minipage}[h]{0.40\textwidth}
+  %   %\column{0.55\textwidth}
+  %     \begin{itemize}
+  %     \item Protocol proceeds in epochs $(E^\vdash,E^\dashv)$.
+  %     \item Continuous exchange of ku-KEM and DS keys.
+  %     \item Unidirectional traffic accumulates ku-KEM keys.
+  %     \end{itemize}
+  % \end{minipage}
+  % %\end{columns}
+\end{frame}
+
+\begin{frame}{BRKE (Poettering and Rösler) V.}
+  \scriptsize
+    \begin{figure}[h]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.6}{%
+        \fbox{%
+          \input{figures/brke-receive.tex}
+        }
+      }
+   \end{figure}
+       \begin{itemize}
+       \item Key-updates for deferred messages.
+       \item Communication transcript is accumulated.
+       \end{itemize}
+\end{frame}
+
+\subsection{Secure Channel (Jaeger and Stepanovs)}
+\label{sec:secure-chann-jaeg}
+
+\begin{frame}{Secure Channel (Jaeger and Stepanovs) I.}
+  \begin{itemize}
+  \item Optimally secure messaging protocol.
+  \item Also uses HIBE scheme to provide provide key-update
+    functionalities.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Secure Channel (Jaeger and Stepanovs) II.}
+  The HIBE is used to build a key-updatable public-key encryption scheme (ku-PKE).
+  \begin{align*}
+    \texttt{Gen} & : \ \rightarrow \mathcal{DK} \times \mathcal{EK} \\
+    \texttt{Enc} & : \mathcal{EK} \times \mathcal{M} \rightarrow \mathcal{C} \\
+    \texttt{Dec} & : \mathcal{DK} \times \mathcal{C} \rightarrow \mathcal{M} \\
+    \texttt{UpdEk} & : \mathcal{EK} \times \Delta \rightarrow \mathcal{EK} \\
+    \texttt{UpdDk} & : \mathcal{DK} \times \Delta \rightarrow \mathcal{DK}
+  \end{align*}
+\end{frame}
+
+\begin{frame}{Secure Channel (Jaeger and Stepanovs) III.}
+  It further needs a key-updatable digital signature scheme (ku-DS).
+  \begin{align*}
+    \texttt{Gen} & \  \rightarrow \mathcal{SK} \times \mathcal{VK} \\
+    \texttt{Sign} & : \mathcal{SK} \times \mathcal{M} \rightarrow \Sigma \\
+    \texttt{Verify} & : \mathcal{VK} \times \mathcal{M} \times \Sigma \rightarrow \{0,1\} \\
+    \texttt{UpdSk} & : \mathcal{SK} \times \Delta \rightarrow \mathcal{SK} \\
+    \texttt{UpdVk} & : \mathcal{VK} \times \Delta \rightarrow \mathcal{VK}
+  \end{align*}
+  Unlike the ku-PKE the ku-DS is mounted by forward-secure signature scheme.
+  We also need a collision-resistant hash function H.
+\end{frame}
+
+\begin{frame}{Secure Channel (Jaeger and Stepanovs) IV.}
+  \scriptsize
+  \begin{minipage}[h]{0.65\textwidth}
+      \begin{figure}[h]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.7}{%
+        \fbox{%
+          \input{figures/sch-init.tex}
+        }
+      }
+    \end{figure}
+    \end{minipage}
+  \begin{minipage}[h]{0.34\textwidth}
+      \begin{itemize}
+      \item Key distribution.
+      \item Parameter initialization.
+      \end{itemize}
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{Secure Channel (Jaeger and Stepanovs) V.}
+  \scriptsize
+  \begin{minipage}[ht]{0.59\textwidth}
+      \begin{figure}[ht]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.7}{%
+        \fbox{%
+          \input{figures/sch-send.tex}
+        }
+      }
+    \end{figure}
+    \end{minipage}
+  \begin{minipage}[ht]{0.40\textwidth}
+    %\column{0.5\textwidth}
+      \begin{itemize}
+      \item Continuous exchange of ku-PKE and ku-DS keys.
+      \item Unidirectional traffic induces ku-PKE updates
+        and accumulates decryption keys.
+      \end{itemize}
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{Secure Channel (Jaeger and Stepanovs) VI.}
+  \scriptsize
+  \begin{minipage}[h]{0.65\textwidth}
+  % \begin{columns}
+  %  \column{0.6\textwidth}
+      \begin{figure}[ht]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.7}{%
+        \fbox{%
+          \input{figures/sch-receive.tex}
+        }
+      }
+    \end{figure}
+    \end{minipage}
+  \begin{minipage}[h]{0.34\textwidth}
+   % \column{0.5\textwidth}
+      \begin{itemize}
+      \item ku-DS signing key is always updated.
+      \item $r^\t{ack}$ designates number of acknowledged messages.
+      \end{itemize}
+    \end{minipage}
+\end{frame}
+
+\subsection{BARK (Durak and Vaudenay)}
+\label{sec:bark-durak-vaudenay}
+
+\begin{frame}{BARK (Durak and Vaudenay) I.}
+  \begin{itemize}
+  \item Sub-optimally secure but very efficient key-agreement protocol.
+  \item Relies only on regular public-key cryptosystems.
+  \item Recover security.
+  \item Composed of a simpler unidirectional messaging protocol (uniARCAD),
+    one instance per user.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{BARK (Durak and Vaudenay) II.}
+  BARK relies on a simple signcryption construction, combining a public-key
+  encryption scheme and digital signature scheme.
+  \begin{align*}
+    \texttt{PKE.Gen} & : \ \rightarrow \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{R} \\
+    \texttt{DS.Gen} & : \ \rightarrow \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{S} \\
+    \texttt{Enc} & : \mathcal{SK}_\t{S} \times \mathcal{PK}_\t{R} \times \mathcal{M} \times
+                   \mathcal{AD} \rightarrow \mathcal{C} \\
+    \texttt{Dec} & : \mathcal{SK}_\t{R} \times \mathcal{PK}_\t{S} \times
+  \mathcal{C} \times \mathcal{AD} \rightarrow \mathcal{M}
+  \end{align*}
+  It further needs some collision-resistant hash function H.
+\end{frame}
+
+\begin{frame}{BARK (Durak and Vaudenay) III.}
+   \begin{figure}[h]
+     \centering
+     \setlength{\fboxsep}{10pt}
+     \scalebox{0.7}{%
+       \fbox{%
+          \input{figures/uni-arcad.tex}
+       }
+     }
+  \end{figure}
+\end{frame}
+
+\begin{frame}{BARK (Durak and Vaudenay) IV.}
+   \scriptsize
+  \begin{minipage}[h]{0.49\textwidth}
+  % \begin{columns}
+  %  \column{0.6\textwidth}
+      \begin{figure}[ht]
+        \centering
+        \setlength{\fboxsep}{10pt}
+        \scalebox{0.7}{%
+        \fbox{%
+          \input{figures/bark-init.tex}
+        }
+      }
+    \end{figure}
+    \end{minipage}
+  \begin{minipage}[h]{0.49\textwidth}
+   % \column{0.5\textwidth}
+      \begin{itemize}
+      \item Initialize two uniARCAD instances and distribute the
+        resulting states.
+      \item Further initialize two variables (Hsent, Hreceived) to $\perp$ which will
+        hold the chain-hash of all sent and received messages.
+      \end{itemize}
+    \end{minipage}
+  \end{frame}
+
+\begin{frame}{BARK (Durak and Vaudenay) V.}
+  \scriptsize
+  \begin{figure}[ht]
+     \centering
+     \setlength{\fboxsep}{10pt}
+     \scalebox{0.5}{%
+       \fbox{%
+         \input{figures/bark-send.tex}
+       }
+     }
+  \end{figure}
+  \begin{itemize}
+  \item Continuously exchange signcryption keys.
+  \item First message in the other direction after unidirectional traffic
+    will use all accumulated keys in the onion encryption.
+  \item Chain-hash ensures recover security.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{BARK (Durak and Vaudenay) VI.}
+  \scriptsize
+  \begin{figure}[ht]
+     \centering
+     \setlength{\fboxsep}{10pt}
+     \scalebox{0.5}{%
+       \fbox{%
+         \input{figures/bark-receive.tex}
+       }
+     }
+  \end{figure}
+  \begin{itemize}
+  \item Accumulate received signcryption keys for responding.
+  \item Use all accumulated keys when receiving message
+  \item All the accumulated keys will be used in when responding.
+  \end{itemize}
+\end{frame}
+
+\subsection{Secure Channel (Jost, Maurer \& Mularczyk)}
+\label{sec:secure-channel-jost}
+
+\begin{frame}{Secure Channel (Jost, Maurer \& Mularczyk) I.}
+  \begin{itemize}
+  \item Aims to fill the gap between BARK and the first two protocols.
+  \item Almost completely post-impersonation secure but less efficient than BARK.
+  \item As BARK only relies on regular public-key cryptosystems however
+    it proposes several rather complicated key-update primitives.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Secure Channel (Jost, Maurer \& Mularczyk) II.}
+  The first primitive is a key-updatable signature scheme (ku-Sig).
+  \begin{align*}
+    \texttt{Gen} & : \ \rightarrow \mathcal{VK} \times \mathcal{SK} \\
+    \texttt{Sign} & : \mathcal{SK} \times \mathcal{M} \rightarrow \mathcal{SK} \times \Sigma \\
+    \texttt{Verify} & : \mathcal{VK} \times \mathcal{M} \times \Sigma
+             \rightarrow \mathcal{VK} \times \{0,1\}
+  \end{align*}
+A ku-Sig can be constructed out of a regular digital signature scheme.
+\end{frame}
+
+\begin{frame}{Secure Channel (Jost, Maurer \& Mularczyk) III.}
+  The protocol further needs a secretly key-updatable public-key encryption scheme (sku-PKE).
+   \begin{align*}
+     \texttt{Gen} & : \ \rightarrow \mathcal{EK} \times \mathcal{DK}, \
+     && \texttt{UpdGen} : \ \rightarrow \mathcal{UE} \times \mathcal{UD} \\
+     \texttt{Enc} & : \mathcal{EK} \times \mathcal{M} \rightarrow \mathcal{C}, \
+     && \texttt{UpdEk} : \mathcal{UE} \times \mathcal{EK} \rightarrow \mathcal{EK} \\
+     \texttt{Dec} & : \mathcal{DK} \times \mathcal{C} \rightarrow \mathcal{M}, \
+     && \texttt{UpdDk} :  \mathcal{UD} \times \mathcal{DK} \rightarrow \mathcal{DK}
+  \end{align*}
+The update information is independently generated and the keys
+can be separately updated. A sku-PKE can be mounted with the
+components of the ElGamal cryptosystem.
+\end{frame}
+
+\begin{frame}{Secure Channel (Jost, Maurer \& Mularczyk) IV.}
+  The sku-PKE serves as a building block a healable and key-updating
+  public-key encryption scheme (hku-PKE). We further need a regular
+  PKE that can treat associated data (PKE-AD).
+  \begin{align*}
+    \texttt{Gen} & : \ \rightarrow \mathcal{EK} \times \mathcal{DK}, \ &&
+    \texttt{BcUpEk} : \mathcal{EK} \times \Delta \rightarrow \mathcal{EK} \\
+    \texttt{Enc} & : \mathcal{EK} \times \mathcal{M} \times \mathcal{AD}
+                   \rightarrow \mathcal{C}, \ &&
+    \texttt{BcUpDk} : \mathcal{DK} \times \Delta \rightarrow \mathcal{DK} \\
+    \texttt{Dec} & : \mathcal{DK} \times \mathcal{C} \times \mathcal{AD}
+                   \rightarrow \mathcal{M}
+  \end{align*}
+  Update calls do not to be synchronized anymore, meaning that decryption still
+  succeeds for any sequence of \texttt{BcUpDk} call even if only a prefix
+  of the used update information has been used in \texttt{BcUpEk} calls.
+\end{frame}
+
+\begin{frame}{Secure Channel (Jost, Maurer \& Mularczyk) V.}
+  \scriptsize
+  \begin{figure}[ht]
+     \centering
+     \setlength{\fboxsep}{10pt}
+     \scalebox{0.6}{%
+       \fbox{%
+         \input{figures/secmsg-init.tex}
+       }
+     }
+  \end{figure}
+  \begin{itemize}
+  \item Protocol also needs a regular digital signature scheme (Sig).
+  \item Generate two key pairs for each primitive and distribute them to the users.
+  \item Further initialize a Sig verification key array $VK^\t{eph}$, a transcript
+    variable holding the chain-hash of the messages $tr$ and a transcript array $TR$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Secure Channel (Jost, Maurer \& Mularczyk) VI.}
+  \scriptsize
+  \begin{figure}[ht]
+     \centering
+     \setlength{\fboxsep}{10pt}
+     \scalebox{0.6}{%
+       \fbox{%
+         \input{figures/secmsg-send.tex}
+       }
+     }
+  \end{figure}
+  \begin{itemize}
+  \item Generate two sets of Sig key pairs for sending and receiving and
+    accumulate the verification key.
+  \item Update hku-PKE decryption key for each message.
+  \item Combination of ku-Sig and Sig signature yields post-impersonation
+    authenticity.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Secure Channel (Jost, Maurer \& Mularczyk) VII.}
+  \scriptsize
+  \begin{figure}[ht]
+     \centering
+     \setlength{\fboxsep}{10pt}
+     \scalebox{0.55}{%
+       \fbox{%
+         \input{figures/secmsg-receive.tex}
+       }
+     }
+  \end{figure}
+  \begin{itemize}
+  \item Update hku-PKE encryption key for each message.
+  \end{itemize}
+\end{frame}
+
+\subsection{Double Ratchet (Alwen, Coretti \& Dodis)}
+\label{sec:double-ratchet-alwen}
+
+\begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis)}
+  
+\end{frame}
+
+
+
 
 \end{document}

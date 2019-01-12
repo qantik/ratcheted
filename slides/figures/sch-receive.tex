@@ -1,0 +1,28 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+\begin{minipage}{1\linewidth}
+  {\fontsize{8}{10}\selectfont
+  \begin{algorithmic}[1]
+    \Procedure{Receive}{$st,ad,c$}
+    \State $(s,r,r^\t{ack},sk,vk,ek,dk,hk,T_\t{R},T_\t{S}) \gets st$
+    \State $(\sigma,v) \gets c, \ (c',l) \gets v$
+    \State $(s',r',ad',vk',ek',T_\t{R}',T_\t{S}') \gets l$
+    \State $vk'' \gets vk$
+    \For{$i \gets r^\t{ack}+1$ to r'}
+    \State $vk'' \gets$ \Call{\texttt{ku-DS.UpdVk}}{$vk'', T_\t{S}[i]$}
+    \EndFor
+    \State \textbf{assert} \Call{\texttt{ku-DS.Verify}}{$vk'',\sigma,v,T_\t{S}$}
+    \State $r \gets r+1, \ r^\t{ack} \gets r'$
+    \State $m \gets \texttt{ku-PKE.Dec}(dk[r^\t{ack}],l,c')$
+    \State $T_\t{S}[...,r^\t{ack}] \gets \perp, \ dk_\t{S}[...,r^\t{ack}] \gets \perp$
+    \State $T_\t{R} \gets \texttt{H}(hk,c), \ sk \gets \texttt{ku-DS.UpdSk}(sk,T_\t{R})$
+    \For{$i = r^\t{ack}$ to $s$}
+    \State $dk[i] \gets$ \Call{\texttt{ku-PKE.UpdDk}}{$dk[i],T_\t{R}$}
+    \EndFor
+    \State $st \gets (s,r,r^\t{ack},sk,vk',ek',dk,hk,T_\t{R},T_\t{S})$
+    \State \Return $(st,m)$
+    \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}

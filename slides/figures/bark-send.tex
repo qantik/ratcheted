@@ -1,0 +1,32 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+\begin{minipage}{\linewidth}
+  {\fontsize{8}{10}\selectfont
+  \begin{algorithmic}[1]
+    \Procedure{Send}{$st_\t{P}$}
+    \State pick $k$ at random
+    \State $(hk, [st_\t{P}^\t{send,1},...,st_\t{P}^\t{send,u}],
+                 [st_\t{P}^\t{rec,1},...,st_\t{P}^\t{rec,v}],
+    \t{Hsent}, \t{Hreceived}) \gets st_\t{P}$
+    \State $(st_\t{S,new},st_\t{P}^\t{rec,v+1}) \gets$ \Call{\texttt{uniARCAD.Init}}{}
+    \State $\t{onion} \gets st_\t{S,new} || k$
+    \State find smallest i such that $st_\t{P}^\t{send,i} \neq \perp$
+    \For{$j \gets u$ to $i$}
+    \State $(st_\t{P}^\t{send,j},\t{onion}) \gets$ \Call{\texttt{uniARCAD.Send}}
+               {$st_\t{P}^\t{send,j},(u-j)||\t{onion},j=u$}
+    \If{$j < u$}
+    \State $st_\t{P}^\t{send,j} \gets \perp$
+    \EndIf
+    \EndFor
+
+    \State $\t{upd} \gets (u-i)||\t{Hsent}||\t{onion}$
+    \State $\t{Hsent}' \gets$ \Call{\texttt{H}}{hk,\t{upd}}
+    \State $st_\t{P}' \gets (hk,[st_\t{P}^\t{send,1},...,st_\t{P}^\t{send,u}],
+                 [st_\t{P}^\t{rec,1},...,st_\t{P}^\t{rec,v+1}], \t{Hsent}', \t{Hreceived})$
+
+    \State \Return $(st_\t{P}', \t{upd})$
+    \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}

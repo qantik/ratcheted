@@ -2,21 +2,21 @@
 \algrenewcommand\algorithmicprocedure{\textbf{func}}
 
 \begin{minipage}{1\linewidth}
-  {\fontsize{8}{10}\selectfont
-
+  {\fontsize{8}{10}\selectfont%
+    \begin{multicols}{2}
   \begin{algorithmic}[1]
     \Procedure{Send}{$ST, ad$}
     \State $(\sigma_\t{root},v,\gamma,T_\t{cur},t_\t{A}) \gets \t{st}_\t{A}$
     \State $(R,S) \gets ST$
     \State $(SK,E_\t{R},r,L_\t{R},sgk,K_\t{R},t_\t{R}) \gets R$
     \State $(sgk^*,vfk^*) \gets$ \Call{\texttt{DS.Gen}}{}
-    \State $(sk^*,pk^*) \gets$ \Call{\texttt{DS.Gen}}{}
+    \State $(sk^*,pk^*) \gets$ \Call{\texttt{ku-KEM.Gen}}{}
     \State $E_\t{R}^\vdash \gets E_\t{R}^\vdash+1, \ SK[E_\t{R}^\vdash] \gets sk^*$
     \State $C \gets r || pk^* || vfk^*$
     \State $(PK,E_\t{S},s,L_\t{S},vfk,K_\t{S},t_\t{S}) \gets S$
     \State $k^* \gets \perp, \ C \gets C || E_\t{S}^\dashv$
     \For{$e' \gets E_\t{S}^\vdash$ to $E_\t{S}^\dashv$}
-    \State $(k,c) \gets$ \Call{\texttt{KEM.Enc}}{$PK[e']$}
+    \State $(k,c) \gets$ \Call{\texttt{ku-KEM.Enc}}{$PK[e']$}
     \State $k^* \gets k^* || k, \ C \gets C || c$ 
     \EndFor
     \State $\sigma \gets$ \Call{\texttt{DS.Sign}}{$sgk,ad||C$}
@@ -32,5 +32,6 @@
     \State \Return $(ST,k.o,C)$
     \EndProcedure
   \end{algorithmic}
+\end{multicols}
   }
 \end{minipage}
