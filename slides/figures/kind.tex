@@ -1,0 +1,38 @@
+ \algrenewcommand\textproc{}
+ \algrenewcommand\algorithmicprocedure{\textbf{Game}}
+
+ \begin{minipage}{.5\linewidth}
+   {\fontsize{8}{10}\selectfont
+   \begin{algorithmic}[1]
+     \Procedure{$\t{KIND}_b^\mathcal{A}$}{}
+     \State $(\t{st}_\t{A},\t{st}_\t{B}) \gets$ \Call{Init}{$1^\lambda$}
+     \State $b' \gets \mathcal{A}^{\t{RATCH,EXP,TEST}}$
+     \State \Return $b'$
+     \EndProcedure
+   \end{algorithmic}
+   }
+ \end{minipage}
+
+ \vline
+
+ \algrenewcommand\textproc{}
+ \algrenewcommand\algorithmicprocedure{\textbf{Oracle}}
+
+ \begin{minipage}{.5\linewidth}
+   {\fontsize{8}{10}\selectfont
+   \begin{algorithmic}[1]
+     \Procedure{TEST}{$\t{P}$}
+     \If{$b = 1$}
+     \State \Return $k_\t{P}$
+     \EndIf
+     \State \Return pick $\{0,1\}^{|k_\t{P}|}$ 
+     \EndProcedure
+
+     \item[] % Blank line.
+
+     \Procedure{EXP}{$\t{P}$}
+     \State \Return $\t{st}_\t{P}$ 
+     \EndProcedure
+   \end{algorithmic}
+   } 
+\end{minipage}%

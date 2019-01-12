@@ -1,0 +1,93 @@
+\algrenewcommand\textproc{}
+\algrenewcommand\algorithmicprocedure{\textbf{func}}
+
+\begin{minipage}{1\linewidth}
+  {\fontsize{8}{10}\selectfont
+
+  \begin{algorithmic}[1]
+    \Procedure{Init}{$K_\t{A},K_\t{B}$}
+    \For{$u \in \{A,B\}$}
+    \State $(sgk_\t{u},vfk_\t{u}) \gets$ \Call{\texttt{DS.Gen}}{}
+    \State $(sk_\t{u},pk_\t{u}) \gets$ \Call{\texttt{ku-KEM.Gen}}{}
+    \State $E^\vdash \gets 0, \ E^\dashv \gets 0$
+    \State $s \gets 0, \ r \gets 0, \ t \gets \perp$
+    \State $PK_\t{u}[0] \gets pk, \ SK_\t{u}[0] \gets sk$
+    \State $L_\t{S}[0] \gets \perp, \ L_\t{R}[0] \gets \perp$
+    \State $S_\t{u} \gets (PK_{\bar{\t{u}}},E,s,L_\t{S},
+                          vfk_{\bar{\t{u}}},K_{\bar{\t{u}}},t)$
+    \State $R_\t{u} \gets (SK_\t{u},E,r,L_\t{R},sgk_\t{u},K_\t{u},t)$
+    \State $ST_\t{u} \gets (S_\t{u},R_\t{u})$
+    \EndFor
+    \State \Return $(ST_\t{A},ST_\t{B})$
+    \EndProcedure
+    
+    % \item[]
+    
+    % \Procedure{Send}{$ST, ad$}
+    % \State $(\sigma_\t{root},v,\gamma,T_\t{cur},t_\t{A}) \gets \t{st}_\t{A}$
+    % \State $(R,S) \gets ST$
+    % \State $(SK,E_\t{R},r,L_\t{R},sgk,K_\t{R},t_\t{R}) \gets R$
+    % \State $(sgk^*,vfk^*) \gets$ \Call{\texttt{DS.Gen}}{}
+    % \State $(sk^*,pk^*) \gets$ \Call{\texttt{DS.Gen}}{}
+    % \State $E_\t{R}^\vdash \gets E_\t{R}^\vdash+1, \ SK[E_\t{R}^\vdash] \gets sk^*$
+    % \State $C \gets r || pk^* || vfk^*$
+    % \State $(PK,E_\t{S},s,L_\t{S},vfk,K_\t{S},t_\t{S}) \gets S$
+    % \State $k^* \gets \perp, \ C \gets C || E_\t{S}^\dashv$
+    % \For{$e' \gets E_\t{S}^\vdash$ to $E_\t{S}^\dashv$}
+    % \State $(k,c) \gets$ \Call{\texttt{KEM.Enc}}{$PK[e']$}
+    % \State $k^* \gets k^* || k, \ C \gets C || c$ 
+    % \EndFor
+    % \State $\sigma \gets$ \Call{\texttt{DS.Sign}}{$sgk,ad||C$}
+    % \State $C \gets C || \sigma, \ L_\t{R}[E_\t{R}^\dashv] \gets ad||C$
+    % \State $R \gets (SK,E_\t{R},r,L_\t{R},sgk^*,K_\t{R},t_\t{R})$
+    % \State $t_\t{S} \gets ad||C$
+    % \State $k.o || K_\t{S} || k.m || sk \gets$ \Call{\texttt{H}}{$K_\t{S},k^*,L_\t{S}$}
+    % \State $pk \gets$ \Call{\texttt{ku-KEM.Gen}}{$sk$}
+    % \State $PK[...,(E_\t{S}^\dashv -1)] \gets \perp, \ PK[E_\t{S}^\dashv] \gets pk$
+    % \State $E_\t{S}^\vdash \gets E_\t{S}^\dashv, \ s \gets s+1, \ L_\t{S}[s] \gets ad||C$
+    % \State $S \gets (PK,E_\t{S},s,L_\t{S},vfk,K_\t{S},t_\t{S})$
+    % \State $ST \gets (R,S)$
+    % \State \Return $(ST,k.o,C)$
+    % \EndProcedure
+  \end{algorithmic}
+  }
+\end{minipage}
+% \begin{minipage}{0.5\linewidth}
+%   {\fontsize{10}{12}\selectfont
+
+%   \begin{algorithmic}[1]
+%     \Procedure{Recceive}{$ST,ad,C$}
+%     \State $(R,S) \gets ST$
+%     \State $(PK,E_\t{S},s,L_\t{S},vfk,K_\t{S},t_\t{S}) \gets S$
+%     \State $t^* \gets ad||C, \ t_\t{S} \gets t_\t{S} t^*, \ C || \sigma \gets C$
+%     \State \textbf{assert} \Call{\texttt{DS.Verify}}{$vfk,ad||C,\sigma$}
+%     \State $r||pk^*||vfk||C \gets C$
+%     \State $L\t{S}[...,(r-1)] \gets \perp$
+%     \For{$s' \gets r+1$  to $s$}
+%     \State $pk^* \gets$ \Call{\texttt{ku-KEM.UpdPk}}{$pk^*,L\t{S}[s']$}
+%     \EndFor
+%     \State $E_\t{S}^\dashv \gets E_\t{S}^\dashv+1, \ PK[E_\t{S}^\dashv] \gets pk^*$
+%     \State $S \gets (PK,E_\t{S},s,L_\t{S},vfk,K_\t{S},t_\t{S})$
+%     \State $(SK,E_\t{R},r,L_\t{R},sgk,K_\t{R},t_\t{R}) \gets R$
+%     \State $k^* \gets \perp, \ e||C \gets C$
+%     \State $t_\t{R} \gets t_\t{R} || L_\t{R}[E_\t{R}^\vdash+1]||...||L_\t{R}[e]$
+%     \State $L_\t{R}[...,e] \gets \perp$
+%     \For{$e' \gets E_\t{R}^\vdash$ to $e$}
+%     \State $c||C \gets C$
+%     \State $k \gets$ \Call{\texttt{ku-KEM.Dec}}{$SK[e'],c$}
+%     \State $k^* \gets k^* ||k$
+%     \EndFor
+%     \State $t_\t{R} \gets t_\t{R}||t^*$
+%     \State $k.o || K_\t{S} || k.m || sk \gets$ \Call{\texttt{H}}{$K_\t{R},k^*,L_\t{R}$}
+%     \State $SK[...,(e -1)] \gets \perp, \ SK[e] \gets sk$
+%     \For{$e' \gets e+1$  to $E_\t{R}^\dashv$}
+%     \State $SK[e'] \gets$ \Call{\texttt{ku-KEM.UpdSk}}{$SK[e'],t^*$}
+%     \EndFor
+%     \State $E_\t{R}^\vdash \gets e, \ r \gets r+1$
+%     \State $R_\t{u} \gets (SK_\t{u},E,r,L_\t{R},sgk_\t{u},K_\t{u},t)$
+%     \State $ST \gets (R,S)$
+%     \State \Return $(ST,k.o)$ 
+%     \EndProcedure
+%   \end{algorithmic}
+%   }
+% \end{minipage}

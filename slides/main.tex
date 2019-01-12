@@ -1,0 +1,191 @@
+\documentclass{beamer}
+
+\usetheme{metropolis}
+
+\usepackage{graphicx,xcolor,float}
+\usepackage{amssymb,amsmath,array}
+\usepackage{setspace,algpseudocode}
+\usepackage{wrapfig,subcaption}
+\usepackage{chronosys}
+
+\usepackage{pgfplots,tikz}
+\usetikzlibrary{positioning,arrows}
+\pgfplotsset{compat=1.16}
+
+% Black on gray color theme.
+\setbeamercolor{frametitle}{fg=white,bg=gray}
+\setbeamercolor{title separator}{fg=gray,bg=gray}
+\setbeamercolor{normal text}{fg=black,bg=white}
+\setbeamercolor{progress bar in head/foot}{fg=black, bg=gray}
+\setbeamercolor{progress bar in section page}{ fg=black, bg=gray}
+
+% Table of contents bullet points.
+\setbeamertemplate{section in toc}[ball unnumbered]
+\setbeamertemplate{subsection in toc}[square]
+
+% Prevent \maketitle warning caused by bug in the Metropolis theme.
+\def\titlepage{%
+  \usebeamertemplate{title page}%
+}
+
+% Prevent compilation failure caused by Beamer bug.
+\makeatletter
+\let\@@magyar@captionfix\relax
+\makeatother
+
+% Shorten \text command.
+\renewcommand{\t}{\text}
+
+\title{Messaging Application with Ratcheting Security}
+
+\date{January 15, 2019}
+\author{Andrea Caforio}
+\institute{Ecole Polytechnique Fédérale de Lausanne}
+
+\begin{document}
+\maketitle
+
+\begin{frame}{Overview}
+\tableofcontents
+\end{frame}
+
+\section{Ratcheting}
+\label{sec:ratcheting}
+
+\subsection{Properties}
+\label{sec:properties}
+
+\begin{frame}{Properties I.}
+  \begin{itemize}
+  \item Two-party communication protocols.
+  \item Key-Agreement or Messaging.
+  \item Asynchronous.
+  \item Continuous updates of user states (ratchet).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Properties II.}
+  \begin{figure}
+    \centering
+    \input{figures/traffic.tikz} 
+  \end{figure}
+\end{frame}
+
+\subsection{Security}
+\label{sec:security}
+
+\begin{frame}{Security I.}
+  \begin{itemize}
+  \item Forward security.
+    \begin{itemize}
+    \item Protect past states from current state leakages.
+    \end{itemize}
+  \item Post-compromise security (future secrecy).
+    \begin{itemize}
+    \item Protect future state from current state leakages.
+    \end{itemize}
+  \item Assert security through key- or ciphertext-indistinguishability games.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Security II.}
+  \begin{figure}[ht]
+      \centering
+      \setlength{\fboxsep}{10pt}
+      \scalebox{0.7}{%
+      \fbox{%
+        \input{figures/kind.tex}
+      }
+    }
+  \end{figure}
+
+  \begin{figure}[ht]
+      \centering
+      \setlength{\fboxsep}{10pt}
+      \scalebox{0.7}{%
+      \fbox{%
+        \input{figures/cind.tex}
+      }
+    }
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Security III.}
+  \begin{itemize}
+  \item Powerful adversary.
+  \item Many many attacks that lead to trivial victories.
+  \item Games have to be adapted to exclude these attacks.
+  \item The fewer attacks a game disallows the securer the protocol.
+  \item Assess advantage of any adversary.
+\[
+  \t{Adv}(\mathcal{A}) = \left| \Pr \left[ \t{\{C,K\}IND}_0^\mathcal{A} \rightarrow 1 \right] -
+                                \Pr \left[ \t{\{C,K\}IND}_1^\mathcal{A} \rightarrow 1 \right]
+                         \right|.
+\]
+  \end{itemize}
+\end{frame}
+
+\section{Protocols}
+\label{sec:protocols}
+
+\subsection{Timeline}
+\label{sec:timeline}
+
+\begin{frame}{Timeline I.}
+  \begin{enumerate}
+  \item \textbf{2012.} Off-the-record messaging protocol.
+  \item \textbf{2014.} Signal protocol.
+  \item \textbf{2017.} Security analysis of Signal.
+  \item \textbf{2017.} Bellare {\em et al.} Formalization of ratcheting. First
+    limited, unidirectional protocol.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Timeline II.}
+  \begin{enumerate}
+  \item \textbf{05/2018.} Poettering and Rösler. Optimally secure bidirectional
+    key-agreement protocol (BRKE).
+  \item \textbf{06/2018.} Jager and Stepanovs. Optimally secure messaging protocol.
+  \item \textbf{09/2018.} Durak and Vaudenay. Sub-optimally secure, efficient key-agreement
+    protocol (BARK).
+  \item \textbf{10/2018.} Jost, Maurer and Mularczyk. Almost-optimally secure messaging
+    protocol.
+  \item \textbf{10/2018.} Alwen, Coretti and Dodis. Modularization of Signal Double
+    Ratchet.
+  \end{enumerate}
+\end{frame}
+
+
+% \begin{frame}{Security}
+% \begin{columns}
+% \column{0.6\linewidth}
+%   \begin{figure}[ht]
+%     \centering
+%     \setlength{\fboxsep}{10pt}
+%     \scalebox{0.5}{%
+%     \fbox{%
+%       \input{figures/brke-receive.tex}
+%     }
+%   }
+% \end{figure}
+
+% \column{0.5\linewidth}
+% \begin{itemize}
+%   \item asdfsa
+%   \item saldfjasf
+%   \item sdlfkjsadf l
+% \end{itemize}
+
+% \end{columns}
+% \end{frame}
+
+% \section{Protocols}
+% \label{sec:protocols}
+
+% \section{Benchmarks}
+% \label{sec:benchmarks}
+
+% \section{Conclusion}
+% \label{sec:conclusion}
+
+\end{document}

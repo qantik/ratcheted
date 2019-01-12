@@ -8,6 +8,8 @@ vendor/
 *.blg
 *.lof
 *.log
+*.nav
 *.out
 *.pdf
+*.snm
 *.toc

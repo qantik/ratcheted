@@ -1,0 +1,167 @@
+\begin{tikzpicture}[
+  box/.style={rectangle,draw,inner sep=5pt,minimum height=1cm,minimum width=2cm,thick},
+  node distance=2cm,
+  ->,>=stealth',
+  scale=0.45, every node/.style={scale=0.45}
+]
+
+  % Box t0
+  \node [box] (t0) {Send};
+  \node [coordinate,right of=t0,node distance=1cm] (tl0) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t0,node distance=1cm] (ta0) {};
+  \node [left=2cm of ta0] (taa0) {$k_0$};
+  \path (ta0) edge[dotted, thick] node [] {} (taa0);
+  \node [coordinate,below left=-0.125cm and 0cm of t0,node distance=1cm] (tb0) {};
+  \node [left=2cm of tb0] (tbb0) {$m_0$};
+  \path (tbb0) edge[dotted, thick] node [] {} (tb0);
+
+  % Box t1
+  \node [box,below of=t0] (t1) {Send};
+  \node [coordinate,right of=t1,node distance=1cm] (tl1) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t1,node distance=1cm] (ta1) {};
+  \node [left=2cm of ta1] (taa1) {$k_1$};
+  \path (ta1) edge[dotted, thick] node [] {} (taa1);
+  \node [coordinate,below left=-0.125cm and 0cm of t1,node distance=1cm] (tb1) {};
+  \node [left=2cm of tb1] (tbb1) {$m_1$};
+  \path (tbb1) edge[dotted, thick] node [] {} (tb1);
+
+  % Box t2
+  \node [box,below of=t1] (t2) {Receive};
+  \node [coordinate,right of=t2,node distance=1cm] (tl2) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t2,node distance=1cm] (ta2) {};
+  \node [left=2cm of ta2] (taa2) {$k_3$};
+  \path (ta2) edge[dotted, thick] node [] {} (taa2);
+  \node [coordinate,below left=-0.125cm and 0cm of t2,node distance=1cm] (tb2) {};
+  \node [left=2cm of tb2] (tbb2) {$m_3$};
+  \path (tb2) edge[dotted, thick] node [] {} (tbb2);
+
+  % Box t3
+  \node [box,below of=t2] (t3) {Send};
+  \node [coordinate,right of=t3,node distance=1cm] (tl3) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t3,node distance=1cm] (ta3) {};
+  \node [left=2cm of ta3] (taa3) {$k_2$};
+  \path (ta3) edge[dotted, thick] node [] {} (taa3);
+  \node [coordinate,below left=-0.125cm and 0cm of t3,node distance=1cm] (tb3) {};
+  \node [left=2cm of tb3] (tbb3) {$m_2$};
+  \path (tbb3) edge[dotted, thick] node [] {} (tb3);
+
+  % Box t4
+  \node [box,below of=t3] (t4) {Receive};
+  \node [coordinate,right of=t4,node distance=1cm] (tl4) {};
+  \node [coordinate,above left=-0.125cm and 0cm of t4,node distance=1cm] (ta4) {};
+  \node [left=2cm of ta4] (taa4) {$k_4$};
+  \path (ta4) edge[dotted, thick] node [] {} (taa4);
+  \node [coordinate,below left=-0.125cm and 0cm of t4,node distance=1cm] (tb4) {};
+  \node [left=2cm of tb4] (tbb4) {$m_4$};
+  \path (tb4) edge[dotted, thick] node [] {} (tbb4);
+
+  % Box t5
+  \node [box,right of=t0,node distance=6cm] (t5) {Send};
+  \node [coordinate,left of=t5,node distance=1cm] (tl5) {};
+  \node [coordinate,above right=-0.125cm and 0cm of t5,node distance=1cm] (ta5) {};
+  \node [right=2cm of ta5] (taa5) {$k_3$};
+  \path (ta5) edge[dotted, thick] node [] {} (taa5);
+  \node [coordinate,below right=-0.125cm and 0cm of t5,node distance=1cm] (tb5) {};
+  \node [right=2cm of tb5] (tbb5) {$m_3$};
+  \path (tbb5) edge[dotted, thick] node [] {} (tb5);
+
+  \node [box,below of=t5] (t6) {Send};
+  \node [coordinate,left of=t6,node distance=1cm] (tl6) {};
+  \node [coordinate,above right=-0.125cm and 0cm of t6,node distance=1cm] (ta6) {};
+  \node [right=2cm of ta6] (taa6) {$k_4$};
+  \path (ta6) edge[dotted, thick] node [] {} (taa6);
+  \node [coordinate,below right=-0.125cm and 0cm of t6,node distance=1cm] (tb6) {};
+  \node [right=2cm of tb6] (tbb6) {$m_4$};
+  \path (tbb6) edge[dotted, thick] node [] {} (tb6);
+
+  \node [box,below of=t6] (t7) {Send};
+  \node [coordinate,left of=t7,node distance=1cm] (tl7) {};
+  \node [coordinate,above right=-0.125cm and 0cm of t7,node distance=1cm] (ta7) {};
+  \node [right=2cm of ta7] (taa7) {$k_5$};
+  \path (ta7) edge[dotted, thick] node [] {} (taa7);
+  \node [coordinate,below right=-0.125cm and 0cm of t7,node distance=1cm] (tb7) {};
+  \node [right=2cm of tb7] (tbb7) {$m_5$};
+  \path (tbb7) edge[dotted, thick] node [] {} (tb7);
+
+  \node [box,below of=t7] (t8) {Receive};
+  \node [coordinate,left of=t8,node distance=1cm] (tl8) {};
+  \node [coordinate,above right=-0.125cm and 0cm of t8,node distance=1cm] (ta8) {};
+  \node [right=2cm of ta8] (taa8) {$k_0$};
+  \path (ta8) edge[dotted, thick] node [] {} (taa8);
+  \node [coordinate,below right=-0.125cm and 0cm of t8,node distance=1cm] (tb8) {};
+  \node [right=2cm of tb8] (tbb8) {$m_0$};
+  \path (tb8) edge[dotted, thick] node [] {} (tbb8);
+
+
+
+  \node [box,below of=t8] (t9) {Send};
+  \node [coordinate,left of=t9,node distance=1cm] (tl9) {};
+  \node [coordinate,above right=-0.125cm and 0cm of t9,node distance=1cm] (ta9) {};
+  \node [right=2cm of ta9] (taa9) {$k_6$};
+  \path (ta9) edge[dotted, thick] node [] {} (taa9);
+  \node [coordinate,below right=-0.125cm and 0cm of t9,node distance=1cm] (tb9) {};
+  \node [right=2cm of tb9] (tbb9) {$m_6$};
+  \path (tbb9) edge[dotted, thick] node [] {} (tb9);
+
+
+  \node [box,below of=t9] (t10) {Receive};
+  \node [coordinate,left of=t10,node distance=1cm] (tl10) {};
+  \node [coordinate,above right=-0.125cm and 0cm of t10,node distance=1cm] (ta10) {};
+  \node [right=2cm of ta10] (taa10) {$k_1$};
+  \path (ta10) edge[dotted, thick] node [] {} (taa10);
+  \node [coordinate,below right=-0.125cm and 0cm of t10,node distance=1cm] (tb10) {};
+  \node [right=2cm of tb10] (tbb10) {$m_1$};
+  \path (tb10) edge[dotted, thick] node [] {} (tbb10);
+
+  \node [box,below of=t10] (t11) {Receive};
+  \node [coordinate,left of=t11,node distance=1cm] (tl11) {};
+  \node [coordinate,above right=-0.125cm and 0cm of t11,node distance=1cm] (ta11) {};
+  \node [right=2cm of ta11] (taa11) {$k_2$};
+  \path (ta11) edge[dotted, thick] node [] {} (taa11);
+  \node [coordinate,below right=-0.125cm and 0cm of t11,node distance=1cm] (tb11) {};
+  \node [right=2cm of tb11] (tbb11) {$m_2$};
+  \path (tb11) edge[dotted, thick] node [] {} (tbb11);
+
+
+%  \node [coordinate,left of=t8,node distance=1cm] (tl8) {};
+%  \node [coordinate,left of=t10,node distance=1cm] (tl10) {};
+  \path (tl0) edge[thick] node [] {} (tl8);
+  \path (tl1) edge[thick] node [] {} (tl10);
+  \path (tl3) edge[thick] node [] {} (tl11);
+  \path (tl5) edge[thick] node [] {} (tl2);
+  \path (tl6) edge[thick] node [] {} (tl4);
+
+  \node [left=2.4cm of t0] (ttaa0) {$(t_0)$};
+  \node [left=2.4cm of t1] (ttaa1) {$(t_1)$};
+  \node [left=2.4cm of t2] (ttaa2) {$(t_2)$};
+  \node [left=2.4cm of t3] (ttaa3) {$(t_3)$};
+  \node [left=2.4cm of t4] (ttaa4) {$(t_4)$};
+  \node [right=2.4cm of t5] (ttaa5) {$(t_5)$};
+  \node [right=2.4cm of t6] (ttaa6) {$(t_6)$};
+  \node [right=2.4cm of t7] (ttaa7) {$(t_7)$};
+  \node [right=2.4cm of t8] (ttaa8) {$(t_8)$};
+  \node [right=2.4cm of t9] (ttaa9) {$(t_9)$};
+  \node [right=2.4cm of t10] (ttaa10) {$(t_{10})$};
+  \node [right=2.4cm of t11] (ttaa11) {$(t_{11})$};
+
+
+  \path (t0) edge[thick] node [] {} (t1);
+  \path (t1) edge[thick] node [] {} (t2);
+  \path (t2) edge[thick] node [] {} (t3);
+  \path (t3) edge[thick] node [] {} (t4);
+  \path (t5) edge[thick] node [] {} (t6);
+  \path (t6) edge[thick] node [] {} (t7);
+  \path (t7) edge[thick] node [] {} (t8);
+  \path (t8) edge[thick] node [] {} (t9);
+  \path (t9) edge[thick] node [] {} (t10);
+  \path (t10) edge[thick] node [] {} (t11);
+
+  \node [coordinate, below=0.5cm of t4] (el) {};
+  \path (t4) edge[thick] node [] {} (el);
+  \node [below=0.4cm of el] (el1) {\textbf{.}};
+  \node [below=0.1cm of el1] (el2) {\textbf{.}};
+  \node [below=0.1cm of el2] (el3) {\textbf{.}};
+
+  \node [above=0.25cm of t0] (alice) {\bfseries{A}};
+  \node [above=0.25cm of t5] (bob) {\bfseries{B}};
+\end{tikzpicture}
