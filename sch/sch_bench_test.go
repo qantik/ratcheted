@@ -154,6 +154,7 @@ func benchmarkUni(i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		uni(i, b)
 	}
+	fmt.Println("hhhhhhhhhhhhhhhhhhhhhhhhh", count)
 }
 
 func benchmarkDeferredUni(i int, b *testing.B) {
@@ -168,7 +169,7 @@ func benchmarkAlt(i int, b *testing.B) {
 	}
 }
 
-//func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(50, b) }
+//func BenchmarkAlt50(b *testing.B) { benchmarkAlt(50, b) }
 //func BenchmarkAlt100(b *testing.B) { benchmarkAlt(100, b) }
 //func BenchmarkAlt200(b *testing.B) { benchmarkAlt(200, b) }
 //func BenchmarkAlt300(b *testing.B) { benchmarkAlt(300, b) }
@@ -179,16 +180,17 @@ func benchmarkAlt(i int, b *testing.B) {
 //func BenchmarkAlt800(b *testing.B) { benchmarkAlt(800, b) }
 //func BenchmarkAlt900(b *testing.B) { benchmarkAlt(900, b) }
 
-func BenchmarkUni50(b *testing.B)  { benchmarkUni(50, b) }
-func BenchmarkUni100(b *testing.B) { benchmarkUni(100, b) }
-func BenchmarkUni200(b *testing.B) { benchmarkUni(200, b) }
-func BenchmarkUni300(b *testing.B) { benchmarkUni(300, b) }
-func BenchmarkUni400(b *testing.B) { benchmarkUni(400, b) }
-func BenchmarkUni500(b *testing.B) { benchmarkUni(500, b) }
-func BenchmarkUni600(b *testing.B) { benchmarkUni(600, b) }
-func BenchmarkUni700(b *testing.B) { benchmarkUni(700, b) }
-func BenchmarkUni800(b *testing.B) { benchmarkUni(800, b) }
-func BenchmarkUni900(b *testing.B) { benchmarkUni(900, b) }
+func BenchmarkUni50(b *testing.B) { benchmarkUni(50, b) }
+
+//func BenchmarkUni100(b *testing.B) { benchmarkUni(100, b) }
+//func BenchmarkUni200(b *testing.B) { benchmarkUni(200, b) }
+//func BenchmarkUni300(b *testing.B) { benchmarkUni(300, b) }
+//func BenchmarkUni400(b *testing.B) { benchmarkUni(400, b) }
+//func BenchmarkUni500(b *testing.B) { benchmarkUni(500, b) }
+//func BenchmarkUni600(b *testing.B) { benchmarkUni(600, b) }
+//func BenchmarkUni700(b *testing.B) { benchmarkUni(700, b) }
+//func BenchmarkUni800(b *testing.B) { benchmarkUni(800, b) }
+//func BenchmarkUni900(b *testing.B) { benchmarkUni(900, b) }
 
 //func BenchmarkDeferredUni50(b *testing.B)  { benchmarkDeferredUni(50, b) }
 //func BenchmarkDeferredUni100(b *testing.B) { benchmarkDeferredUni(100, b) }

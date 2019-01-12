@@ -122,6 +122,13 @@ func (f fsAEAD) receive(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 		r.W = w
 	}
 
+	t := 0
+	for _, v := range r.D {
+		if v != nil {
+			t++
+		}
+	}
+
 	h := append([]byte(strconv.Itoa(c.I)), ad...)
 	msg, err = f.aead.Decrypt(k, c.C, h)
 	if err != nil {

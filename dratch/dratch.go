@@ -63,7 +63,7 @@ type User struct {
 	name string
 }
 
-func (u User) size() int {
+func (u User) Size() int {
 	size := 0
 	for _, b := range u.V {
 		size += len(b)
