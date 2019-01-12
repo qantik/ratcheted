@@ -23,6 +23,18 @@ $ dep ensure
 $ go test -v ./...
 ````
 
+## Benchmarks
+```
+# To run the BRKE benchmarks, same for the other protocols.
+$ cd pt
+
+# Runtime benchmarks.
+$ go test -bench=. -run=Benchmark
+
+# Message and state size benchmarks.
+$ go run size.go
+```
+
 ## Report/Slides
 The `report` and `slides` directories contain the `TeX` sources
 for the project write-up and the accompanying slides. 
