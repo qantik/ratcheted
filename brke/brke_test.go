@@ -41,7 +41,7 @@ func TestBRKE_Alternating(t *testing.T) {
 	alice, bob, err := brke.Init()
 	require.Nil(err)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		ka, c, err := brke.Send(alice, ad)
 		require.Nil(err)
 
@@ -66,7 +66,7 @@ func TestBRKE_Unidirectional(t *testing.T) {
 	alice, bob, err := brke.Init()
 	require.Nil(err)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		ka, c, err := brke.Send(alice, ad)
 		require.Nil(err)
 
@@ -75,7 +75,7 @@ func TestBRKE_Unidirectional(t *testing.T) {
 		require.True(bytes.Equal(ka, kb))
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		kb, c, err := brke.Send(bob, ad)
 		require.Nil(err)
 
@@ -93,9 +93,9 @@ func TestBRKE_DefUnidirectional(t *testing.T) {
 	alice, bob, err := brke.Init()
 	require.Nil(err)
 
-	var ks [10][]byte
-	var cs [10][][]byte
-	for i := 0; i < 10; i++ {
+	var ks [5][]byte
+	var cs [5][][]byte
+	for i := 0; i < 5; i++ {
 		k, c, err := brke.Send(alice, ad)
 		require.Nil(err)
 
@@ -103,7 +103,7 @@ func TestBRKE_DefUnidirectional(t *testing.T) {
 		cs[i] = c
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		kb, c, err := brke.Send(bob, ad)
 		require.Nil(err)
 
@@ -112,7 +112,7 @@ func TestBRKE_DefUnidirectional(t *testing.T) {
 		require.True(bytes.Equal(ka, kb))
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		k, err := brke.Receive(bob, ad, cs[i])
 		require.Nil(err)
 		require.True(bytes.Equal(ks[i], k))

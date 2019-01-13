@@ -82,24 +82,6 @@ type s struct {
 	t []byte
 }
 
-func (u User) size() int {
-	size := 0
-	for _, b := range u.r.SK {
-		size += len(b)
-	}
-	for _, b := range u.r.L {
-		size += len(b)
-	}
-	size += len(u.r.sgk) + len(u.r.K) + len(u.r.t)
-	for _, b := range u.s.PK {
-		size += len(b)
-	}
-	for _, b := range u.s.L {
-		size += len(b)
-	}
-	return size + len(u.s.vfk) + len(u.s.K) + len(u.s.t)
-}
-
 // NewBRKE creates a fresh BRKE protocol instance.
 func NewBRKE(hibe hibe.HIBE, signature signature.Signature) *BRKE {
 	return &BRKE{kuKEM: &kuKEM{hibe: hibe}, signature: signature}
@@ -342,4 +324,15 @@ func (b BRKE) Receive(user *User, ad []byte, C [][]byte) ([]byte, error) {
 	user.r.K = Kr
 
 	return ko, nil
+}
+
+// Size returns the size (in bytes) of the user state.
+func (u User) Size() int {
+	size := 0
+	for _, a := range []map[int][]byte{u.r.SK, u.r.L, u.s.PK, u.s.L} {
+		for _, b := range a {
+			size += len(b)
+		}
+	}
+	return size + len(u.r.sgk) + len(u.r.K) + len(u.r.t) + len(u.s.vfk) + len(u.s.K) + len(u.s.t)
 }
