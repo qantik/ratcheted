@@ -1,4 +1,4 @@
-\begin{tikzpicture}[scale=.75]
+\begin{tikzpicture}[scale=.9]
   \begin{axis} [
     ybar, axis on top,
     bar width= 20pt,

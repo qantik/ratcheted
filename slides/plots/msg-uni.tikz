@@ -1,4 +1,4 @@
-\begin{tikzpicture}[scale=1]
+\begin{tikzpicture}[scale=0.9]
 \begin{axis}[
   %ymode=log,
 %  legend style={font=\tiny, legend columns=4},
