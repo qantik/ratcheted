@@ -39,7 +39,7 @@ func TestSCh_Alternating(t *testing.T) {
 	alice, bob, err := s.Init()
 	require.Nil(err)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		m, err := s.Send(alice, msg, msg)
 		require.Nil(err)
 
@@ -64,7 +64,7 @@ func TestSCh_Unidirectional(t *testing.T) {
 	alice, bob, err := s.Init()
 	require.Nil(err)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		ct, err := sch.Send(alice, msg, msg)
 		require.Nil(err)
 
@@ -73,7 +73,7 @@ func TestSCh_Unidirectional(t *testing.T) {
 		require.True(bytes.Equal(msg, pt))
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		ct, err := sch.Send(bob, msg, msg)
 		require.Nil(err)
 
@@ -91,15 +91,15 @@ func TestSCh_DefUnidirectional(t *testing.T) {
 	alice, bob, err := s.Init()
 	require.Nil(err)
 
-	var cts [10][]byte
-	for i := 0; i < 10; i++ {
+	var cts [5][]byte
+	for i := 0; i < 5; i++ {
 		ct, err := sch.Send(alice, msg, msg)
 
 		require.Nil(err)
 		cts[i] = ct
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		ct, err := sch.Send(bob, msg, msg)
 		require.Nil(err)
 
@@ -108,7 +108,7 @@ func TestSCh_DefUnidirectional(t *testing.T) {
 		require.True(bytes.Equal(msg, pt))
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		pt, err := sch.Receive(bob, msg, cts[i])
 		require.Nil(err)
 		require.True(bytes.Equal(msg, pt))
