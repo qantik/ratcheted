@@ -1,0 +1,33 @@
+\begin{tikzpicture}
+
+  % Message 1
+  \node [coordinate] (a1) {};
+  \node [coordinate,below right=2cm and 3cm of a1] (b1) {};
+  \draw [->,ultra thick] (a1) -- node [above,midway] {} (b1);
+
+  % Message 2
+  \node [coordinate,below=0.5cm of a1] (a2) {};
+  \node [coordinate,below right=2cm and 3cm of a2] (b2) {};
+  \draw [->,ultra thick] (a2) -- node [above,midway] {} (b2);
+
+  % Message 3
+  \node [coordinate,below=0.5cm of a2] (a3) {};
+  \node [coordinate,below right=2cm and 3cm of a3] (b3) {};
+  \draw [->,ultra thick] (a3) -- node [above,midway] {} (b3);
+
+  % Message 4
+  \node [coordinate,right=3cm of a1] (b4) {};
+  \node [coordinate,below left=2cm and 3cm of b4] (a4) {};
+  \draw [->,ultra thick] (b4) -- node [above,midway] {} (a4);
+
+  % Message 5
+  \node [coordinate,below=0.5cm of b4] (b5) {};
+  \node [coordinate,below left=2cm and 3cm of b5] (a5) {};
+  \draw [->,ultra thick] (b5) -- node [above,midway] {} (a5);
+
+  % Message 6
+  \node [coordinate,below=0.5cm of b5] (b6) {};
+  \node [coordinate,below left=2cm and 3cm of b6] (a6) {};
+  \draw [->,ultra thick] (b6) -- node [above,midway] {} (a6);
+
+\end{tikzpicture}

@@ -1,0 +1,66 @@
+\begin{tikzpicture}[scale=0.9]
+\begin{axis}[
+  ymode=log,
+ legend style={font=\tiny, legend columns=3},
+  scaled ticks=false,
+  xlabel={Number of Sent Messages},
+  ylabel={Time (s)},
+  xmin=0, xmax=1000,
+  ymax=10000,
+  xtick={0,200,400,600,800,1000},
+  ytick={0.01,0.1,1,10,100,1000,10000},
+  legend pos=south east,
+  ymajorgrids=true,
+  xminorticks=false,
+  yminorticks=false,
+  grid style=dashed,
+  height=7cm,
+  width=10cm,
+]
+ 
+\addplot[color=blue,mark=*]
+   coordinates {
+  (50,0.0689)(100,0.144)(200,0.359)(300,0.502)(400,0.798)(500,1.116)(600,1.614)
+  (700,1.712)(800,1.965)(900,2.344)
+  };
+
+\addplot[color=red,mark=triangle*]
+  coordinates {
+  (50,0.00704)(100,0.0143)(200,0.0303)(300,0.0506)(400,0.0645)(500,0.0923)
+  (600,0.104)(700,0.118)(800,0.135)(900,0.164)
+  };
+
+\addplot[color=orange,mark=square*]
+  coordinates {
+  (50,3.8)(100,7.6)(200,15.4)(300,23.1)(400,33.4)(500,39.2)
+  (600,47.1)(700,55.8)(800,66.3)(900,75.1)
+  };
+
+\addplot[color=black!30!green,mark=x]
+  coordinates {
+  (50,8.024)(100,27.096)(200,98.210)(300,233.751)(400,521.110)(500,1044.091)
+  (600,2168.099)(700,3783.724)(800,5688.493)(900,9235.921)
+  };
+
+\addplot[color=black,mark=pentagon*]
+  coordinates {
+  (50,0.0943)(100,0.189)(200,0.425)(300,0.694)(400,0.854)(500,1.166)
+  (600,1.377)(700,1.675)(800,2.036)(900,2.319)
+  };
+
+\addplot[color=purple,mark=o]
+  coordinates {
+  (50,0.0102)(100,0.0205)(200,0.0446)(300,0.0725)(400,0.0992)(500,0.127)
+  (600,0.170)(700,0.219)(800,0.263)(900,0.308)
+  };
+
+\addplot[color=yellow,mark=square]
+  coordinates {
+  (50,0.0451)(100,0.109)(200,0.159)(300,0.238)(400,0.325)(500,0.498)
+  (600,0.571)(700,0.685)(800,0.727)(900,0.891)
+  };
+
+  \legend{DV,DV-lite,PR,JS,JMM,ACD,ACD-PK}
+ 
+\end{axis}
+\end{tikzpicture}

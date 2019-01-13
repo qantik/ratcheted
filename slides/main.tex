@@ -5,7 +5,7 @@
 \usepackage{graphicx,xcolor,float}
 \usepackage{amssymb,amsmath,array}
 \usepackage{setspace,algpseudocode}
-\usepackage{wrapfig,subcaption}
+\usepackage{wrapfig,caption,subcaption}
 \usepackage{chronosys}
 \usepackage{multicol}
 
@@ -53,9 +53,6 @@
 \section{Ratcheting}
 \label{sec:ratcheting}
 
-\subsection{Properties}
-\label{sec:properties}
-
 \begin{frame}{Properties I.}
   \begin{itemize}
   \item Two-party communication protocols.
@@ -71,9 +68,6 @@
     \input{figures/traffic.tikz} 
   \end{figure}
 \end{frame}
-
-\subsection{Security}
-\label{sec:security}
 
 \begin{frame}{Security I.}
   \begin{itemize}
@@ -129,9 +123,6 @@
 \section{Protocols}
 \label{sec:protocols}
 
-\subsection{Timeline}
-\label{sec:timeline}
-
 \begin{frame}{Timeline I.}
   \begin{enumerate}
   \item \textbf{2012.} Off-the-record messaging protocol.
@@ -155,9 +146,6 @@
     Ratchet.
   \end{enumerate}
 \end{frame}
-
-\subsection{BRKE (Poettering and Rösler)}
-\label{sec:brke-poett-rosl}
 
 \begin{frame}{BRKE (Poettering and Rösler) I.}
   \begin{itemize}
@@ -263,9 +251,6 @@
        \end{itemize}
 \end{frame}
 
-\subsection{Secure Channel (Jaeger and Stepanovs)}
-\label{sec:secure-chann-jaeg}
-
 \begin{frame}{Secure Channel (Jaeger and Stepanovs) I.}
   \begin{itemize}
   \item Optimally secure messaging protocol.
@@ -366,9 +351,6 @@
     \end{minipage}
 \end{frame}
 
-\subsection{BARK (Durak and Vaudenay)}
-\label{sec:bark-durak-vaudenay}
-
 \begin{frame}{BARK (Durak and Vaudenay) I.}
   \begin{itemize}
   \item Sub-optimally secure but very efficient key-agreement protocol.
@@ -467,9 +449,6 @@
   \item All the accumulated keys will be used in when responding.
   \end{itemize}
 \end{frame}
-
-\subsection{Secure Channel (Jost, Maurer \& Mularczyk)}
-\label{sec:secure-channel-jost}
 
 \begin{frame}{Secure Channel (Jost, Maurer \& Mularczyk) I.}
   \begin{itemize}
@@ -578,9 +557,6 @@ components of the ElGamal cryptosystem.
   \item Update hku-PKE encryption key for each message.
   \end{itemize}
 \end{frame}
-
-\subsection{Double Ratchet (Alwen, Coretti \& Dodis)}
-\label{sec:double-ratchet-alwen}
 
 \begin{frame}{Double Ratchet (Alwen, Coretti \& Dodis) I.}
   \begin{itemize}
@@ -691,5 +667,322 @@ components of the ElGamal cryptosystem.
   \end{minipage}
 \end{frame}
 
+\section{Benchmarks}
+\label{sec:benchmarks}
+
+\begin{frame}{Incentive}
+  \begin{itemize}
+  \item Solidify performance differences.
+  \item Gain insight into the feasibility of a potential real-world usage.
+  \item Spot performance weakness that can be tackled in updated protocol
+    versions.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Setup I.}
+  \begin{itemize}
+  \item Implementation in Go (all protocols \& some primitives).
+    \begin{itemize}
+    \item Compiled and garbage-collected (disabled for benchmarks).
+      Efficiency close to C/C++.
+    \item Built-in industry-grade benchmark tooling.
+    \end{itemize}
+  \item Intel Core i5 with 8GB RAM (comparable to high-end smartphone).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Setup II.}
+  \begin{itemize}
+  \item \textbf{Runtime.} How long it takes to exchange $n$ messages
+    executed on a single machine ignoring potential latency that would occur in a network.
+  \item \textbf{Message Size.} The maximal size of a messages throughout the
+    exchange of $n$ messages. A message designates the data that is sent over the channel.
+  \item \textbf{State Size.} The maximal size of a user state throughout the
+    exchange of $n$ messages. The state designates all the data kept in memory by a user.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Setup III.}
+  \begin{itemize}
+  \item \textbf{Alternating.} Alice and Bob take turns sending messages.
+    Alice sends the odd- numbered messages and Bob sends the even-numbered messages.
+  \item \textbf{Unidirectional.} Alice first sends $\frac{n}{2}$ messages to Bob,
+    after receiving them Bob responds with the remaining $\frac{n}{2}$ messages.
+  \item \textbf{Deferred Unidirectional.} Alice first sends $\frac{n}{2}$ messages
+    to Bob but before he receives them, Bob sends his share of $\frac{n}{2}$ messages to Alice.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Setup IV.}
+  \begin{figure}[H]
+    \centering
+    \noindent\begin{subfigure}[t]{0.32\linewidth}
+      \centering
+      \input{figures/alt.tikz}
+      \caption{Alternating}
+    \end{subfigure}%
+    \begin{subfigure}[t]{0.32\linewidth}
+      \centering
+      \input{figures/uni.tikz}
+      \caption{Unidirectional}
+    \end{subfigure}%
+    \begin{subfigure}[t]{0.32\linewidth}
+      \centering
+      \input{figures/def-uni.tikz}
+      \caption{Def. Unidirectional}
+    \end{subfigure}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Primitives I.}
+  \begin{itemize}
+  \item \textbf{SHA-256.} As the hash function and random oracle. Part of
+    the Go standard library.
+  \item \textbf{AES-GCM.} As the AEAD scheme (e.g. in FS-AEAD). Part of
+    the Go standard library.
+  \item \textbf{Gentry-Silverberg HIBE.} As the HIBE scheme in the first
+    two protocols. Implemented by hand.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Primitives II.}
+  \begin{itemize}
+   \item \textbf{ECIES.} As the public-key encryption scheme in several protocols.
+    Implemented by hand.
+  \item \textbf{ECDSA.} As the digital signature scheme in several protocols.
+    Part of the Go standard library.
+  \item \textbf{Bellare et al. Forward-Secure Signature} As the forward-secures
+    signature within the ku-DSS. Implemented by hand.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Runtime (Alternating) I.}
+  \begin{figure}[H]
+    \centering
+    \input{plots/time-alt.tikz} 
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Runtime (Alternating) II.}
+  \scriptsize
+  \begin{table}
+    \caption*{PT (Poettering \& Rösler)}
+    \begin{tabular}{ | l | l | l | l |}
+      \hline
+      Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+      \textbf{ku-KEM} & $2n$ & $2n-1/2n-1$ & $0/0$ \\ \hline
+      \textbf{Signature} & $n$ & $n/n$ & - \\  
+        \hline
+    \end{tabular}
+  \end{table}
+  \begin{table}
+    \caption*{JS (Jaeger \& Stepanovs)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-PKE} & $0$ & $n/n$ & $0/n$ \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & $n-1/n$ \\  
+    \hline
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Runtime (Alternating) III.}
+  \scriptsize
+  \begin{table}
+    \caption*{DV (Durak \& Vaudenay)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{PKE} & $2n$ & $2n-1/2n-1$ & $0/0$ \\ \hline
+    \textbf{Signature} & $2n-1$ & $2n-1/2n-1$ & $0/0$ \\  
+    \hline
+    \end{tabular}
+  \end{table}
+
+  \begin{table}
+    \caption*{JMM (Jost, Maurer \& Mularczyk)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{Sig} & $2n$ & $n/n$ & - \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & - \\ \hline
+    \textbf{sku-PKE} & $2n$ & $n/n$ & $n/n$ \\ \hline
+    \textbf{PKE-AD} & $3n$ & $n/n$ & - \\
+    \hline
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Runtime (Alternating) IV.}
+  \scriptsize
+  \begin{table}
+    \caption*{ACD (Alwen, Coretti \& Dodis)}
+    \begin{tabular}{ | l | l | l | l |}
+      \hline
+      Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+      \textbf{FS-AEAD} & $2n$ & $n/n$ & - \\ \hline
+      \textbf{CKA} & $2n$ & - & - \\  
+      \hline
+    \end{tabular}
+  \end{table}
+  \normalsize
+  \begin{itemize}
+  \item Contained behaviour in all protocols.
+  \item States are continuously flushed.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Runtime (Unidirectional) I.}
+  \begin{figure}[H]
+    \centering
+    \input{plots/time-uni.tikz} 
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Runtime (Unidirectional) II.}
+  \scriptsize
+  \begin{table}
+    \caption*{PR (Poettering \& Rösler)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-KEM} & $2n$ & $\frac{3}{2}n/\frac{3}{2}n$ & $0/0$ \\ \hline
+    \textbf{Signature} & $n$ & $n/n$ & - \\  
+    \hline
+    \end{tabular}
+  \end{table}
+  \begin{table}
+    \caption*{JS (Jaeger \& Stepanovs)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-PKE} & $0$ & $n/n$ & $\frac{(n-1)n}{2}/n$ \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & $\frac{n}{2}/n$ \\  
+    \hline
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Runtime (Unidirectional) III.}
+  \scriptsize
+  \begin{table}
+    \caption*{DV (Durak \& Vaudenay)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{PKE} & $2n$ & $\frac{3}{2}n/\frac{3}{2}n$ & $0/0$ \\ \hline
+    \textbf{Signature} & $2n$ & $\frac{3}{2}n/\frac{3}{2}n$ & $0/0$ \\  
+    \hline
+    \end{tabular}
+  \end{table}
+  \begin{table}
+    \caption*{JMM (Jost, Maurer \& Mularczyk)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{Sig} & $2n$ & $n/n$ & - \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & - \\ \hline
+    \textbf{sku-PKE} & $2n$ & $n/n$ & $n/n$ \\ \hline
+    \textbf{PKE-AD} & $3n$ & $n/n$ & - \\
+    \hline
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Runtime (Unidirectional) IV.}
+  \scriptsize
+  \begin{table}
+    \caption*{ACD (Alwen, Coretti \& Dodis)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{FS-AEAD} & $4$ & $n/n$ & - \\ \hline
+    \textbf{CKA} & $4$ & - & - \\  
+    \hline
+    \end{tabular}
+  \end{table}
+  \normalsize
+  \begin{itemize}
+  \item Quadratic key-update penalty for the JS protocol.
+  \item Other protocols either slightly faster or unchanged.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Runtime (Deferred Unidirectional) I.}
+ \begin{figure}[H]
+    \centering
+    \input{plots/time-def-uni.tikz} 
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Runtime (Deferred Unidirectional) II.}
+  \scriptsize
+  \begin{table}
+    \caption*{PR (Poettering \& Rösler)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-KEM} & $2n$ & $n/n$ & $2(\frac{n}{2})^2/2(\frac{n}{2})^2$ \\ \hline
+    \textbf{Signature} & $n$ & $n/n$ & - \\  
+    \hline
+    \end{tabular}
+  \end{table}
+  \begin{table}
+    \caption*{JS (Jaeger \& Stepanovs)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{ku-PKE} & $0$ & $n/n$ & $\frac{(n-1)n}{2}/n(\frac{n}{2}+1)$ \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & $0/n$ \\  
+    \hline
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Runtime (Deferred Unidirectional) III.}
+  \scriptsize
+  \begin{table}
+    \caption*{DV (Durak \& Vaudenay)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{PKE} & $2n$ & $n/n$ & $0/0$ \\ \hline
+    \textbf{Signature} & $2n$ & $n/n$ & $0/0$ \\  
+    \hline
+    \end{tabular}
+  \end{table}
+  \begin{table}
+    \caption*{JMM (Jost, Maurer \& Mularczyk)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{Sig} & $2n$ & $n/n$ & - \\ \hline
+    \textbf{ku-Sig} & $0$ & $n/n$ & - \\ \hline
+    \textbf{sku-PKE} & $2n$ & $n/n$ & $n+2n^2/n+2n^2$ \\ \hline
+    \textbf{PKE-AD} & $3n$ & $n/n$ & - \\
+    \hline
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Runtime (Deferred Unidirectional) IV.}
+  \scriptsize
+  \begin{table}
+    \caption*{ACD (Alwen, Coretti \& Dodis)}
+    \begin{tabular}{ | l | l | l | l |}
+    \hline
+    Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{FS-AEAD} & $2$ & $n/n$ & - \\ \hline
+    \textbf{CKA} & $2$ & - & - \\  
+    \hline
+    \end{tabular}
+  \end{table}
+  \normalsize
+  \begin{itemize}
+  \item Now also quadratic key-update penalties for the PR and JMM protocols.
+  \item Clear separation between the DV and JMM protocols.
+  \end{itemize}
+\end{frame}
 
 \end{document}
