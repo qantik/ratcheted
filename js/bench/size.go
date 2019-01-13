@@ -1,6 +1,7 @@
 // (c) 2018 EPFL
 // This code is licensed under MIT license (see LICENSE.txt for details)
 
+// Runtime, message size and state size benchmarks for the js protocol.
 package main
 
 import (
