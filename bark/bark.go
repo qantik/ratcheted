@@ -62,17 +62,6 @@ func NewBARK(uni uni) *BARK {
 	return &BARK{uni: uni}
 }
 
-func (u User) size() int {
-	s := 0
-	for _, b := range u.Sender {
-		s += len(b)
-	}
-	for _, b := range u.Receiver {
-		s += len(b)
-	}
-	return s + len(u.Hk) + len(u.Hsent) + len(u.Hreceived)
-}
-
 // Init initialized the BARK protocols and returns two user states.
 func (b BARK) Init() (alice, bob *User, err error) {
 	sa, ra, err := b.uni.Init()
@@ -207,4 +196,16 @@ func (b BARK) Receive(user *User, ct []byte) (k []byte, err error) {
 	user.Hreceived = primitives.Digest(hmac.New(sha256.New, user.Hk), ct)
 
 	return
+}
+
+// Size returns the size (in bytes) of the user state.
+func (u User) Size() int {
+	size := 0
+	for _, b := range u.Sender {
+		size += len(b)
+	}
+	for _, b := range u.Receiver {
+		size += len(b)
+	}
+	return size + len(u.Hk) + len(u.Hsent) + len(u.Hreceived)
 }

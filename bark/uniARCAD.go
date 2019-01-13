@@ -11,7 +11,7 @@ import (
 	"github.com/qantik/ratcheted/primitives/signature"
 )
 
-// Uni is the uniARCAD object handler.
+// uniARCAD is the uniARCAD object handler.
 type uniARCAD struct {
 	sc *signcryption
 }
