@@ -9,12 +9,14 @@
 package secmsg
 
 import (
+	"crypto/elliptic"
 	"crypto/sha256"
 	"strconv"
 
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
+	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
 
@@ -41,17 +43,6 @@ type User struct {
 	trans [][]byte // trans is an array of all hashed ciphertexts (transcript).
 }
 
-func (u User) size() int {
-	size := 0
-	for _, b := range u.vk {
-		size += len(b)
-	}
-	for _, b := range u.trans {
-		size += len(b)
-	}
-	return size + len(u.ek) + len(u.dk) + len(u.vkUpd) + len(u.skUpd) + len(u.vkEph) + len(u.skEph) + len(u.trace)
-}
-
 // message groups the actual plaintext the ephemeral ots private key for encryption.
 type message struct {
 	Msg, SkEph []byte
@@ -68,11 +59,15 @@ type ciphertext struct {
 	SigUpd, SigEph []byte
 }
 
-var kuGen = 0
-var kuEnc = 0
-var kuDec = 0
-var kuUpdEk = 0
-var kuUpdDk = 0
+// NewSecMsg returns a fresh secure messaging instance for a given public-key
+// encryption scheme and a digital signature scheme.
+func NewSecMsg(encryption encryption.Asymmetric, signature signature.Signature) *SecMsg {
+	return &SecMsg{
+		hku: &hkuPKE{pke: encryption, sku: &skuPKE{elliptic.P256()}},
+		kus: &kuSig{signature},
+		sig: signature,
+	}
+}
 
 // Init creates and returns two User objects which can communicate with each other.
 // Note, that in case of an error during a send or receiver operation both user states
@@ -123,7 +118,6 @@ func (s SecMsg) Init() (*User, *User, error) {
 		s: 0, sAck: 0, r: 0,
 		trace: []byte{}, trans: [][]byte{[]byte{}},
 	}
-	kuGen, kuEnc, kuDec, kuUpdEk, kuUpdDk = 0, 0, 0, 0, 0
 	return alice, bob, nil
 }
 
@@ -155,7 +149,6 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 	}
 
 	// signature
-	kuEnc++
 	data := primitives.Digest(sha256.New(), c, upd, vkEph2, []byte(strconv.Itoa(user.r)))
 	skUpd, sigUpd, err := s.kus.sign(user.skUpd, append(data, user.trace...))
 	if err != nil {
@@ -215,7 +208,6 @@ func (s SecMsg) Receive(user *User, ct []byte) ([]byte, error) {
 	if err := s.sig.Verify(vk, append(data, user.trans[c.R]...), c.SigEph); err != nil {
 		return nil, errors.Wrap(err, "unable to verify ots signature")
 	}
-	kuDec++
 	vkUpd, err := s.kus.verify(user.vkUpd, append(data, user.trans[c.R]...), c.SigUpd)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to verify ku-Sig signature")
@@ -245,4 +237,17 @@ func (s SecMsg) Receive(user *User, ct []byte) ([]byte, error) {
 	user.trace = primitives.Digest(sha256.New(), user.trace, data)
 
 	return msg.Msg, nil
+}
+
+// Size returns the size (in bytes) of the user state.
+func (u User) Size() int {
+	size := 0
+	for _, b := range u.vk {
+		size += len(b)
+	}
+	for _, b := range u.trans {
+		size += len(b)
+	}
+	return size + len(u.ek) + len(u.dk) + len(u.vkUpd) +
+		len(u.skUpd) + len(u.vkEph) + len(u.skEph) + len(u.trace)
 }
