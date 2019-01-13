@@ -28,6 +28,9 @@ $ go test -v ./...
 # To run the BRKE benchmarks, same for the other protocols.
 $ cd pt
 
+# Turn off Go garbage collection.
+$ GOGC=off
+
 # Runtime benchmarks.
 $ go test -bench=. -run=Benchmark
 
