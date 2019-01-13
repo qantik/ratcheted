@@ -38,6 +38,11 @@ $ go test -bench=. -run=Benchmark
 $ go run size.go
 ```
 
-## Report/Slides
-The `report` and `slides` directories contain the `TeX` sources
-for the project write-up and the accompanying slides. 
+## Project Structure
+- `./acd` Double Ratchet protocol by [Alwen, Coretti & Dodis](https://eprint.iacr.org/2018/1037).
+- `./dv` BARK protocol by [Durak & Vaudenay](https://eprint.iacr.org/2018/889).
+- `./jmm` Secure Channel protocol by [Jost, Maurer & Mularczyk](https://eprint.iacr.org/2018/954).
+- `./js` Secure Channel protocol by [Jaeger & Stepanovs](https://eprint.iacr.org/2018/553).
+- `./pr` BRKE protocol by [Poettering & Rösler](https://eprint.iacr.org/2018/296).
+- `./primitives` contains the implementation of various cryptographic primitives as needed by the protocols.
+- `./report` and `./slides` contain the `TeX` sources for the project write-up and the accompanying slides.
