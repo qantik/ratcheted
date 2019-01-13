@@ -11,7 +11,7 @@
     \State $t^* \gets ad||C, \ t_\t{S} \gets t_\t{S} t^*, \ C || \sigma \gets C$
     \State \textbf{assert} \Call{\texttt{DS.Verify}}{$vfk,ad||C,\sigma$}
     \State $r||pk^*||vfk||C \gets C$
-    \State $L\t{S}[...,(r-1)] \gets \perp$
+    \State $L_\t{S}[...,(r-1)] \gets \perp$
     \For{$s' \gets r+1$  to $s$}
     \State $pk^* \gets$ \Call{\texttt{ku-KEM.UpdPk}}{$pk^*,L\t{S}[s']$}
     \EndFor

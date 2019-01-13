@@ -135,19 +135,19 @@
 
 \begin{frame}{Timeline II.}
   \begin{enumerate}
-  \item[5.] \textbf{05/2018.} Poettering and Rösler. Optimally secure bidirectional
+  \item[5.] \textbf{05/2018.} Poettering \& Rösler. Optimally secure bidirectional
     key-agreement protocol (BRKE).
-  \item[6.] \textbf{06/2018.} Jager and Stepanovs. Optimally secure messaging protocol.
-  \item[7.] \textbf{09/2018.} Durak and Vaudenay. Sub-optimally secure, efficient key-agreement
+  \item[6.] \textbf{06/2018.} Jager \& Stepanovs. Optimally secure messaging protocol.
+  \item[7.] \textbf{09/2018.} Durak \& Vaudenay. Sub-optimally secure, efficient key-agreement
     protocol (BARK).
-  \item[8.] \textbf{10/2018.} Jost, Maurer and Mularczyk. Almost-optimally secure messaging
+  \item[8.] \textbf{10/2018.} Jost, Maurer \& Mularczyk. Almost-optimally secure messaging
     protocol.
-  \item[9.] \textbf{10/2018.} Alwen, Coretti and Dodis. Modularization of Signal Double
+  \item[9.] \textbf{10/2018.} Alwen, Coretti \& Dodis. Modularization of Signal Double
     Ratchet.
   \end{enumerate}
 \end{frame}
 
-\begin{frame}{BRKE (Poettering and Rösler) I.}
+\begin{frame}{BRKE (Poettering \& Rösler) I.}
   \begin{itemize}
   \item Optimally secure key-agreement protocol.
     \begin{itemize}
@@ -159,7 +159,7 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{BRKE (Poettering and Rösler) II.}
+\begin{frame}{BRKE (Poettering \& Rösler) II.}
   The HIBE is used the mount a key-updatable key encapsulation mechanism (ku-KEM).
   \begin{align*}
     \texttt{Gen} & : \ \rightarrow \mathcal{SK} \times \mathcal{VK} \\
@@ -172,7 +172,7 @@
   oracle H.
 \end{frame}
 
-\begin{frame}{BRKE (Poettering and Rösler) III.}
+\begin{frame}{BRKE (Poettering \& Rösler) III.}
   \scriptsize
    \begin{minipage}[h]{0.59\textwidth}
       \begin{figure}[h]
@@ -187,8 +187,9 @@
     \end{minipage}
    \begin{minipage}[h]{0.40\textwidth}
       \begin{itemize}
-      \item Key distribution.
-      \item Parameter initialization.
+      \item $E^\vdash,E^\dashv$: Epoch counters.
+      \item $s, r$: Sent and received counters.
+      \item $t, L_S, L_R$: Transcript accumulators.
       \end{itemize}
   \end{minipage}
 \end{frame}
@@ -205,33 +206,10 @@
       }
     \end{figure}
        \begin{itemize}
-       \item Protocol proceeds in epochs $(E^\vdash,E^\dashv)$.
-       \item Continuous exchange of ku-KEM and DS keys.
-       \item Unidirectional traffic accumulates ku-KEM keys.
+       \item Transcript is accumulated.
+       \item Key-updates only for deferred messages.
+       \item All keys are used in the encapsulation when the direction changes.
        \end{itemize}
-
-
-  %  \begin{minipage}[h]{0.59\textwidth}
-  %   %\column{0\textwidth}
-  %     \begin{figure}[h]
-  %       \centering
-  %       \setlength{\fboxsep}{10pt}
-  %       \scalebox{0.6}{%
-  %       \fbox{%
-  %         \input{figures/brke-send.tex}
-  %       }
-  %     }
-  %   \end{figure}
-  % \end{minipage}%
-  %  \begin{minipage}[h]{0.40\textwidth}
-  %   %\column{0.55\textwidth}
-  %     \begin{itemize}
-  %     \item Protocol proceeds in epochs $(E^\vdash,E^\dashv)$.
-  %     \item Continuous exchange of ku-KEM and DS keys.
-  %     \item Unidirectional traffic accumulates ku-KEM keys.
-  %     \end{itemize}
-  % \end{minipage}
-  % %\end{columns}
 \end{frame}
 
 \begin{frame}{BRKE (Poettering and Rösler) V.}
@@ -248,6 +226,7 @@
        \begin{itemize}
        \item Key-updates for deferred messages.
        \item Communication transcript is accumulated.
+       \item The more encapsulations the bigger the ciphertext.
        \end{itemize}
 \end{frame}
 
@@ -298,8 +277,9 @@
     \end{minipage}
   \begin{minipage}[h]{0.34\textwidth}
       \begin{itemize}
-      \item Key distribution.
-      \item Parameter initialization.
+      \item $s, r$: Sent and receive counters.
+      \item $r^\t{ack}$: Number of acknowledged messages.
+      \item $T_S,T_R$: Message transcript arrays.
       \end{itemize}
     \end{minipage}
 \end{frame}
@@ -318,11 +298,10 @@
     \end{figure}
     \end{minipage}
   \begin{minipage}[ht]{0.40\textwidth}
-    %\column{0.5\textwidth}
       \begin{itemize}
-      \item Continuous exchange of ku-PKE and ku-DS keys.
-      \item Unidirectional traffic induces ku-PKE updates
-        and accumulates decryption keys.
+      \item 1 ku-PKE generation for the reply, 1 ku.DS generation for the next message.
+      \item Unidirectional traffic has quadratic ku-PKE key-update penalty.
+      \item Entire receive transcript is part of message.
       \end{itemize}
     \end{minipage}
 \end{frame}
@@ -330,8 +309,6 @@
 \begin{frame}{Secure Channel (Jaeger and Stepanovs) VI.}
   \scriptsize
   \begin{minipage}[h]{0.65\textwidth}
-  % \begin{columns}
-  %  \column{0.6\textwidth}
       \begin{figure}[ht]
         \centering
         \setlength{\fboxsep}{10pt}
@@ -343,15 +320,14 @@
     \end{figure}
     \end{minipage}
   \begin{minipage}[h]{0.34\textwidth}
-   % \column{0.5\textwidth}
       \begin{itemize}
-      \item ku-DS signing key is always updated.
-      \item $r^\t{ack}$ designates number of acknowledged messages.
+      \item ku-DS signing key updated with each receive. Incurs
+        linearly many verification key-updates when direction changes.
       \end{itemize}
     \end{minipage}
 \end{frame}
 
-\begin{frame}{BARK (Durak and Vaudenay) I.}
+\begin{frame}{BARK (Durak \& Vaudenay) I.}
   \begin{itemize}
   \item Sub-optimally secure but very efficient key-agreement protocol.
   \item Relies only on regular public-key cryptosystems.
@@ -361,7 +337,7 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{BARK (Durak and Vaudenay) II.}
+\begin{frame}{BARK (Durak \& Vaudenay) II.}
   BARK relies on a simple signcryption construction, combining a public-key
   encryption scheme and digital signature scheme.
   \begin{align*}
@@ -375,7 +351,7 @@
   It further needs some collision-resistant hash function H.
 \end{frame}
 
-\begin{frame}{BARK (Durak and Vaudenay) III.}
+\begin{frame}{BARK (Durak \& Vaudenay) III.}
    \begin{figure}[h]
      \centering
      \setlength{\fboxsep}{10pt}
@@ -387,11 +363,9 @@
   \end{figure}
 \end{frame}
 
-\begin{frame}{BARK (Durak and Vaudenay) IV.}
+\begin{frame}{BARK (Durak \& Vaudenay) IV.}
    \scriptsize
   \begin{minipage}[h]{0.49\textwidth}
-  % \begin{columns}
-  %  \column{0.6\textwidth}
       \begin{figure}[ht]
         \centering
         \setlength{\fboxsep}{10pt}
@@ -403,7 +377,6 @@
     \end{figure}
     \end{minipage}
   \begin{minipage}[h]{0.49\textwidth}
-   % \column{0.5\textwidth}
       \begin{itemize}
       \item Initialize two uniARCAD instances and distribute the
         resulting states.
@@ -413,7 +386,7 @@
     \end{minipage}
   \end{frame}
 
-\begin{frame}{BARK (Durak and Vaudenay) V.}
+\begin{frame}{BARK (Durak \& Vaudenay) V.}
   \scriptsize
   \begin{figure}[ht]
      \centering
@@ -425,14 +398,14 @@
      }
   \end{figure}
   \begin{itemize}
-  \item Continuously exchange signcryption keys.
-  \item First message in the other direction after unidirectional traffic
-    will use all accumulated keys in the onion encryption.
-  \item Chain-hash ensures recover security.
+  \item Create 2 new uniARCAD instances, 1 one for the next message and 1
+    for the reply.
+  \item Accumulate uniARCAD states and use all in onion encryption when
+    the direction changes.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{BARK (Durak and Vaudenay) VI.}
+\begin{frame}{BARK (Durak \& Vaudenay) VI.}
   \scriptsize
   \begin{figure}[ht]
      \centering
@@ -444,9 +417,7 @@
      }
   \end{figure}
   \begin{itemize}
-  \item Accumulate received signcryption keys for responding.
-  \item Use all accumulated keys when receiving message
-  \item All the accumulated keys will be used in when responding.
+  \item Chain-hash the communication transcript to ensure recover security.
   \end{itemize}
 \end{frame}
 
@@ -516,7 +487,8 @@ components of the ElGamal cryptosystem.
   \end{figure}
   \begin{itemize}
   \item Protocol also needs a regular digital signature scheme (Sig).
-  \item Generate two key pairs for each primitive and distribute them to the users.
+  \item Set sent and receive counters $(s,r)$ as well number of acknowledged
+    messages $s_\t{ack}$ to 0.
   \item Further initialize a Sig verification key array $VK^\t{eph}$, a transcript
     variable holding the chain-hash of the messages $tr$ and a transcript array $TR$.
   \end{itemize}
@@ -536,7 +508,7 @@ components of the ElGamal cryptosystem.
   \begin{itemize}
   \item Generate two sets of Sig key pairs for sending and receiving and
     accumulate the verification key.
-  \item Update hku-PKE decryption key for each message.
+  \item Update hku-PKE keys for each message.
   \item Combination of ku-Sig and Sig signature yields post-impersonation
     authenticity.
   \end{itemize}
@@ -554,7 +526,9 @@ components of the ElGamal cryptosystem.
      }
   \end{figure}
   \begin{itemize}
-  \item Update hku-PKE encryption key for each message.
+  \item Message transcript is accumulated.
+  \item Use accumulated verification keys if $s_\t{msg} > s_\t{ack}$ otherwise
+    use received verification keys.
   \end{itemize}
 \end{frame}
 
@@ -564,6 +538,7 @@ components of the ElGamal cryptosystem.
   \item Unlike the other protocols, it uses private-key cryptography to ensure
     forward-secrecy hence it does not reach the same security guarantees.
   \item However, this approach yields a very efficient protocol.
+  \item Only protocol that offers immediate decryption.
   \end{itemize}
 \end{frame}
 
@@ -622,7 +597,10 @@ components of the ElGamal cryptosystem.
     \end{minipage}
    \begin{minipage}[h]{0.49\textwidth}
       \begin{itemize}
-      \item Key distribution.
+      \item $\sigma_\t{root}$: PRF-PRNG state.
+      \item $\gamma$: CKA state.
+      \item $T_\t{cur}$: CKA update information.
+      \item $t_\t{P}$: Epoch counter.
       \end{itemize}
   \end{minipage}
 \end{frame}
@@ -642,7 +620,8 @@ components of the ElGamal cryptosystem.
     \end{minipage}
    \begin{minipage}[h]{0.49\textwidth}
       \begin{itemize}
-      \item Key distribution.
+      \item CKA output used to generate FS-AEAD key via PRF-PRNG.
+      \item As in Signal CKA is renegotiated at the start of every epoch.
       \end{itemize}
   \end{minipage}
 \end{frame}
@@ -662,7 +641,7 @@ components of the ElGamal cryptosystem.
     \end{minipage}
    \begin{minipage}[h]{0.49\textwidth}
       \begin{itemize}
-      \item Key distribution.
+      \item State size only grows in case of message reorder or message-loss.
       \end{itemize}
   \end{minipage}
 \end{frame}
@@ -780,8 +759,8 @@ components of the ElGamal cryptosystem.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
-    \textbf{ku-PKE} & $0$ & $n/n$ & $0/n$ \\ \hline
-    \textbf{ku-Sig} & $0$ & $n/n$ & $n-1/n$ \\  
+    \textbf{ku-PKE} & $n$ & $n/n$ & $0/n$ \\ \hline
+    \textbf{ku-Sig} & $n$ & $n/n$ & $n-1/n$ \\  
     \hline
     \end{tabular}
   \end{table}
@@ -857,8 +836,8 @@ components of the ElGamal cryptosystem.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
-    \textbf{ku-PKE} & $0$ & $n/n$ & $\frac{(n-1)n}{2}/n$ \\ \hline
-    \textbf{ku-Sig} & $0$ & $n/n$ & $\frac{n}{2}/n$ \\  
+    \textbf{ku-PKE} & $n$ & $n/n$ & $\frac{(n-1)n}{2}/n$ \\ \hline
+    \textbf{ku-Sig} & $n$ & $n/n$ & $\frac{n}{2}/n$ \\  
     \hline
     \end{tabular}
   \end{table}
@@ -933,8 +912,8 @@ components of the ElGamal cryptosystem.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
-    \textbf{ku-PKE} & $0$ & $n/n$ & $\frac{(n-1)n}{2}/n(\frac{n}{2}+1)$ \\ \hline
-    \textbf{ku-Sig} & $0$ & $n/n$ & $0/n$ \\  
+    \textbf{ku-PKE} & $n$ & $n/n$ & $\frac{(n-1)n}{2}/n(\frac{n}{2}+1)$ \\ \hline
+    \textbf{ku-Sig} & $n$ & $n/n$ & $0/n$ \\  
     \hline
     \end{tabular}
   \end{table}
@@ -1020,9 +999,20 @@ components of the ElGamal cryptosystem.
   \end{figure}
 \end{frame}
 
+\section{Erratum}
+\label{sec:erratum}
+
+
+
 \section{Conclusion}
 \label{sec:conclusion}
 
+\begin{frame}{Future Work}
+  
+\end{frame}
 
+\begin{frame}{Gained Knowledge}
+  
+\end{frame}
 
 \end{document}
