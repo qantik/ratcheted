@@ -63,27 +63,6 @@ type User struct {
 	name string
 }
 
-func (u User) Size() int {
-	size := 0
-	for _, b := range u.V {
-		size += len(b)
-	}
-	for _, b := range u.ek {
-		size += len(b)
-	}
-	for _, b := range u.dk {
-		size += len(b)
-	}
-	for _, b := range u.vk {
-		size += len(b)
-	}
-	for _, b := range u.sk {
-		size += len(b)
-	}
-
-	return size + len(u.Gamma) + len(u.T) + len(u.Root)
-}
-
 // NewDRatch returns a fresh double ratchet instance for a given AEAD scheme.
 func NewDRatch(aead encryption.Authenticated,
 	pke encryption.Asymmetric,
@@ -95,9 +74,6 @@ func NewDRatch(aead encryption.Authenticated,
 		pke: pke, dss: dss,
 	}
 }
-
-var ckaGen = 0
-var fsGen = 0
 
 // Init intializes the double ratchet protocol and returns two user states.
 func (d DRatch) Init() (alice, bob *User, err error) {
@@ -144,13 +120,10 @@ func (d DRatch) Init() (alice, bob *User, err error) {
 		ek: ekb, dk: dkb, vk: vkb, sk: skb,
 		name: "bob",
 	}
-	ckaGen = 0
-	fsGen = 0
 	return
 }
 
 // genOpt generates the sets of optional PKE and DSS key pairs.
-// TODO: Simplify this mess.
 func (d DRatch) genOpt() (eka, dka, vka, ska, ekb, dkb, vkb, skb map[int][]byte, err error) {
 	eka, ekb = make(map[int][]byte), make(map[int][]byte)
 	dka, dkb = make(map[int][]byte), make(map[int][]byte)
@@ -186,7 +159,6 @@ func (d DRatch) Send(user *User, msg []byte) ([]byte, error) {
 		user.V[user.I-1] = nil
 
 		user.I++
-		ckaGen++
 		gamma, t, i, err := d.cka.send(user.Gamma)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable create cka message")
@@ -200,7 +172,6 @@ func (d DRatch) Send(user *User, msg []byte) ([]byte, error) {
 		}
 		user.Root = root
 
-		fsGen++
 		v, _, err := d.fsa.generate(k)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to create fresh fs-aead sender state")
@@ -309,7 +280,6 @@ func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 			user.ek[c.I+1], user.vk[c.I+2] = c.EK, c.VK
 		}
 
-		ckaGen++
 		gamma, i, err := d.cka.receive(user.Gamma, c.T)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to receive cka message")
@@ -322,7 +292,6 @@ func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 		}
 		user.Root = root
 
-		fsGen++
 		_, v, err := d.fsa.generate(k)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to create fresh fs-aead receiver state")
@@ -338,4 +307,15 @@ func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
 		return msg, nil
 	}
 	return nil, errors.New("user epochs are out-of-sync")
+}
+
+// Size returns the size (in bytes) of a user state.
+func (u User) Size() int {
+	size := 0
+	for _, a := range []map[int][]byte{u.V, u.ek, u.dk, u.vk, u.sk} {
+		for _, b := range a {
+			size += len(b)
+		}
+	}
+	return size + len(u.Gamma) + len(u.T) + len(u.Root)
 }
