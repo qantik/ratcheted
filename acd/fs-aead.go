@@ -101,7 +101,9 @@ func (f fsAEAD) receive(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 
 	// try-skipped
 	k = r.D[c.I]
-	r.D[c.I] = nil
+	if c.I < len(r.D) {
+		r.D[c.I] = nil
+	}
 
 	if k == nil || len(k) == 0 {
 		// skip
