@@ -8,9 +8,9 @@ import (
 	"crypto/elliptic"
 	"fmt"
 
+	"github.com/qantik/ratcheted/jmm"
 	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
-	"github.com/qantik/ratcheted/secmsg"
 )
 
 var (
@@ -18,7 +18,7 @@ var (
 	ecdsa = signature.NewECDSA(curve)
 	ecies = encryption.NewECIES(curve)
 
-	sec = secmsg.NewSecMsg(ecies, ecdsa)
+	sec = jmm.NewSecMsg(ecies, ecdsa)
 
 	msg = []byte{
 		0, 0, 0, 0, 0, 0, 0, 0,
