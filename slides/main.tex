@@ -999,20 +999,40 @@ components of the ElGamal cryptosystem.
   \end{figure}
 \end{frame}
 
-\section{Erratum}
-\label{sec:erratum}
-
-
+\begin{frame}{Erratum}
+  \begin{itemize}
+  \item JS Protocol. ku-PKE and ku-DS generations should be $n$ not $0$.
+  \item JMM Protocol. Missing Sig row in runtime tables.
+  \end{itemize}
+\end{frame}
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 \begin{frame}{Future Work}
-  
+  \begin{itemize}
+  \item Further performance gains with C/C++ implementations.
+  \item Observe protocols in a real-world context.
+    \begin{itemize}
+    \item Replace double ratchet in Signal protocol?
+    \end{itemize}
+  \item Update protocols to achieve better efficiency or security.
+  \item Design new protocols based on the ideas established by the existing ones.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Gained Knowledge}
-  
+  \begin{itemize}
+  \item Familiarization with ratcheted protocols as sub-field of cryptography.
+    \begin{itemize}
+    \item Security games and proofs.
+    \item Security/Performance trade-off.
+    \end{itemize}
+  \item Introduction to more obscure primitives like HIBE schemes.
+  \item Broadened programming and benchmarking skills.
+  \item Cognitive training in quickly digesting large and complicated
+    papers and convert them to reasonable code.
+  \end{itemize}
 \end{frame}
 
 \end{document}
