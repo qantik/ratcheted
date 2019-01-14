@@ -20,8 +20,8 @@ var (
 	ecdsa = signature.NewECDSA(curve)
 	gcm   = encryption.NewGCM()
 
-	dr   = NewDRatch(gcm, nil, nil)
-	drpk = NewDRatch(gcm, ecies, ecdsa)
+	dr   = NewDoubleRatchet(gcm, nil, nil)
+	drpk = NewDoubleRatchet(gcm, ecies, ecdsa)
 
 	msg = []byte{
 		0, 0, 0, 0, 0, 0, 0, 0,

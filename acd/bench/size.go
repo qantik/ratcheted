@@ -8,7 +8,7 @@ import (
 	"crypto/elliptic"
 	"fmt"
 
-	"github.com/qantik/ratcheted/dratch"
+	"github.com/qantik/ratcheted/acd"
 	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
@@ -19,8 +19,8 @@ var (
 	ecdsa = signature.NewECDSA(curve)
 	gcm   = encryption.NewGCM()
 
-	dr   = dratch.NewDRatch(gcm, nil, nil)
-	drpk = dratch.NewDRatch(gcm, ecies, ecdsa)
+	dr   = acd.NewDoubleRatchet(gcm, nil, nil)
+	drpk = acd.NewDoubleRatchet(gcm, ecies, ecdsa)
 
 	msg = []byte{
 		0, 0, 0, 0, 0, 0, 0, 0,
@@ -34,7 +34,7 @@ var (
 	}
 )
 
-func size_alternating(dr *dratch.DRatch, n int) {
+func size_alternating(dr *acd.DoubleRatchet, n int) {
 	alice, bob, _ := dr.Init()
 
 	maxMsg := 0
@@ -63,7 +63,7 @@ func size_alternating(dr *dratch.DRatch, n int) {
 	fmt.Printf("======= STATE SIZE\talternating(%d):\t%d\n", n, maxState)
 }
 
-func size_unidirectional(dr *dratch.DRatch, n int) {
+func size_unidirectional(dr *acd.DoubleRatchet, n int) {
 	alice, bob, _ := dr.Init()
 
 	maxMsg := 0
@@ -93,7 +93,7 @@ func size_unidirectional(dr *dratch.DRatch, n int) {
 	fmt.Printf("======= STATE SIZE\tunidirectional(%d):\t%d\n", n, maxState)
 }
 
-func size_def(dr *dratch.DRatch, n int) {
+func size_def(dr *acd.DoubleRatchet, n int) {
 	alice, bob, _ := dr.Init()
 
 	maxMsg := 0

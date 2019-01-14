@@ -23,9 +23,9 @@ import (
 
 const keySize = 16
 
-// DRatch designates the the secure channel protocol defined by a
+// DoubleRatchet designates the the secure channel protocol defined by a
 // FS-AEAD scheme, a CKA construction and a PRF-PRNG algorithm.
-type DRatch struct {
+type DoubleRatchet struct {
 	pp  *prfPRNG
 	fsa *fsAEAD
 	cka *cka
@@ -63,11 +63,11 @@ type User struct {
 	name string
 }
 
-// NewDRatch returns a fresh double ratchet instance for a given AEAD scheme.
-func NewDRatch(aead encryption.Authenticated,
+// NewDoubleRatchet returns a fresh double ratchet instance for a given AEAD scheme.
+func NewDoubleRatchet(aead encryption.Authenticated,
 	pke encryption.Asymmetric,
-	dss signature.Signature) *DRatch {
-	return &DRatch{
+	dss signature.Signature) *DoubleRatchet {
+	return &DoubleRatchet{
 		pp:  &prfPRNG{},
 		fsa: &fsAEAD{aead: aead, pp: &prfPRNG{}},
 		cka: &cka{curve: elliptic.P256()},
@@ -76,7 +76,7 @@ func NewDRatch(aead encryption.Authenticated,
 }
 
 // Init intializes the double ratchet protocol and returns two user states.
-func (d DRatch) Init() (alice, bob *User, err error) {
+func (d DoubleRatchet) Init() (alice, bob *User, err error) {
 	root, err := d.pp.generate()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to initialize prf-prng")
@@ -124,7 +124,7 @@ func (d DRatch) Init() (alice, bob *User, err error) {
 }
 
 // genOpt generates the sets of optional PKE and DSS key pairs.
-func (d DRatch) genOpt() (eka, dka, vka, ska, ekb, dkb, vkb, skb map[int][]byte, err error) {
+func (d DoubleRatchet) genOpt() (eka, dka, vka, ska, ekb, dkb, vkb, skb map[int][]byte, err error) {
 	eka, ekb = make(map[int][]byte), make(map[int][]byte)
 	dka, dkb = make(map[int][]byte), make(map[int][]byte)
 	vka, vkb = make(map[int][]byte), make(map[int][]byte)
@@ -154,7 +154,7 @@ func (d DRatch) genOpt() (eka, dka, vka, ska, ekb, dkb, vkb, skb map[int][]byte,
 }
 
 // Send calls the double ratchet send routine for a given user and message.
-func (d DRatch) Send(user *User, msg []byte) ([]byte, error) {
+func (d DoubleRatchet) Send(user *User, msg []byte) ([]byte, error) {
 	if (user.name == "alice" && user.I%2 == 0) || (user.name == "bob" && user.I%2 == 1) {
 		user.V[user.I-1] = nil
 
@@ -238,7 +238,7 @@ func (d DRatch) Send(user *User, msg []byte) ([]byte, error) {
 }
 
 // Receive calls the double ratchet receive routine for a given user and ciphertext.
-func (d DRatch) Receive(user *User, ct []byte) ([]byte, error) {
+func (d DoubleRatchet) Receive(user *User, ct []byte) ([]byte, error) {
 	var c dratchCiphertext
 	if err := primitives.Decode(ct, &c); err != nil {
 		return nil, errors.Wrap(err, "unable to decode dratch ciphertext")

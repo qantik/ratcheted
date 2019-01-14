@@ -6,10 +6,10 @@ package main
 import (
 	"testing"
 
-	"github.com/qantik/ratcheted/dratch"
+	"github.com/qantik/ratcheted/acd"
 )
 
-func alt(dr *dratch.DRatch, n int, b *testing.B) {
+func alt(dr *acd.DoubleRatchet, n int) {
 	alice, bob, _ := dr.Init()
 
 	for i := 0; i < n/2; i++ {
@@ -23,7 +23,7 @@ func alt(dr *dratch.DRatch, n int, b *testing.B) {
 	}
 }
 
-func uni(dr *dratch.DRatch, n int, b *testing.B) {
+func uni(dr *acd.DoubleRatchet, n int) {
 	alice, bob, _ := dr.Init()
 
 	for i := 0; i < n/2; i++ {
@@ -39,7 +39,7 @@ func uni(dr *dratch.DRatch, n int, b *testing.B) {
 	}
 }
 
-func deferredUni(dr *dratch.DRatch, n int, b *testing.B) {
+func deferredUni(dr *acd.DoubleRatchet, n int) {
 	alice, bob, _ := dr.Init()
 
 	var cts [1000][]byte
@@ -60,21 +60,21 @@ func deferredUni(dr *dratch.DRatch, n int, b *testing.B) {
 	}
 }
 
-func benchmarkAlt(dr *dratch.DRatch, i int, b *testing.B) {
+func benchmarkAlt(dr *acd.DoubleRatchet, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		alt(dr, i, b)
+		alt(dr, i)
 	}
 }
 
-func benchmarkUni(dr *dratch.DRatch, i int, b *testing.B) {
+func benchmarkUni(dr *acd.DoubleRatchet, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		uni(dr, i, b)
+		uni(dr, i)
 	}
 }
 
-func benchmarkDeferredUni(dr *dratch.DRatch, i int, b *testing.B) {
+func benchmarkDeferredUni(dr *acd.DoubleRatchet, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		deferredUni(dr, i, b)
+		deferredUni(dr, i)
 	}
 }
 
