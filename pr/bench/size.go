@@ -8,7 +8,7 @@ import (
 	"crypto/elliptic"
 	"fmt"
 
-	"github.com/qantik/ratcheted/brke"
+	"github.com/qantik/ratcheted/pr"
 	"github.com/qantik/ratcheted/primitives/hibe"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
@@ -18,7 +18,7 @@ var (
 	ecdsa  = signature.NewECDSA(curve)
 	gentry = hibe.NewGentry()
 
-	prt = brke.NewBRKE(gentry, ecdsa)
+	brke = pr.NewBRKE(gentry, ecdsa)
 
 	ad = []byte{
 		0, 0, 0, 0, 0, 0, 0, 0,
@@ -33,22 +33,22 @@ var (
 )
 
 func size_alternating(n int) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := brke.Init()
 
 	maxMsg := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
-		ka, c, _ := prt.Send(alice, ad)
-		kb, _ := prt.Receive(bob, ad, c)
+		ka, c, _ := brke.Send(alice, ad)
+		kb, _ := brke.Receive(bob, ad, c)
 		_, _ = ka, kb
 
 		maxMsg = max(maxMsg, size(c))
 		maxState = max(maxState, alice.Size())
 		maxState = max(maxState, bob.Size())
 
-		kb, c, _ = prt.Send(bob, ad)
-		ka, _ = prt.Receive(alice, ad, c)
+		kb, c, _ = brke.Send(bob, ad)
+		ka, _ = brke.Receive(alice, ad, c)
 		_, _ = ka, kb
 
 		maxMsg = max(maxMsg, size(c))
@@ -61,14 +61,14 @@ func size_alternating(n int) {
 }
 
 func size_unidirectional(n int) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := brke.Init()
 
 	maxMsg := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
-		ka, c, _ := prt.Send(alice, ad)
-		kb, _ := prt.Receive(bob, ad, c)
+		ka, c, _ := brke.Send(alice, ad)
+		kb, _ := brke.Receive(bob, ad, c)
 		_, _ = ka, kb
 
 		maxMsg = max(maxMsg, size(c))
@@ -77,8 +77,8 @@ func size_unidirectional(n int) {
 	}
 
 	for i := 0; i < n/2; i++ {
-		kb, c, _ := prt.Send(bob, ad)
-		ka, _ := prt.Receive(alice, ad, c)
+		kb, c, _ := brke.Send(bob, ad)
+		ka, _ := brke.Receive(alice, ad, c)
 		_, _ = ka, kb
 
 		maxMsg = max(maxMsg, size(c))
@@ -91,7 +91,7 @@ func size_unidirectional(n int) {
 }
 
 func size_def(n int) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := brke.Init()
 
 	maxMsg := 0
 	maxState := 0
@@ -99,7 +99,7 @@ func size_def(n int) {
 	var ks [1000][]byte
 	var cs [1000][][]byte
 	for i := 0; i < n/2; i++ {
-		k, c, _ := prt.Send(alice, ad)
+		k, c, _ := brke.Send(alice, ad)
 		ks[i] = k
 		cs[i] = c
 
@@ -108,8 +108,8 @@ func size_def(n int) {
 	}
 
 	for i := 0; i < n/2; i++ {
-		kb, c, _ := prt.Send(bob, ad)
-		ka, _ := prt.Receive(alice, ad, c)
+		kb, c, _ := brke.Send(bob, ad)
+		ka, _ := brke.Receive(alice, ad, c)
 		_, _ = ka, kb
 
 		maxMsg = max(maxMsg, size(c))
@@ -118,7 +118,7 @@ func size_def(n int) {
 	}
 
 	for i := 0; i < n/2; i++ {
-		k, _ := prt.Receive(bob, ad, cs[i])
+		k, _ := brke.Receive(bob, ad, cs[i])
 		_ = k
 
 		maxState = max(maxState, bob.Size())

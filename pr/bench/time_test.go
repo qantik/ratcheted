@@ -8,54 +8,54 @@ import (
 )
 
 func alt(n int, b *testing.B) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := brke.Init()
 
 	for i := 0; i < n/2; i++ {
-		ka, c, _ := prt.Send(alice, ad)
-		kb, _ := prt.Receive(bob, ad, c)
+		ka, c, _ := brke.Send(alice, ad)
+		kb, _ := brke.Receive(bob, ad, c)
 		_, _ = ka, kb
 
-		kb, c, _ = prt.Send(bob, ad)
-		ka, _ = prt.Receive(alice, ad, c)
+		kb, c, _ = brke.Send(bob, ad)
+		ka, _ = brke.Receive(alice, ad, c)
 		_, _ = ka, kb
 	}
 }
 
 func uni(n int, b *testing.B) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := brke.Init()
 
 	for i := 0; i < n/2; i++ {
-		ka, c, _ := prt.Send(alice, ad)
-		kb, _ := prt.Receive(bob, ad, c)
+		ka, c, _ := brke.Send(alice, ad)
+		kb, _ := brke.Receive(bob, ad, c)
 		_, _ = ka, kb
 	}
 
 	for i := 0; i < n/2; i++ {
-		kb, c, _ := prt.Send(bob, ad)
-		ka, _ := prt.Receive(alice, ad, c)
+		kb, c, _ := brke.Send(bob, ad)
+		ka, _ := brke.Receive(alice, ad, c)
 		_, _ = ka, kb
 	}
 }
 
 func deferredUni(n int, b *testing.B) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := brke.Init()
 
 	var ks [1000][]byte
 	var cs [1000][][]byte
 	for i := 0; i < n/2; i++ {
-		k, c, _ := prt.Send(alice, ad)
+		k, c, _ := brke.Send(alice, ad)
 		ks[i] = k
 		cs[i] = c
 	}
 
 	for i := 0; i < n/2; i++ {
-		kb, c, _ := prt.Send(bob, ad)
-		ka, _ := prt.Receive(alice, ad, c)
+		kb, c, _ := brke.Send(bob, ad)
+		ka, _ := brke.Receive(alice, ad, c)
 		_, _ = ka, kb
 	}
 
 	for i := 0; i < n/2; i++ {
-		k, _ := prt.Receive(bob, ad, cs[i])
+		k, _ := brke.Receive(bob, ad, cs[i])
 		_ = k
 	}
 }
