@@ -8,7 +8,7 @@ import (
 	"crypto/elliptic"
 	"fmt"
 
-	"github.com/qantik/ratcheted/bark"
+	"github.com/qantik/ratcheted/dv"
 	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
@@ -19,11 +19,11 @@ var (
 	ecdsa = signature.NewECDSA(curve)
 	gcm   = encryption.NewGCM()
 
-	prt  = bark.NewBARK(bark.NewUniARCAD(ecies, ecdsa))
-	lite = bark.NewBARK(bark.NewLiteUniARCAD(gcm))
+	bark = dv.NewBARK(dv.NewUniARCAD(ecies, ecdsa))
+	lite = dv.NewBARK(dv.NewLiteUniARCAD(gcm))
 )
 
-func size_alternating(bark *bark.BARK, n int) {
+func size_alternating(bark *dv.BARK, n int) {
 	alice, bob, _ := bark.Init()
 
 	maxMsg := 0
@@ -51,7 +51,7 @@ func size_alternating(bark *bark.BARK, n int) {
 	fmt.Printf("======= STATE SIZE\talternating(%d):\t%d\n", n, maxState)
 }
 
-func size_unidirectional(bark *bark.BARK, n int) {
+func size_unidirectional(bark *dv.BARK, n int) {
 	alice, bob, _ := bark.Init()
 
 	maxMsg := 0
@@ -81,7 +81,7 @@ func size_unidirectional(bark *bark.BARK, n int) {
 	fmt.Printf("======= STATE SIZE\tunidirectional(%d):\t%d\n", n, maxState)
 }
 
-func size_def(bark *bark.BARK, n int) {
+func size_def(bark *dv.BARK, n int) {
 	alice, bob, _ := bark.Init()
 
 	maxMsg := 0
@@ -120,13 +120,13 @@ func size_def(bark *bark.BARK, n int) {
 
 func main() {
 	for _, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		size_alternating(prt, n)
+		size_alternating(bark, n)
 	}
 	for _, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		size_unidirectional(prt, n)
+		size_unidirectional(bark, n)
 	}
 	for _, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		size_def(prt, n)
+		size_def(bark, n)
 	}
 }
 
