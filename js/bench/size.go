@@ -7,16 +7,16 @@ package main
 import (
 	"fmt"
 
+	"github.com/qantik/ratcheted/js"
 	"github.com/qantik/ratcheted/primitives/hibe"
 	"github.com/qantik/ratcheted/primitives/signature"
-	"github.com/qantik/ratcheted/sch"
 )
 
 var (
 	fsg    = signature.NewBellare()
 	gentry = hibe.NewGentry()
 
-	prt = sch.NewSCh(fsg, gentry)
+	sch = js.NewSCh(fsg, gentry)
 
 	msg = []byte{
 		0, 0, 0, 0, 0, 0, 0, 0,
@@ -31,22 +31,22 @@ var (
 )
 
 func size_alternating(n int) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := sch.Init()
 
 	maxMsg := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(alice, msg, msg)
-		pt, _ := prt.Receive(bob, msg, ct)
+		ct, _ := sch.Send(alice, msg, msg)
+		pt, _ := sch.Receive(bob, msg, ct)
 		_ = pt
 
 		maxMsg = max(maxMsg, len(ct))
 		maxState = max(maxState, alice.Size())
 		maxState = max(maxState, bob.Size())
 
-		ct, _ = prt.Send(bob, msg, msg)
-		pt, _ = prt.Receive(alice, msg, ct)
+		ct, _ = sch.Send(bob, msg, msg)
+		pt, _ = sch.Receive(alice, msg, ct)
 		_ = pt
 
 		maxMsg = max(maxMsg, len(ct))
@@ -59,14 +59,14 @@ func size_alternating(n int) {
 }
 
 func size_unidirectional(n int) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := sch.Init()
 
 	maxMsg := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(alice, msg, msg)
-		pt, _ := prt.Receive(bob, msg, ct)
+		ct, _ := sch.Send(alice, msg, msg)
+		pt, _ := sch.Receive(bob, msg, ct)
 		_ = pt
 
 		maxMsg = max(maxMsg, len(ct))
@@ -75,8 +75,8 @@ func size_unidirectional(n int) {
 	}
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(bob, msg, msg)
-		pt, _ := prt.Receive(alice, msg, ct)
+		ct, _ := sch.Send(bob, msg, msg)
+		pt, _ := sch.Receive(alice, msg, ct)
 		_ = pt
 
 		maxMsg = max(maxMsg, len(ct))
@@ -89,14 +89,14 @@ func size_unidirectional(n int) {
 }
 
 func size_def(n int) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := sch.Init()
 
 	maxMsg := 0
 	maxState := 0
 
 	var cts [1000][]byte
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(alice, msg, msg)
+		ct, _ := sch.Send(alice, msg, msg)
 		cts[i] = ct
 
 		maxMsg = max(maxMsg, len(ct))
@@ -104,8 +104,8 @@ func size_def(n int) {
 	}
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(bob, msg, msg)
-		pt, _ := prt.Receive(alice, msg, ct)
+		ct, _ := sch.Send(bob, msg, msg)
+		pt, _ := sch.Receive(alice, msg, ct)
 		_ = pt
 
 		maxMsg = max(maxMsg, len(ct))
@@ -114,7 +114,7 @@ func size_def(n int) {
 	}
 
 	for i := 0; i < n/2; i++ {
-		pt, _ := prt.Receive(bob, msg, cts[i])
+		pt, _ := sch.Receive(bob, msg, cts[i])
 		_ = pt
 
 		maxState = max(maxState, bob.Size())

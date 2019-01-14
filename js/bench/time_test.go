@@ -8,52 +8,52 @@ import (
 )
 
 func alt(n int, b *testing.B) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := sch.Init()
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(alice, msg, msg)
-		pt, _ := prt.Receive(bob, msg, ct)
+		ct, _ := sch.Send(alice, msg, msg)
+		pt, _ := sch.Receive(bob, msg, ct)
 		_ = pt
 
-		ct, _ = prt.Send(bob, msg, msg)
-		pt, _ = prt.Receive(alice, msg, ct)
+		ct, _ = sch.Send(bob, msg, msg)
+		pt, _ = sch.Receive(alice, msg, ct)
 		_ = pt
 	}
 }
 
 func deferredUni(n int, b *testing.B) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := sch.Init()
 
 	var cts [1000][]byte
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(alice, msg, msg)
+		ct, _ := sch.Send(alice, msg, msg)
 		cts[i] = ct
 	}
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(bob, msg, msg)
-		pt, _ := prt.Receive(alice, msg, ct)
+		ct, _ := sch.Send(bob, msg, msg)
+		pt, _ := sch.Receive(alice, msg, ct)
 		_ = pt
 	}
 
 	for i := 0; i < n/2; i++ {
-		pt, _ := prt.Receive(bob, msg, cts[i])
+		pt, _ := sch.Receive(bob, msg, cts[i])
 		_ = pt
 	}
 }
 
 func uni(n int, b *testing.B) {
-	alice, bob, _ := prt.Init()
+	alice, bob, _ := sch.Init()
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(alice, msg, msg)
-		pt, _ := prt.Receive(bob, msg, ct)
+		ct, _ := sch.Send(alice, msg, msg)
+		pt, _ := sch.Receive(bob, msg, ct)
 		_ = pt
 	}
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := prt.Send(bob, msg, msg)
-		pt, _ := prt.Receive(alice, msg, ct)
+		ct, _ := sch.Send(bob, msg, msg)
+		pt, _ := sch.Receive(alice, msg, ct)
 		_ = pt
 	}
 }
