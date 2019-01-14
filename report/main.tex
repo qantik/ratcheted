@@ -1231,8 +1231,8 @@ to 900 messages anything beyond can then be safely extrapolated.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
-    \textbf{ku-PKE} & $0$ & $n/n$ & $0/n$ \\ \hline
-    \textbf{ku-Sig} & $0$ & $n/n$ & $n-1/n$ \\  
+    \textbf{ku-PKE} & $n$ & $n/n$ & $0/n$ \\ \hline
+    \textbf{ku-Sig} & $n$ & $n/n$ & $n-1/n$ \\  
     \hline
     \end{tabular}
   \end{center}
@@ -1265,6 +1265,7 @@ to 900 messages anything beyond can then be safely extrapolated.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{Sig} & $2n$ & $n/n$ & - \\ \hline
     \textbf{ku-Sig} & $0$ & $n/n$ & - \\ \hline
     \textbf{sku-PKE} & $2n$ & $n/n$ & $n/n$ \\ \hline
     \textbf{PKE-AD} & $3n$ & $n/n$ & - \\
@@ -1344,8 +1345,8 @@ expected.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
-    \textbf{ku-PKE} & $0$ & $n/n$ & $\frac{(n-1)n}{2}/n$ \\ \hline
-    \textbf{ku-Sig} & $0$ & $n/n$ & $\frac{n}{2}/n$ \\  
+    \textbf{ku-PKE} & $n$ & $n/n$ & $(\frac{n}{2}-1)\frac{n}{2}/n$ \\ \hline
+    \textbf{ku-Sig} & $n$ & $n/n$ & $\frac{n}{2}/n$ \\  
     \hline
     \end{tabular}
   \end{center}
@@ -1373,6 +1374,7 @@ expected.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{Sig} & $2n$ & $n/n$ & - \\ \hline
     \textbf{ku-Sig} & $0$ & $n/n$ & - \\ \hline
     \textbf{sku-PKE} & $2n$ & $n/n$ & $n/n$ \\ \hline
     \textbf{PKE-AD} & $3n$ & $n/n$ & - \\
@@ -1441,8 +1443,8 @@ the same metrics as in alternating traffic.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
-    \textbf{ku-PKE} & $0$ & $n/n$ & $\frac{(n-1)n}{2}/n(\frac{n}{2}+1)$ \\ \hline
-    \textbf{ku-Sig} & $0$ & $n/n$ & $0/n$ \\  
+    \textbf{ku-PKE} & $n$ & $n/n$ & $(\frac{n}{2}-1)\frac{n}{2}/n(\frac{n}{2}+1)$ \\ \hline
+    \textbf{ku-Sig} & $n$ & $n/n$ & $0/n$ \\  
     \hline
     \end{tabular}
   \end{center}
@@ -1470,6 +1472,7 @@ the same metrics as in alternating traffic.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
+    \textbf{Sig} & $2n$ & $n/n$ & - \\ \hline
     \textbf{ku-Sig} & $0$ & $n/n$ & - \\ \hline
     \textbf{sku-PKE} & $2n$ & $n/n$ & $n+2n^2/n+2n^2$ \\ \hline
     \textbf{PKE-AD} & $3n$ & $n/n$ & - \\

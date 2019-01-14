@@ -38,10 +38,11 @@
 \renewcommand{\t}{\text}
 
 \title{Messaging Application with Ratcheting Security}
+\subtitle{\scriptsize Optional Semester Project in Computer Science CS-596}
 
 \date{January 15, 2019}
 \author{Andrea Caforio}
-\institute{Ecole Polytechnique Fédérale de Lausanne}
+\institute{École Polytechnique Fédérale de Lausanne}
 
 \begin{document}
 \maketitle
@@ -59,6 +60,7 @@
   \item Key-Agreement or Messaging.
   \item Asynchronous.
   \item Continuous updates of user states (ratchet).
+  \item Long-lived states.
   \end{itemize}
 \end{frame}
 
@@ -137,7 +139,7 @@
   \begin{enumerate}
   \item[5.] \textbf{05/2018.} Poettering \& Rösler. Optimally secure bidirectional
     key-agreement protocol (BRKE).
-  \item[6.] \textbf{06/2018.} Jager \& Stepanovs. Optimally secure messaging protocol.
+  \item[6.] \textbf{06/2018.} Jaeger \& Stepanovs. Optimally secure messaging protocol.
   \item[7.] \textbf{09/2018.} Durak \& Vaudenay. Sub-optimally secure, efficient key-agreement
     protocol (BARK).
   \item[8.] \textbf{10/2018.} Jost, Maurer \& Mularczyk. Almost-optimally secure messaging
@@ -155,7 +157,7 @@
     \item Post-impersonation confidentiality.
     \end{itemize}
   \item Leverages hierarchical identity-based encryption scheme,
-    causing efficiency degradation.
+    which are usually pairing or lattice-based causing efficiency degradation.
   \end{itemize}
 \end{frame}
 
@@ -205,10 +207,12 @@
         }
       }
     \end{figure}
-       \begin{itemize}
+    \begin{itemize}
+       \item 2 ku-KEM generations, 1 for the next message and 1 for the reply.
+       \item Key accumulation in unidirectional traffic, accumulated keys
+         then are used for multiple encapsulations when the direction of traffic
+         changes.
        \item Transcript is accumulated.
-       \item Key-updates only for deferred messages.
-       \item All keys are used in the encapsulation when the direction changes.
        \end{itemize}
 \end{frame}
 
@@ -225,7 +229,6 @@
    \end{figure}
        \begin{itemize}
        \item Key-updates for deferred messages.
-       \item Communication transcript is accumulated.
        \item The more encapsulations the bigger the ciphertext.
        \end{itemize}
 \end{frame}
@@ -279,7 +282,7 @@
       \begin{itemize}
       \item $s, r$: Sent and receive counters.
       \item $r^\t{ack}$: Number of acknowledged messages.
-      \item $T_S,T_R$: Message transcript arrays.
+      \item $T_S,T_R$: Message transcript accumulators.
       \end{itemize}
     \end{minipage}
 \end{frame}
@@ -301,7 +304,6 @@
       \begin{itemize}
       \item 1 ku-PKE generation for the reply, 1 ku.DS generation for the next message.
       \item Unidirectional traffic has quadratic ku-PKE key-update penalty.
-      \item Entire receive transcript is part of message.
       \end{itemize}
     \end{minipage}
 \end{frame}
@@ -391,7 +393,7 @@
   \begin{figure}[ht]
      \centering
      \setlength{\fboxsep}{10pt}
-     \scalebox{0.5}{%
+     \scalebox{0.6}{%
        \fbox{%
          \input{figures/bark-send.tex}
        }
@@ -410,7 +412,7 @@
   \begin{figure}[ht]
      \centering
      \setlength{\fboxsep}{10pt}
-     \scalebox{0.5}{%
+     \scalebox{0.6}{%
        \fbox{%
          \input{figures/bark-receive.tex}
        }
@@ -836,7 +838,7 @@ components of the ElGamal cryptosystem.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
-    \textbf{ku-PKE} & $n$ & $n/n$ & $\frac{(n-1)n}{2}/n$ \\ \hline
+    \textbf{ku-PKE} & $n$ & $n/n$ & $(\frac{n}{2}-1)\frac{n}{2}/n$ \\ \hline
     \textbf{ku-Sig} & $n$ & $n/n$ & $\frac{n}{2}/n$ \\  
     \hline
     \end{tabular}
@@ -912,7 +914,7 @@ components of the ElGamal cryptosystem.
     \begin{tabular}{ | l | l | l | l |}
     \hline
     Primitive & Generations & (Encs/Decs) $\vee$ (Sigs/Vers) & Updates PK/SK \\ \hline
-    \textbf{ku-PKE} & $n$ & $n/n$ & $\frac{(n-1)n}{2}/n(\frac{n}{2}+1)$ \\ \hline
+    \textbf{ku-PKE} & $n$ & $n/n$ & $(\frac{n}{2}-1)\frac{n}{2}/n(\frac{n}{2}+1)$ \\ \hline
     \textbf{ku-Sig} & $n$ & $n/n$ & $0/n$ \\  
     \hline
     \end{tabular}
@@ -1001,7 +1003,9 @@ components of the ElGamal cryptosystem.
 
 \begin{frame}{Erratum}
   \begin{itemize}
-  \item JS Protocol. ku-PKE and ku-DS generations should be $n$ not $0$.
+  \item JS Protocol. ku-PKE and ku-DS generations should be $n$ not $0$. Also
+    ku-PKE encryption key updates should be $(\frac{n}{2}-1)\frac{n}{2}$ for
+    both unidirectional and deferred unidirectional traffic.
   \item JMM Protocol. Missing Sig row in runtime tables.
   \end{itemize}
 \end{frame}
