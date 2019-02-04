@@ -1,10 +1,3 @@
-// (c) 2018 EPFL
-// This code is licensed under MIT license (see LICENSE.txt for details)
-
-// Package dv implements the Bidirectional Asynchronous Ratcheted Key Agreement (BARK)
-// protocol specified by Betül Durak and Serge Vaudenay in their paper
-// Bidirectional Asynchronous Ratcheted Key Agreement without Key-Update Primitives
-// (https://eprint.iacr.org/2018/889).
 package dv
 
 import (
@@ -19,51 +12,26 @@ import (
 	"github.com/qantik/ratcheted/primitives"
 )
 
-const (
-	hashKeySize    = 16
-	sessionKeySize = 16
-)
-
 // uni is a helper interface under which uniARCAD and lite-uniARCAD are unified.
-type uni interface {
+type lite interface {
 	Init() ([]byte, []byte, error)
-	Send(states [][]byte, hk, ad, pt []byte) ([]byte, []byte, error)
-	Receive(states [][]byte, hk, ad, ct []byte) ([]byte, []byte, error)
+	Send(state, ad, pt []byte, simple bool) ([]byte, []byte, error)
+	Receive(state, ad, ct []byte) ([]byte, []byte, error)
 }
 
 // BARK implements the Bidirectional Asynchronous Key-Agreement protocol.
-type BARK struct {
-	uni uni
-}
-
-// barkBlock bundles BARK plaintext material.
-type barkBlock struct {
-	State, Key []byte
-}
-
-// barkCiphertext bundles the BARK ciphertext material.
-type barkCiphertext struct {
-	I     []byte
-	Hs    []byte
-	Onion []byte
-}
-
-// User designates a BARK user state.
-type User struct {
-	Hk               []byte   // hashing key
-	Sender, Receiver [][]byte // states
-	Hsent            []byte   // iterated hash of sent messages
-	Hreceived        []byte   // iterated hash received messages
+type liteBARK struct {
+	uni lite
 }
 
 // NewBARK returns a fresh BARK instance composed of either the uniARCAD or
 // lite-uniARCAD sub-protocols.
-func NewBARK(uni uni) *BARK {
-	return &BARK{uni: uni}
+func NewLiteBARK(uni lite) *liteBARK {
+	return &liteBARK{uni: uni}
 }
 
 // Init initialized the BARK protocols and returns two user states.
-func (b BARK) Init() (alice, bob *User, err error) {
+func (b liteBARK) Init() (alice, bob *User, err error) {
 	sa, ra, err := b.uni.Init()
 	if err != nil {
 		return nil, nil, err
@@ -94,7 +62,7 @@ func (b BARK) Init() (alice, bob *User, err error) {
 
 // Send invokes the BARK send routine. It returns a session key
 // and ciphertext to be sent across the channel.
-func (b BARK) Send(user *User) (k, ct []byte, err error) {
+func (b liteBARK) Send(user *User) (k, ct []byte, err error) {
 	s, r, err := b.uni.Init()
 	if err != nil {
 		return nil, nil, err
@@ -119,14 +87,15 @@ func (b BARK) Send(user *User) (k, ct []byte, err error) {
 		}
 	}
 
-	s, o, err := b.uni.Send(user.Sender[i:len(user.Sender)], user.Hk, user.Hsent, onion)
-	if err != nil {
-		return nil, nil, err
-	}
-	user.Sender[len(user.Sender)-1] = s
-
 	u := len(user.Sender) - 1
 	for j := u; j >= i; j-- {
+		index := []byte(strconv.Itoa(u - j))
+		sj, o, err := b.uni.Send(user.Sender[j], append(index, user.Hsent...), onion, j == u)
+		if err != nil {
+			return nil, nil, err
+		}
+		user.Sender[j], onion = sj, o
+
 		if j < u {
 			user.Sender[j] = nil
 		}
@@ -134,7 +103,7 @@ func (b BARK) Send(user *User) (k, ct []byte, err error) {
 
 	ct, err = primitives.Encode(barkCiphertext{
 		I:  []byte(strconv.Itoa(u - i)),
-		Hs: user.Hsent, Onion: o,
+		Hs: user.Hsent, Onion: onion,
 	})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode bark ciphertext")
@@ -145,7 +114,7 @@ func (b BARK) Send(user *User) (k, ct []byte, err error) {
 
 // Receive invokes the BARK receive routine for a given ciphertext and
 // returns the established session key.
-func (b BARK) Receive(user *User, ct []byte) (k []byte, err error) {
+func (b liteBARK) Receive(user *User, ct []byte) (k []byte, err error) {
 	var c barkCiphertext
 	if err := primitives.Decode(ct, &c); err != nil {
 		return nil, errors.Wrap(err, "unable to decode bark ciphertext")
@@ -168,15 +137,20 @@ func (b BARK) Receive(user *User, ct []byte) (k []byte, err error) {
 	}
 
 	onion := c.Onion
-	//index := []byte(strconv.Itoa(i + n - j))
 
-	upds, o, err := b.uni.Receive(user.Receiver[i:i+n+1], user.Hk, user.Hreceived, onion)
-	if err != nil {
-		return nil, err
+	var upds []byte
+	for j := i; j <= i+n; j++ {
+		index := []byte(strconv.Itoa(i + n - j))
+		upd, o, err := b.uni.Receive(user.Receiver[j], append(index, user.Hreceived...), onion)
+		if err != nil {
+			return nil, err
+		}
+		onion = o
+		upds = upd
 	}
 
 	var block barkBlock
-	if err := primitives.Decode(o, &block); err != nil {
+	if err := primitives.Decode(onion, &block); err != nil {
 		return nil, err
 	}
 	k = block.Key
@@ -190,16 +164,4 @@ func (b BARK) Receive(user *User, ct []byte) (k []byte, err error) {
 	user.Hreceived = primitives.Digest(hmac.New(sha256.New, user.Hk), ct)
 
 	return
-}
-
-// Size returns the size (in bytes) of the user state.
-func (u User) Size() int {
-	size := 0
-	for _, b := range u.Sender {
-		size += len(b)
-	}
-	for _, b := range u.Receiver {
-		size += len(b)
-	}
-	return size + len(u.Hk) + len(u.Hsent) + len(u.Hreceived)
 }

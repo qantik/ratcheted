@@ -20,8 +20,8 @@ var (
 	ecdsa = signature.NewECDSA(curve)
 	gcm   = encryption.NewGCM()
 
-	bark     = NewBARK(&uniARCAD{&signcryption{ecies, ecdsa}})
-	liteBARK = NewBARK(NewLiteUniARCAD(gcm))
+	bark  = NewBARK(&uniARCAD{&signcryption{ecies, ecdsa}})
+	lBARK = NewLiteBARK(NewLiteUniARCAD(gcm))
 )
 
 func TestBARK_Alternating(t *testing.T) {
