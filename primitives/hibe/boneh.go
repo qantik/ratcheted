@@ -135,7 +135,7 @@ func (b Boneh) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err 
 
 	s := pairing.NewZr().Rand()
 	h := pairing.NewGT().MulZn(pairing.NewGT().Pair(p.G1, p.G2), s).Bytes()
-	c1 = xor(message, h)
+	c1 = primitives.Xor(message, h)
 
 	V := pairing.NewG1().MulZn(p.G, s)
 
@@ -166,7 +166,7 @@ func (b Boneh) Decrypt(entity, c1, c2 []byte) ([]byte, error) {
 
 	n := pairing.NewGT().Pair(e.A1, c.W)
 	d := pairing.NewGT().Pair(c.V, e.A0)
-	return xor(c1, pairing.NewGT().Sub(d, n).Bytes()), nil
+	return primitives.Xor(c1, pairing.NewGT().Sub(d, n).Bytes()), nil
 }
 
 // bonehParamsPacket is a helper structure that enables marshalling.

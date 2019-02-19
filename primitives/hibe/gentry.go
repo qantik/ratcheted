@@ -114,7 +114,7 @@ func (g Gentry) Encrypt(params, message []byte, id [][]byte) (c1, c2 []byte, err
 	// TODO: Hash pairing result (H_2 oracle in the paper).
 	paired := pairing.NewGT().Pair(p.Q0, P[0])
 	h := pairing.NewGT().MulZn(paired, r).Bytes()
-	c1 = xor(message, h)
+	c1 = primitives.Xor(message, h)
 
 	ct := gentryCiphertext{}
 	ct.U = make([]*pbc.Element, len(id)+1)
@@ -145,23 +145,7 @@ func (g Gentry) Decrypt(entity, c1, c2 []byte) ([]byte, error) {
 		k = pairing.NewGT().Sub(k, pairing.NewGT().Pair(e.Q[i-1], c.U[i]))
 	}
 
-	return xor(c1, k.Bytes()), nil
-}
-
-// xor computes the exclusive-or of two byte arrays.
-// TODO: Refactor and rewrite xor into a robuster version.
-func xor(a, b []byte) []byte {
-	if a == nil {
-		return b
-	} else if b == nil {
-		return a
-	}
-
-	c := make([]byte, len(a))
-	for i := range a {
-		c[i] = a[i] ^ b[i]
-	}
-	return c
+	return primitives.Xor(c1, k.Bytes()), nil
 }
 
 // gentryParamsPacket is a helper structure that enables marshalling.

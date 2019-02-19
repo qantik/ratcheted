@@ -48,3 +48,17 @@ func Concat(data ...[]byte) []byte {
 	}
 	return res
 }
+
+// Xor two byte slices.
+func Xor(a, b []byte) []byte {
+	n := len(a)
+	if len(b) < n {
+		n = len(b)
+	}
+
+	c := make([]byte, n)
+	for i := 0; i < n; i++ {
+		c[i] = a[i] ^ b[i]
+	}
+	return c
+}
