@@ -5,8 +5,6 @@ package encryption
 
 import (
 	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/elliptic"
 	"crypto/hmac"
 	"crypto/rand"
@@ -26,6 +24,7 @@ import (
 // HS256 and AES-GCM as the authentication and encryption primitives and HDKF for key derivation.
 type ECIES struct {
 	curve elliptic.Curve
+	aes   *AES
 }
 
 // eciesPublicKey wraps the x and y coordinate of a group point.
@@ -46,7 +45,7 @@ type eciesCiphertext struct {
 
 // NewECIES creates a fresh ECIES object instance.
 func NewECIES(curve elliptic.Curve) *ECIES {
-	return &ECIES{curve: curve}
+	return &ECIES{curve: curve, aes: NewAES()}
 }
 
 // Generate creates a ECIES public/private key pair.
@@ -97,36 +96,21 @@ func (e ECIES) Encrypt(pk, msg, ad []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	block, err := aes.NewCipher(ke)
+	c, err := e.aes.Encrypt(ke, msg)
 	if err != nil {
 		return nil, err
 	}
-
-	// The message has to be padded to be a multiple of the block size.
-	padded := pad(msg)
-
-	c := make([]byte, aes.BlockSize+len(padded))
-	iv := c[:aes.BlockSize]
-	if _, err := rand.Read(iv); err != nil {
-		return nil, err
-	}
-
-	cbc := cipher.NewCBCEncrypter(block, iv)
-	cbc.CryptBlocks(c[aes.BlockSize:], padded)
 
 	d := primitives.Digest(hmac.New(sha256.New, km), c)
 
 	var buffer bytes.Buffer
-	eenc := gob.NewEncoder(&buffer)
+	enc := gob.NewEncoder(&buffer)
 
 	ct := eciesCiphertext{Rx: Rx, Ry: Ry, C: c, D: d}
-	//enc, err := primitives.Encode(&ct)
-	err = eenc.Encode(&ct)
-	if err != nil {
+	if err = enc.Encode(&ct); err != nil {
 		return nil, err
 	}
-	enc := buffer.Bytes()
-	return enc, nil
+	return buffer.Bytes(), nil
 }
 
 // Decrypt deciphers a ciphertex with a given private key.
@@ -140,7 +124,6 @@ func (e ECIES) Decrypt(sk, ct, ad []byte) ([]byte, error) {
 	dec := gob.NewDecoder(buffer)
 
 	if err := dec.Decode(&ciphertext); err != nil {
-		//if err := primitives.Decode(ct, &ciphertext); err != nil {
 		return nil, err
 	}
 
@@ -164,17 +147,11 @@ func (e ECIES) Decrypt(sk, ct, ad []byte) ([]byte, error) {
 		return nil, errors.New("failed to verify mac")
 	}
 
-	block, err := aes.NewCipher(ke)
+	msg, err := e.aes.Decrypt(ke, ciphertext.C)
 	if err != nil {
 		return nil, err
 	}
-
-	iv := ciphertext.C[:aes.BlockSize]
-	ciphertext.C = ciphertext.C[aes.BlockSize:]
-
-	cbc := cipher.NewCBCDecrypter(block, iv)
-	cbc.CryptBlocks(ciphertext.C, ciphertext.C)
-	return unpad(ciphertext.C), nil
+	return msg, nil
 }
 
 // Encapsulate creates a fresh symmetric key and encapsulates it using ECIES.
@@ -242,18 +219,4 @@ func (e ECIES) randomFieldScalar(seed []byte) (*big.Int, error) {
 	k.Mod(k, n)
 	k.Add(k, one)
 	return k, nil
-}
-
-// pad a byte slice to a multiple of the AES block size.
-func pad(src []byte) []byte {
-	padding := aes.BlockSize - len(src)%aes.BlockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(src, padtext...)
-}
-
-// unpad a byte slice.
-func unpad(src []byte) []byte {
-	length := len(src)
-	unpadding := int(src[length-1])
-	return src[:(length - unpadding)]
 }

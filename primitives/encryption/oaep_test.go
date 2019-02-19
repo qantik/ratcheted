@@ -6,8 +6,6 @@ package encryption
 import (
 	"bytes"
 	"crypto/rand"
-	"fmt"
-	rr "math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,11 +21,6 @@ func TestOAEP(t *testing.T) {
 
 	seed := make([]byte, 16)
 	rand.Read(seed)
-
-	r := rr.New(rr.NewSource(0))
-	fmt.Println(r.Int())
-	r = rr.New(rr.NewSource(0))
-	fmt.Println(r.Int())
 
 	pk, sk, err := oaep.Generate(seed)
 	require.Nil(err)

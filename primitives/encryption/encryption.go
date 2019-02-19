@@ -4,6 +4,16 @@
 // Package encryption bundles various symmetric and asymmetric encryption schemes.
 package encryption
 
+// Symmetric defines a common interface for symmetric encryption schemes.
+type Symmetric interface {
+	// Generate returns a fresh symmetric key.
+	Generate(seed []byte) ([]byte, error)
+	// Encrypt enciphers a message with a given symmetric key.
+	Encrypt(key, msg []byte) ([]byte, error)
+	// Decrypt deciphers a ciphertext with a given symmetric key.
+	Decrypt(key, ct []byte) ([]byte, error)
+}
+
 // Asymmetric defines a common interface for asymmetric encryption schemes.
 type Asymmetric interface {
 	// Generate creates a public/private key pair.
