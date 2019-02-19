@@ -53,7 +53,9 @@ func NewARCAD(
 }
 
 // NewLiteARCAD return a fresh lite-ARCAD instance.
-// TODO
+func NewLiteARCAD(otae encryption.Authenticated, symmetric encryption.Symmetric) *ARCAD {
+	return &ARCAD{unid: &liteOnion{otae, symmetric}}
+}
 
 // Init initializes the ARCAD protocol and returns two user states.
 func (a ARCAD) Init() (alice, bob *ARCADUser, err error) {
