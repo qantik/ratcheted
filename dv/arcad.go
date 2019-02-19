@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
+	"github.com/qantik/ratcheted/primitives/encryption"
+	"github.com/qantik/ratcheted/primitives/signature"
 )
 
 type unid interface {
@@ -40,10 +42,18 @@ type arcadCiphertext struct {
 	N int
 }
 
-// NewARCAD returns a fresh ARCAD instance.
-func NewARCAD(unid unid) *ARCAD {
-	return &ARCAD{unid: unid}
+// NewARCAD returns a fresh ARCAD instance for a given signature scheme,
+// a public-key encryption scheme and a symmetric encryption scheme.
+func NewARCAD(
+	signature signature.Signature,
+	asymmetric encryption.Asymmetric,
+	symmetric encryption.Symmetric) *ARCAD {
+
+	return &ARCAD{unid: &onion{&signcryption{asymmetric, signature}, symmetric}}
 }
+
+// NewLiteARCAD return a fresh lite-ARCAD instance.
+// TODO
 
 // Init initializes the ARCAD protocol and returns two user states.
 func (a ARCAD) Init() (alice, bob *ARCADUser, err error) {

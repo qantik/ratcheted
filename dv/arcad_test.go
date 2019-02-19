@@ -18,7 +18,7 @@ var (
 	//ecdsa = signature.NewECDSA(curve)
 	aes = encryption.NewAES()
 
-	arcad = NewARCAD(&onion{&signcryption{ecies, ecdsa}, aes})
+	arcad = NewARCAD(ecdsa, ecies, aes)
 )
 
 func TestARCAD_Alternating(t *testing.T) {
