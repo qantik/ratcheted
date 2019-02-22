@@ -6,7 +6,7 @@ package js
 import (
 	"crypto/rand"
 
-	"github.com/qantik/ratcheted/primitives"
+	"github.com/alecthomas/binary"
 	"github.com/qantik/ratcheted/primitives/hibe"
 )
 
@@ -44,19 +44,19 @@ func (k kuPKE) generate() (pk, sk []byte, err error) {
 		return
 	}
 
-	pk, err = primitives.Encode(&kuPKEPublicKey{PK: params, I: [][]byte{[]byte{}}})
+	pk, err = binary.Marshal(&kuPKEPublicKey{PK: params, I: [][]byte{[]byte{}}})
 	return
 }
 
 // updatePublicKey creates a new public key.
 func (k kuPKE) updatePublicKey(pk, delta []byte) ([]byte, error) {
 	var public kuPKEPublicKey
-	if err := primitives.Decode(pk, &public); err != nil {
+	if err := binary.Unmarshal(pk, &public); err != nil {
 		return nil, err
 	}
 
 	public.I = append(public.I, delta)
-	return primitives.Encode(&public)
+	return binary.Marshal(&public)
 }
 
 // updatePrivateKey creates a new private key.
@@ -67,7 +67,7 @@ func (k kuPKE) updatePrivateKey(sk, delta []byte) ([]byte, error) {
 // encrypt enciphers a message with a given public key.
 func (k kuPKE) encrypt(pk, msg []byte) ([]byte, error) {
 	var public kuPKEPublicKey
-	if err := primitives.Decode(pk, &public); err != nil {
+	if err := binary.Unmarshal(pk, &public); err != nil {
 		return nil, err
 	}
 
@@ -75,13 +75,13 @@ func (k kuPKE) encrypt(pk, msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return primitives.Encode(&kuPKECiphertext{C1: c1, C2: c2})
+	return binary.Marshal(&kuPKECiphertext{C1: c1, C2: c2})
 }
 
 // decrypt deciphers a ciphertext with a given secret key.
 func (k kuPKE) decrypt(sk, ct []byte) ([]byte, error) {
 	var ciphertext kuPKECiphertext
-	if err := primitives.Decode(ct, &ciphertext); err != nil {
+	if err := binary.Unmarshal(ct, &ciphertext); err != nil {
 		return nil, err
 	}
 

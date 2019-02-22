@@ -6,8 +6,8 @@ package dv
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
 
+	"github.com/alecthomas/binary"
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
@@ -61,7 +61,7 @@ func (o liteOnion) send(s [][]byte, hk, ad, msg []byte) (upd, ct []byte, err err
 		ks[i] = tmp
 	}
 
-	pt, err := primitives.Encode(liteOnionMessage{S: sk, Msg: msg})
+	pt, err := binary.Marshal(liteOnionMessage{S: sk, Msg: msg})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode onion message")
 	}
@@ -74,14 +74,13 @@ func (o liteOnion) send(s [][]byte, hk, ad, msg []byte) (upd, ct []byte, err err
 
 	for i := n - 1; i >= 0; i-- {
 		ad = primitives.Digest(sha256.New(), hk, ad, c[i+1])
-		fmt.Println("s", s[i], ad, ks[i])
 		c[i], err = o.otae.Encrypt(s[i], ks[i], ad)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "unable to encrypt message")
 		}
 	}
 
-	ct, err = primitives.Encode(liteOnionCiphertext{CT: c})
+	ct, err = binary.Marshal(liteOnionCiphertext{CT: c})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode ciphertext")
 	}
@@ -91,7 +90,7 @@ func (o liteOnion) send(s [][]byte, hk, ad, msg []byte) (upd, ct []byte, err err
 // receive invokes the lite-onion receive routine.
 func (o liteOnion) receive(s [][]byte, hk, ad, ct []byte) (upd, msg []byte, err error) {
 	var c liteOnionCiphertext
-	if err := primitives.Decode(ct, &c); err != nil {
+	if err := binary.Unmarshal(ct, &c); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode lite-onion ciphertext")
 	}
 
@@ -102,7 +101,6 @@ func (o liteOnion) receive(s [][]byte, hk, ad, ct []byte) (upd, msg []byte, err 
 	for i := n - 1; i >= 0; i-- {
 		ad = primitives.Digest(sha256.New(), hk, ad, c.CT[i+1])
 
-		fmt.Println("r", s[i], ad, c.CT[i])
 		tmp, err := o.otae.Decrypt(s[i], c.CT[i], ad)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "unable to decrypt lite-onion ciphertext")
@@ -117,7 +115,7 @@ func (o liteOnion) receive(s [][]byte, hk, ad, ct []byte) (upd, msg []byte, err 
 	}
 
 	var m liteOnionMessage
-	if err = primitives.Decode(pt, &m); err != nil {
+	if err = binary.Unmarshal(pt, &m); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode lite-onion message")
 	}
 	return m.S, m.Msg, nil

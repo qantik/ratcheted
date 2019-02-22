@@ -6,9 +6,9 @@ package acd
 import (
 	"strconv"
 
+	"github.com/alecthomas/binary"
 	"github.com/pkg/errors"
 
-	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/encryption"
 )
 
@@ -42,11 +42,11 @@ type fsaCiphertext struct {
 
 // generate creates a fresh FS-AEAD sender and receiver states.
 func (f fsAEAD) generate(key []byte) (s, r []byte, err error) {
-	s, err = primitives.Encode(&fsaSender{W: key, I: 0})
+	s, err = binary.Marshal(&fsaSender{W: key, I: 0})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode fs-aead sender state")
 	}
-	r, err = primitives.Encode(&fsaReceiver{W: key, I: 0, D: map[int][]byte{0: nil}})
+	r, err = binary.Marshal(&fsaReceiver{W: key, I: 0, D: map[int][]byte{0: nil}})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode fs-aead receiver state")
 	}
@@ -57,7 +57,7 @@ func (f fsAEAD) generate(key []byte) (s, r []byte, err error) {
 // FS-AEAD sender state.
 func (f fsAEAD) send(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	var s fsaSender
-	if err := primitives.Decode(sender, &s); err != nil {
+	if err := binary.Unmarshal(sender, &s); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode fs-aead sender state")
 	}
 	s.I++
@@ -74,11 +74,11 @@ func (f fsAEAD) send(sender, msg, ad []byte) (upd, ct []byte, err error) {
 		return nil, nil, errors.Wrap(err, "unable to encrypt message")
 	}
 
-	ct, err = primitives.Encode(&fsaCiphertext{C: e, I: s.I})
+	ct, err = binary.Marshal(&fsaCiphertext{C: e, I: s.I})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode fs-aead ciphertext")
 	}
-	upd, err = primitives.Encode(&s)
+	upd, err = binary.Marshal(&s)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode fs-aead sender state")
 	}
@@ -89,11 +89,11 @@ func (f fsAEAD) send(sender, msg, ad []byte) (upd, ct []byte, err error) {
 // updates the FS-AEAD receiver state.
 func (f fsAEAD) receive(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 	var r fsaReceiver
-	if err := primitives.Decode(receiver, &r); err != nil {
+	if err := binary.Unmarshal(receiver, &r); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode fs-aead receiver state")
 	}
 	var c fsaCiphertext
-	if err := primitives.Decode(ct, &c); err != nil {
+	if err := binary.Unmarshal(ct, &c); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode fs-aead ciphertext")
 	}
 
@@ -129,7 +129,7 @@ func (f fsAEAD) receive(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decrypt ciphertext")
 	}
-	upd, err = primitives.Encode(&r)
+	upd, err = binary.Marshal(&r)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode fs-aead receiver state")
 	}

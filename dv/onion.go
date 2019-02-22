@@ -7,6 +7,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 
+	"github.com/alecthomas/binary"
+
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
@@ -52,11 +54,11 @@ func (o onion) init() (s, r []byte, err error) {
 		return nil, nil, errors.Wrap(err, "unable to generate signcryption cipher keys")
 	}
 
-	s, err = primitives.Encode(onionSender{SKS: sks, PKR: pkr})
+	s, err = binary.Marshal(onionSender{SKS: sks, PKR: pkr})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode onion sender")
 	}
-	r, err = primitives.Encode(onionReceiver{SKR: skr, PKS: pks})
+	r, err = binary.Marshal(onionReceiver{SKR: skr, PKS: pks})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode onion receiver")
 	}
@@ -84,7 +86,7 @@ func (o onion) send(s [][]byte, hk, ad, msg []byte) (upd, ct []byte, err error) 
 		ks[i] = tmp
 	}
 
-	pt, err := primitives.Encode(onionMessage{S: ur, Msg: msg})
+	pt, err := binary.Marshal(onionMessage{S: ur, Msg: msg})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode onion message")
 	}
@@ -99,7 +101,7 @@ func (o onion) send(s [][]byte, hk, ad, msg []byte) (upd, ct []byte, err error) 
 		ad = primitives.Digest(sha256.New(), hk, ad, c[i])
 
 		var st onionSender
-		if err = primitives.Decode(s[i], &st); err != nil {
+		if err = binary.Unmarshal(s[i], &st); err != nil {
 			return nil, nil, errors.Wrap(err, "unable to decode onion sender state")
 		}
 
@@ -109,7 +111,7 @@ func (o onion) send(s [][]byte, hk, ad, msg []byte) (upd, ct []byte, err error) 
 		}
 	}
 
-	ct, err = primitives.Encode(onionCiphertext{CT: c})
+	ct, err = binary.Marshal(onionCiphertext{CT: c})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode ciphertext")
 	}
@@ -119,7 +121,7 @@ func (o onion) send(s [][]byte, hk, ad, msg []byte) (upd, ct []byte, err error) 
 // receive invokes the onion receive routine.
 func (o onion) receive(s [][]byte, hk, ad, ct []byte) (upd, msg []byte, err error) {
 	var c onionCiphertext
-	if err := primitives.Decode(ct, &c); err != nil {
+	if err := binary.Unmarshal(ct, &c); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode onion ciphertext")
 	}
 
@@ -129,7 +131,7 @@ func (o onion) receive(s [][]byte, hk, ad, ct []byte) (upd, msg []byte, err erro
 
 	for i := n - 1; i >= 0; i-- {
 		var st onionReceiver
-		if err := primitives.Decode(s[i], &st); err != nil {
+		if err := binary.Unmarshal(s[i], &st); err != nil {
 			return nil, nil, errors.Wrap(err, "unable to decode onion receiver state")
 		}
 
@@ -149,7 +151,7 @@ func (o onion) receive(s [][]byte, hk, ad, ct []byte) (upd, msg []byte, err erro
 	}
 
 	var m onionMessage
-	if err = primitives.Decode(pt, &m); err != nil {
+	if err = binary.Unmarshal(pt, &m); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode onion message")
 	}
 	return m.S, m.Msg, nil

@@ -18,116 +18,124 @@ var (
 	ecies = encryption.NewECIES(curve)
 	ecdsa = signature.NewECDSA(curve)
 	gcm   = encryption.NewGCM()
+	aes   = encryption.NewAES()
 
-	bark = dv.NewBARK(dv.NewUniARCAD(ecies, ecdsa))
-	lite = dv.NewBARK(dv.NewLiteUniARCAD(gcm))
+	//bark      = dv.NewBARK(dv.NewUniARCAD(ecies, ecdsa))
+	arcad     = dv.NewARCAD(ecdsa, ecies, aes)
+	liteARCAD = dv.NewLiteARCAD(gcm, aes)
+	//lite      = dv.NewBARK(dv.NewLiteUniARCAD(gcm))
 )
 
-func size_alternating(bark *dv.BARK, n int) {
-	alice, bob, _ := bark.Init()
+var (
+	msg = []byte("msg")
+	ad  = []byte("ad")
+)
 
-	maxMsg := 0
+func size_alternating(arcad *dv.ARCAD, n int) (int, int) {
+	alice, bob, _ := arcad.Init()
+
+	msgSize := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
-		ka, ct, _ := bark.Send(alice)
-		kb, _ := bark.Receive(bob, ct)
-		_, _ = ka, kb
+		ct, _ := arcad.Send(alice, ad, msg)
+		pt, _ := arcad.Receive(bob, ad, ct)
+		_ = pt
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 
-		ka, ct, _ = bark.Send(bob)
-		kb, _ = bark.Receive(alice, ct)
-		_, _ = ka, kb
+		ct, _ = arcad.Send(bob, ad, msg)
+		pt, _ = arcad.Receive(alice, ad, ct)
+		_ = pt
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 	}
 
-	fmt.Printf("======= MSG SIZE\talternating(%d):\t%d\n", n, maxMsg)
-	fmt.Printf("======= STATE SIZE\talternating(%d):\t%d\n", n, maxState)
+	return msgSize, maxState
 }
 
-func size_unidirectional(bark *dv.BARK, n int) {
-	alice, bob, _ := bark.Init()
+func size_unidirectional(arcad *dv.ARCAD, n int) (int, int) {
+	alice, bob, _ := arcad.Init()
 
-	maxMsg := 0
+	msgSize := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
-		ka, ct, _ := bark.Send(alice)
-		kb, _ := bark.Receive(bob, ct)
-		_, _ = ka, kb
+		ct, _ := arcad.Send(alice, ad, msg)
+		pt, _ := arcad.Receive(bob, ad, ct)
+		_ = pt
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
-		ka, ct, _ := bark.Send(bob)
-		kb, _ := bark.Receive(alice, ct)
-		_, _ = ka, kb
+		ct, _ := arcad.Send(bob, ad, msg)
+		pt, _ := arcad.Receive(alice, ad, ct)
+		_ = pt
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 	}
 
-	fmt.Printf("======= MSG SIZE\tunidirectional(%d):\t%d\n", n, maxMsg)
-	fmt.Printf("======= STATE SIZE\tunidirectional(%d):\t%d\n", n, maxState)
+	return msgSize, maxState
 }
 
-func size_def(bark *dv.BARK, n int) {
-	alice, bob, _ := bark.Init()
+func size_def(arcad *dv.ARCAD, n int) (int, int) {
+	alice, bob, _ := arcad.Init()
 
-	maxMsg := 0
+	msgSize := 0
 	maxState := 0
 
-	var ks, cts [1000][]byte
+	var cts [1000][]byte
 	for i := 0; i < n/2; i++ {
-		ka, ct, _ := bark.Send(alice)
-		ks[i] = ka
+		ct, _ := arcad.Send(alice, ad, msg)
 		cts[i] = ct
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
-		ka, ct, _ := bark.Send(bob)
-		kb, _ := bark.Receive(alice, ct)
-		_, _ = ka, kb
+		ct, _ := arcad.Send(bob, ad, msg)
+		pt, _ := arcad.Receive(alice, ad, ct)
+		_ = pt
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
-		kb, _ := bark.Receive(bob, cts[i])
-		_ = kb
+		pt, _ := arcad.Receive(bob, ad, cts[i])
+		_ = pt
 
-		maxState = max(maxState, bob.Size())
+		//maxState = max(maxState, bob.Size())
 	}
 
-	fmt.Printf("======= MSG SIZE\tdef-unidirectional(%d):\t%d\n", n, maxMsg)
-	fmt.Printf("======= STATE SIZE\tdef-unidirectional(%d):\t%d\n", n, maxState)
+	return msgSize, maxState
 }
 
 func main() {
-	for _, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		size_alternating(bark, n)
+	msg := make([]int, 10)
+	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+		msg[i], _ = size_alternating(arcad, n)
 	}
-	for _, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		size_unidirectional(bark, n)
+	fmt.Println("Total Message Size (ALT):", msg)
+	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+		msg[i], _ = size_unidirectional(arcad, n)
 	}
-	for _, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		size_def(bark, n)
+	fmt.Println("Total Message Size (UNI):", msg)
+	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+		msg[i], _ = size_def(arcad, n)
 	}
+	fmt.Println("Total Message Size (DEF):", msg)
 }
 
 func max(a, b int) int {

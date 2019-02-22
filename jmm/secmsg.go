@@ -13,6 +13,7 @@ import (
 	"crypto/sha256"
 	"strconv"
 
+	"github.com/alecthomas/binary"
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
@@ -135,7 +136,7 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 	}
 
 	// encryption
-	m, err := primitives.Encode(&message{Msg: msg, SkEph: skEph1})
+	m, err := binary.Marshal(&message{Msg: msg, SkEph: skEph1})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encode message")
 	}
@@ -170,7 +171,7 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 	h := primitives.Digest(sha256.New(), user.trans[user.s-1], data)
 	user.trans = append(user.trans, h)
 
-	c, err = primitives.Encode(&ciphertext{
+	c, err = binary.Marshal(&ciphertext{
 		C: c, Upd: upd, VkEph: vkEph2, R: user.r,
 		SigUpd: sigUpd, SigEph: sigEph,
 	})
@@ -185,7 +186,7 @@ func (s SecMsg) Send(user *User, msg []byte) ([]byte, error) {
 // forward (ratchet) using the authenticated data sent along the ciphertext.
 func (s SecMsg) Receive(user *User, ct []byte) ([]byte, error) {
 	var c ciphertext
-	if err := primitives.Decode(ct, &c); err != nil {
+	if err := binary.Unmarshal(ct, &c); err != nil {
 		return nil, errors.Wrap(err, "unable to decode ciphertext")
 	}
 
@@ -223,7 +224,7 @@ func (s SecMsg) Receive(user *User, ct []byte) ([]byte, error) {
 		return nil, errors.Wrap(err, "unable to hku-PKE decrypt ciphertext")
 	}
 	var msg message
-	if err := primitives.Decode(m, &msg); err != nil {
+	if err := binary.Unmarshal(m, &msg); err != nil {
 		return nil, errors.Wrap(err, "unable to decode message")
 	}
 

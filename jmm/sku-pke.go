@@ -9,6 +9,7 @@ import (
 	"crypto/sha512"
 	"math/big"
 
+	"github.com/alecthomas/binary"
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
@@ -92,7 +93,7 @@ func (s skuPKE) encrypt(pk, msg []byte) ([]byte, error) {
 	for i := 0; i < len(msg); i++ {
 		c2[i] = msg[i] ^ h[i]
 	}
-	ct, err := primitives.Encode(&skuCiphertext{C1: gr, C2: c2})
+	ct, err := binary.Marshal(&skuCiphertext{C1: gr, C2: c2})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encode ciphertext")
 	}
@@ -102,7 +103,7 @@ func (s skuPKE) encrypt(pk, msg []byte) ([]byte, error) {
 // decrypt deciphers a ciphertext pair with a given sku-pke private key.
 func (s skuPKE) decrypt(sk, ct []byte) ([]byte, error) {
 	var ciphertext skuCiphertext
-	if err := primitives.Decode(ct, &ciphertext); err != nil {
+	if err := binary.Unmarshal(ct, &ciphertext); err != nil {
 		return nil, errors.Wrap(err, "unable to decode ciphertext")
 	}
 	c1x, c1y := elliptic.Unmarshal(s.curve, ciphertext.C1)

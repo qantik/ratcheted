@@ -14,6 +14,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 
+	"github.com/alecthomas/binary"
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
@@ -49,7 +50,7 @@ type message struct {
 	C   []byte // C is the ciphertext.
 	Sig []byte // Sig is the message signature.
 
-	Aux *aux   // Aux contains auxiliary data that signed but not encrypted.
+	Aux aux    // Aux contains auxiliary data that signed but not encrypted.
 	L   []byte // L is the marshalled auxiliary data.
 }
 
@@ -128,7 +129,7 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 		Ad: ad, Tau: user.tau, T: user.t[user.s-1],
 		S: user.s, R: user.r,
 	}
-	l, err := primitives.Encode(&aux)
+	l, err := binary.Marshal(aux)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to marshal auxiliary data")
 	}
@@ -151,7 +152,7 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to sign message")
 	}
-	msg, err := primitives.Encode(&message{C: c, Sig: sig, Aux: aux, L: l})
+	msg, err := binary.Marshal(&message{C: c, Sig: sig, Aux: *aux, L: l})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to decode message")
 	}
@@ -167,7 +168,7 @@ func (s SCh) Send(user *User, ad, pt []byte) ([]byte, error) {
 // step forward (ratchet). The function returns a decrypted plaintext.
 func (s SCh) Receive(user *User, ad, ct []byte) ([]byte, error) {
 	var msg message
-	if err := primitives.Decode(ct, &msg); err != nil {
+	if err := binary.Unmarshal(ct, &msg); err != nil {
 		return nil, errors.Wrap(err, "unable to decode message")
 	}
 

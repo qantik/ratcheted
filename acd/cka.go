@@ -7,8 +7,8 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 
+	"github.com/alecthomas/binary"
 	"github.com/pkg/errors"
-	"github.com/qantik/ratcheted/primitives"
 )
 
 // cka implements the continuous key agreement scheme proposed in the paper. The
@@ -38,11 +38,11 @@ func (c cka) generate() (sa, sb []byte, err error) {
 	pk := elliptic.Marshal(c.curve, x, y)
 	sk := private
 
-	sa, err = primitives.Encode(&ckaState{Key: pk, Role: true})
+	sa, err = binary.Marshal(&ckaState{Key: pk, Role: true})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode cka state")
 	}
-	sb, err = primitives.Encode(&ckaState{Key: sk, Role: false})
+	sb, err = binary.Marshal(&ckaState{Key: sk, Role: false})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode cka state")
 	}
@@ -53,7 +53,7 @@ func (c cka) generate() (sa, sb []byte, err error) {
 // it also updates the sender state.
 func (c cka) send(state []byte) (upd, msg, key []byte, err error) {
 	var s ckaState
-	if err := primitives.Decode(state, &s); err != nil {
+	if err := binary.Unmarshal(state, &s); err != nil {
 		return nil, nil, nil, errors.Wrap(err, "unable to decode cka state")
 	}
 	if s.Role == false {
@@ -74,7 +74,7 @@ func (c cka) send(state []byte) (upd, msg, key []byte, err error) {
 	tx, ty := c.curve.ScalarBaseMult(x)
 	msg = elliptic.Marshal(c.curve, tx, ty)
 
-	upd, err = primitives.Encode(&ckaState{Key: x, Role: false})
+	upd, err = binary.Marshal(&ckaState{Key: x, Role: false})
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "unable to encode cka state")
 	}
@@ -84,7 +84,7 @@ func (c cka) send(state []byte) (upd, msg, key []byte, err error) {
 // receive extracts the by the sender established CKA key and updates the receiver state.
 func (c cka) receive(state, msg []byte) (upd, key []byte, err error) {
 	var s ckaState
-	if err := primitives.Decode(state, &s); err != nil {
+	if err := binary.Unmarshal(state, &s); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode cka state")
 	}
 	if s.Role == true {
@@ -98,7 +98,7 @@ func (c cka) receive(state, msg []byte) (upd, key []byte, err error) {
 	ix, iy := c.curve.ScalarMult(hx, hy, s.Key)
 	key = elliptic.Marshal(c.curve, ix, iy)
 
-	upd, err = primitives.Encode(&ckaState{Key: msg, Role: true})
+	upd, err = binary.Marshal(&ckaState{Key: msg, Role: true})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode cka state")
 	}

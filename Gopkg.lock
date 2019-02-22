@@ -10,6 +10,14 @@
   revision = "12f3f0abc76db4319de8036959dc3a6d060838fe"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ca3a1857e388ea7d31eb98af48ea52a82478c70948f617c4842a57cc6867ed9f"
+  name = "github.com/alecthomas/binary"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6e8df1b1fb9d591dfc8249e230e0a762524873f3"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -65,6 +73,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Nik-U/pbc",
+    "github.com/alecthomas/binary",
     "github.com/dchest/wots",
     "github.com/pkg/errors",
     "github.com/stretchr/testify/require",

@@ -21,52 +21,45 @@ var (
 
 	dr   = acd.NewDoubleRatchet(gcm, nil, nil)
 	drpk = acd.NewDoubleRatchet(gcm, ecies, ecdsa)
-
-	msg = []byte{
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-	}
 )
 
-func size_alternating(dr *acd.DoubleRatchet, n int) {
+var (
+	msg = []byte("msg")
+	ad  = []byte("ad")
+)
+
+func size_alternating(dr *acd.DoubleRatchet, n int) (int, int) {
 	alice, bob, _ := dr.Init()
 
-	maxMsg := 0
+	msgSize := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
 		ct, _ := dr.Send(alice, msg)
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 
 		pt, _ := dr.Receive(bob, ct)
 		ct, _ = dr.Send(bob, msg)
 		_ = pt
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 
 		pt, _ = dr.Receive(alice, ct)
 		_ = pt
 	}
 
-	fmt.Printf("======= MSG SIZE\talternating(%d):\t%d\n", n, maxMsg)
-	fmt.Printf("======= STATE SIZE\talternating(%d):\t%d\n", n, maxState)
+	return msgSize, maxState
 }
 
-func size_unidirectional(dr *acd.DoubleRatchet, n int) {
+func size_unidirectional(dr *acd.DoubleRatchet, n int) (int, int) {
 	alice, bob, _ := dr.Init()
 
-	maxMsg := 0
+	msgSize := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
@@ -74,9 +67,9 @@ func size_unidirectional(dr *acd.DoubleRatchet, n int) {
 		pt, _ := dr.Receive(bob, ct)
 		_ = pt
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
@@ -84,19 +77,18 @@ func size_unidirectional(dr *acd.DoubleRatchet, n int) {
 		pt, _ := dr.Receive(alice, ct)
 		_ = pt
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 	}
 
-	fmt.Printf("======= MSG SIZE\tunidirectional(%d):\t%d\n", n, maxMsg)
-	fmt.Printf("======= STATE SIZE\tunidirectional(%d):\t%d\n", n, maxState)
+	return msgSize, maxState
 }
 
-func size_def(dr *acd.DoubleRatchet, n int) {
+func size_def(dr *acd.DoubleRatchet, n int) (int, int) {
 	alice, bob, _ := dr.Init()
 
-	maxMsg := 0
+	msgSize := 0
 	maxState := 0
 
 	var cts [1000][]byte
@@ -104,8 +96,8 @@ func size_def(dr *acd.DoubleRatchet, n int) {
 		ct, _ := dr.Send(alice, msg)
 		cts[i] = ct
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
@@ -113,32 +105,35 @@ func size_def(dr *acd.DoubleRatchet, n int) {
 		pt, _ := dr.Receive(alice, ct)
 		_ = pt
 
-		maxMsg = max(maxMsg, len(ct))
-		maxState = max(maxState, alice.Size())
-		maxState = max(maxState, bob.Size())
+		msgSize += len(ct)
+		//maxState = max(maxState, alice.Size())
+		//maxState = max(maxState, bob.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
 		pt, _ := dr.Receive(bob, cts[i])
 		_ = pt
 
-		maxState = max(maxState, bob.Size())
+		//maxState = max(maxState, bob.Size())
 	}
 
-	fmt.Printf("======= MSG SIZE\tdef-unidirectional(%d):\t%d\n", n, maxMsg)
-	fmt.Printf("======= STATE SIZE\tdef-unidirectional(%d):\t%d\n", n, maxState)
+	return msgSize, maxState
 }
 
 func main() {
-	for _, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		size_alternating(dr, n)
+	msg := make([]int, 10)
+	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+		msg[i], _ = size_alternating(dr, n)
 	}
-	for _, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		size_unidirectional(dr, n)
+	fmt.Println("Total Message Size (ALT)", msg)
+	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+		msg[i], _ = size_unidirectional(dr, n)
 	}
-	for _, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		size_def(dr, n)
+	fmt.Println("Total Message Size (UNI)", msg)
+	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+		msg[i], _ = size_def(dr, n)
 	}
+	fmt.Println("Total Message Size (DEF)", msg)
 }
 
 func max(a, b int) int {

@@ -4,7 +4,8 @@
 package dv
 
 import (
-	"github.com/qantik/ratcheted/primitives"
+	"github.com/alecthomas/binary"
+
 	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
@@ -41,7 +42,7 @@ func (s signcryption) signcrypt(sks, pkr, ad, msg []byte) ([]byte, error) {
 
 	block := signcryptionBlock{AD: ad, Message: msg, Signature: sig}
 
-	b, err := primitives.Encode(&block)
+	b, err := binary.Marshal(&block)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +62,7 @@ func (s signcryption) unsigncrypt(skr, pks, ad, ct []byte) ([]byte, error) {
 	}
 
 	var b signcryptionBlock
-	if err := primitives.Decode(dec, &b); err != nil {
+	if err := binary.Unmarshal(dec, &b); err != nil {
 		return nil, err
 	}
 

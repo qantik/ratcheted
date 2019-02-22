@@ -10,12 +10,13 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
-	"encoding/gob"
 	"errors"
 	"io"
 	"math/big"
 
 	"golang.org/x/crypto/hkdf"
+
+	"github.com/alecthomas/binary"
 
 	"github.com/qantik/ratcheted/primitives"
 )
@@ -29,17 +30,17 @@ type ECIES struct {
 
 // eciesPublicKey wraps the x and y coordinate of a group point.
 type eciesPublicKey struct {
-	Kx, Ky *big.Int
+	Kx, Ky []byte
 }
 
 // eciesPrivateKey wraps a group scalar.
 type eciesPrivateKey struct {
-	K *big.Int
+	K []byte
 }
 
 // eciesCiphertext bundles the ciphertext material.
 type eciesCiphertext struct {
-	Rx, Ry *big.Int
+	Rx, Ry []byte
 	C, D   []byte
 }
 
@@ -57,13 +58,13 @@ func (e ECIES) Generate(seed []byte) (pk, sk []byte, err error) {
 
 	Kx, Ky := e.curve.ScalarBaseMult(k.Bytes())
 
-	public := &eciesPublicKey{Kx: Kx, Ky: Ky}
-	pk, err = primitives.Encode(public)
+	public := &eciesPublicKey{Kx: Kx.Bytes(), Ky: Ky.Bytes()}
+	pk, err = binary.Marshal(public)
 	if err != nil {
 		return
 	}
-	private := &eciesPrivateKey{K: k}
-	sk, err = primitives.Encode(private)
+	private := &eciesPrivateKey{K: k.Bytes()}
+	sk, err = binary.Marshal(private)
 	if err != nil {
 		return
 	}
@@ -73,9 +74,11 @@ func (e ECIES) Generate(seed []byte) (pk, sk []byte, err error) {
 // Encrypt enciphers a message with a given public key.
 func (e ECIES) Encrypt(pk, msg, ad []byte) ([]byte, error) {
 	var public eciesPublicKey
-	if err := primitives.Decode(pk, &public); err != nil {
+	if err := binary.Unmarshal(pk, &public); err != nil {
 		return nil, err
 	}
+
+	kx, ky := new(big.Int).SetBytes(public.Kx), new(big.Int).SetBytes(public.Ky)
 
 	r, err := e.randomFieldScalar(nil)
 	if err != nil {
@@ -83,7 +86,7 @@ func (e ECIES) Encrypt(pk, msg, ad []byte) ([]byte, error) {
 	}
 
 	Rx, Ry := e.curve.ScalarBaseMult(r.Bytes())
-	Px, _ := e.curve.ScalarMult(public.Kx, public.Ky, r.Bytes())
+	Px, _ := e.curve.ScalarMult(kx, ky, r.Bytes())
 
 	hkdf := hkdf.New(sha256.New, Px.Bytes(), nil, nil)
 
@@ -102,32 +105,25 @@ func (e ECIES) Encrypt(pk, msg, ad []byte) ([]byte, error) {
 	}
 
 	d := primitives.Digest(hmac.New(sha256.New, km), c)
+	ct := eciesCiphertext{Rx: Rx.Bytes(), Ry: Ry.Bytes(), C: c, D: d}
 
-	var buffer bytes.Buffer
-	enc := gob.NewEncoder(&buffer)
-
-	ct := eciesCiphertext{Rx: Rx, Ry: Ry, C: c, D: d}
-	if err = enc.Encode(&ct); err != nil {
-		return nil, err
-	}
-	return buffer.Bytes(), nil
+	return binary.Marshal(&ct)
 }
 
 // Decrypt deciphers a ciphertex with a given private key.
 func (e ECIES) Decrypt(sk, ct, ad []byte) ([]byte, error) {
 	var private eciesPrivateKey
-	if err := primitives.Decode(sk, &private); err != nil {
+	if err := binary.Unmarshal(sk, &private); err != nil {
 		return nil, err
 	}
 	var ciphertext eciesCiphertext
-	buffer := bytes.NewBuffer(ct)
-	dec := gob.NewDecoder(buffer)
-
-	if err := dec.Decode(&ciphertext); err != nil {
+	if err := binary.Unmarshal(ct, &ciphertext); err != nil {
 		return nil, err
 	}
 
-	Px, _ := e.curve.ScalarMult(ciphertext.Rx, ciphertext.Ry, private.K.Bytes())
+	rx, ry := new(big.Int).SetBytes(ciphertext.Rx), new(big.Int).SetBytes(ciphertext.Ry)
+
+	Px, _ := e.curve.ScalarMult(rx, ry, private.K)
 
 	hkdf := hkdf.New(sha256.New, Px.Bytes(), nil, nil)
 
@@ -152,48 +148,6 @@ func (e ECIES) Decrypt(sk, ct, ad []byte) ([]byte, error) {
 		return nil, err
 	}
 	return msg, nil
-}
-
-// Encapsulate creates a fresh symmetric key and encapsulates it using ECIES.
-func (e ECIES) Encapsulate(pk []byte) (k, c []byte, err error) {
-	var public eciesPublicKey
-	if err := primitives.Decode(pk, &public); err != nil {
-		return nil, nil, err
-	}
-
-	r, err := e.randomFieldScalar(nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	Cx, Cy := e.curve.ScalarBaseMult(r.Bytes())
-	c = elliptic.Marshal(e.curve, Cx, Cy)
-	Px, _ := e.curve.ScalarMult(public.Kx, public.Ky, r.Bytes())
-
-	hkdf := hkdf.New(sha256.New, append(c, Px.Bytes()...), nil, nil)
-
-	k = make([]byte, 16)
-	_, err = io.ReadFull(hkdf, k)
-	return
-}
-
-// Decapsulate decrypts a ECIES ciphertext to extract the encapsulated symmetric key.
-func (e ECIES) Decapsulate(sk, c []byte) ([]byte, error) {
-	var private eciesPrivateKey
-	if err := primitives.Decode(sk, &private); err != nil {
-		return nil, err
-	}
-
-	Cx, Cy := elliptic.Unmarshal(e.curve, c)
-	Qx, _ := e.curve.ScalarMult(Cx, Cy, private.K.Bytes())
-
-	hkdf := hkdf.New(sha256.New, append(c, Qx.Bytes()...), nil, nil)
-
-	k := make([]byte, 16)
-	if _, err := io.ReadFull(hkdf, k); err != nil {
-		return nil, err
-	}
-	return k, nil
 }
 
 // randomFieldElement returns a random group scalar.

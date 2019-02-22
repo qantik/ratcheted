@@ -6,9 +6,9 @@ package dv
 import (
 	"crypto/rand"
 
+	"github.com/alecthomas/binary"
 	"github.com/pkg/errors"
 
-	"github.com/qantik/ratcheted/primitives"
 	"github.com/qantik/ratcheted/primitives/encryption"
 	"github.com/qantik/ratcheted/primitives/signature"
 )
@@ -73,7 +73,6 @@ func (a ARCAD) Init() (alice, bob *ARCADUser, err error) {
 	if _, err := rand.Read(hk); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to poll random source")
 	}
-
 	alice = &ARCADUser{Hk: hk, Sender: [][]byte{sa}, Receiver: [][]byte{rb}}
 	bob = &ARCADUser{Hk: hk, Sender: [][]byte{sb}, Receiver: [][]byte{ra}}
 	return
@@ -94,8 +93,7 @@ func (a ARCAD) Send(user *ARCADUser, ad, msg []byte) (ct []byte, err error) {
 			break
 		}
 	}
-
-	pt, err := primitives.Encode(arcadMessage{S: s, Msg: msg, N: len(user.Sender) - i - 1})
+	pt, err := binary.Marshal(arcadMessage{S: s, Msg: msg, N: len(user.Sender) - i - 1})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encode arcad message")
 	}
@@ -110,7 +108,7 @@ func (a ARCAD) Send(user *ARCADUser, ad, msg []byte) (ct []byte, err error) {
 		user.Sender[i] = nil
 	}
 
-	ct, err = primitives.Encode(arcadCiphertext{C: c, N: len(user.Sender[i:])})
+	ct, err = binary.Marshal(arcadCiphertext{C: c, N: len(user.Sender[i:])})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encode arcad ciphertext")
 	}
@@ -120,7 +118,7 @@ func (a ARCAD) Send(user *ARCADUser, ad, msg []byte) (ct []byte, err error) {
 // receive invokes the ARCAD receive routine.
 func (a ARCAD) Receive(user *ARCADUser, ad, ct []byte) (msg []byte, err error) {
 	var c arcadCiphertext
-	if err := primitives.Decode(ct, &c); err != nil {
+	if err := binary.Unmarshal(ct, &c); err != nil {
 		return nil, errors.Wrap(err, "unable to decode arcad ciphertext")
 	}
 
@@ -138,7 +136,7 @@ func (a ARCAD) Receive(user *ARCADUser, ad, ct []byte) (msg []byte, err error) {
 	}
 
 	var m arcadMessage
-	if err = primitives.Decode(pt, &m); err != nil {
+	if err = binary.Unmarshal(pt, &m); err != nil {
 		return nil, errors.Wrap(err, "unable to decode arcad message")
 	}
 	user.Sender = append(user.Sender, m.S)

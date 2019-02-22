@@ -6,10 +6,11 @@ package signature
 import (
 	"crypto/rand"
 	"crypto/sha512"
-	"encoding/json"
 	"errors"
 	"math/big"
 	"strconv"
+
+	"github.com/alecthomas/binary"
 
 	"github.com/qantik/ratcheted/primitives"
 )
@@ -27,21 +28,23 @@ type Bellare struct{}
 
 // bellarePublicKey bundles the public key material.
 type bellarePublicKey struct {
-	N *big.Int
-	U [bellareNumPoints]*big.Int
+	N []byte
+	//U [bellareNumPoints][]byte
+	U [][]byte
 }
 
 // bellarePrivateKey bundles the secret key material.
 type bellarePrivateKey struct {
-	N *big.Int
-	S [bellareNumPoints]*big.Int
+	N []byte
+	//S [bellareNumPoints][]byte
+	S [][]byte
 
 	J int // J specifies the current period of this private key.
 }
 
 // bellareSignature bundles signature material.
 type bellareSignature struct {
-	Y, Z *big.Int
+	Y, Z []byte
 	J    int
 }
 
@@ -67,8 +70,8 @@ func (b Bellare) Generate() (pk, sk []byte, err error) {
 
 	N := new(big.Int).Mul(p, q)
 
-	var S [bellareNumPoints]*big.Int
-	var U [bellareNumPoints]*big.Int
+	S := make([][]byte, bellareNumPoints)
+	U := make([][]byte, bellareNumPoints)
 	for i := 0; i < bellareNumPoints; i++ {
 		var s *big.Int
 		for {
@@ -79,21 +82,21 @@ func (b Bellare) Generate() (pk, sk []byte, err error) {
 		}
 		e := new(big.Int).Exp(big.NewInt(2), big.NewInt(bellareMaxPeriod+1), nil)
 		u := new(big.Int).Exp(s, e, N)
-		S[i], U[i] = s, u
+		S[i], U[i] = s.Bytes(), u.Bytes()
 	}
 
-	pk, err = json.Marshal(&bellarePublicKey{N: N, U: U})
+	pk, err = binary.Marshal(&bellarePublicKey{N: N.Bytes(), U: U})
 	if err != nil {
 		return
 	}
-	sk, err = json.Marshal(&bellarePrivateKey{N: N, S: S, J: 0})
+	sk, err = binary.Marshal(&bellarePrivateKey{N: N.Bytes(), S: S, J: 0})
 	return
 }
 
 // Update evolves a private key into a new period.
 func (b Bellare) Update(sk []byte) ([]byte, error) {
 	var private bellarePrivateKey
-	if err := json.Unmarshal(sk, &private); err != nil {
+	if err := binary.Unmarshal(sk, &private); err != nil {
 		return nil, err
 	}
 
@@ -101,29 +104,34 @@ func (b Bellare) Update(sk []byte) ([]byte, error) {
 		return nil, errors.New("private key has surpassed max period")
 	}
 
-	var S [bellareNumPoints]*big.Int
+	n := new(big.Int).SetBytes(private.N)
+
+	S := make([][]byte, bellareNumPoints)
 	for i := 0; i < bellareNumPoints; i++ {
-		S[i] = new(big.Int).Exp(private.S[i], big.NewInt(2), private.N)
+		s := new(big.Int).SetBytes(private.S[i])
+		S[i] = new(big.Int).Exp(s, big.NewInt(2), n).Bytes()
 	}
-	return json.Marshal(&bellarePrivateKey{N: private.N, S: S, J: private.J + 1})
+	return binary.Marshal(&bellarePrivateKey{N: private.N, S: S, J: private.J + 1})
 }
 
 // Sign creates a Bellare signature of a given message.
 func (b Bellare) Sign(sk, msg []byte) ([]byte, error) {
 	var private bellarePrivateKey
-	if err := json.Unmarshal(sk, &private); err != nil {
+	if err := binary.Unmarshal(sk, &private); err != nil {
 		return nil, err
 	}
 
+	n := new(big.Int).SetBytes(private.N)
+
 	var R *big.Int
 	for {
-		R, _ = rand.Int(rand.Reader, private.N)
+		R, _ = rand.Int(rand.Reader, n)
 		if R.Uint64() != 0 {
 			break
 		}
 	}
 	e := new(big.Int).Exp(big.NewInt(2), big.NewInt(bellareMaxPeriod+1-int64(private.J)), nil)
-	Y := new(big.Int).Exp(R, e, private.N)
+	Y := new(big.Int).Exp(R, e, n)
 
 	digest := primitives.Digest(sha512.New(), []byte(strconv.Itoa(private.J)), Y.Bytes(), msg)
 	c := new(big.Int).SetBytes(digest)
@@ -131,38 +139,45 @@ func (b Bellare) Sign(sk, msg []byte) ([]byte, error) {
 	P := big.NewInt(1)
 	for i := 0; i < bellareNumPoints; i++ {
 		e := new(big.Int).And(new(big.Int).Rsh(c, uint(i)), big.NewInt(1))
-		P = new(big.Int).Mul(P, new(big.Int).Exp(private.S[i], e, nil))
+
+		s := new(big.Int).SetBytes(private.S[i])
+		P = new(big.Int).Mul(P, new(big.Int).Exp(s, e, nil))
 	}
 	P = new(big.Int).Mul(R, P)
-	Z := new(big.Int).Mod(P, private.N)
+	Z := new(big.Int).Mod(P, n)
 
-	return json.Marshal(&bellareSignature{Y: Y, Z: Z, J: private.J})
+	return binary.Marshal(&bellareSignature{Y: Y.Bytes(), Z: Z.Bytes(), J: private.J})
 }
 
 // Verify checks the validity of a given signature.
 func (b Bellare) Verify(pk, msg, sig []byte) error {
 	var public bellarePublicKey
-	if err := json.Unmarshal(pk, &public); err != nil {
+	if err := binary.Unmarshal(pk, &public); err != nil {
 		return err
 	}
 	var signature bellareSignature
-	if err := json.Unmarshal(sig, &signature); err != nil {
+	if err := binary.Unmarshal(sig, &signature); err != nil {
 		return err
 	}
 
-	digest := primitives.Digest(sha512.New(), []byte(strconv.Itoa(signature.J)), signature.Y.Bytes(), msg)
+	y, z := new(big.Int).SetBytes(signature.Y), new(big.Int).SetBytes(signature.Z)
+	n := new(big.Int).SetBytes(public.N)
+
+	digest := primitives.Digest(sha512.New(), []byte(strconv.Itoa(signature.J)), y.Bytes(), msg)
 	c := new(big.Int).SetBytes(digest)
 
 	e := new(big.Int).Exp(big.NewInt(2), big.NewInt(bellareMaxPeriod+1-int64(signature.J)), nil)
-	L := new(big.Int).Exp(signature.Z, e, public.N)
+	L := new(big.Int).Exp(z, e, n)
 
 	P := big.NewInt(1)
 	for i := 0; i < bellareNumPoints; i++ {
 		e := new(big.Int).And(new(big.Int).Rsh(c, uint(i)), big.NewInt(1))
-		P = new(big.Int).Mul(P, new(big.Int).Exp(public.U[i], e, nil))
+
+		u := new(big.Int).SetBytes(public.U[i])
+		P = new(big.Int).Mul(P, new(big.Int).Exp(u, e, nil))
 	}
-	P = new(big.Int).Mul(signature.Y, P)
-	R := new(big.Int).Mod(P, public.N)
+	P = new(big.Int).Mul(y, P)
+	R := new(big.Int).Mod(P, n)
 
 	if L.Cmp(R) != 0 {
 		return errors.New("unable to verify signature")

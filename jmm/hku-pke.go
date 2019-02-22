@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"strconv"
 
+	"github.com/alecthomas/binary"
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
@@ -81,7 +82,7 @@ func (h hkuPKE) generate() (s, r []byte, err error) {
 		S: 0, J: 0,
 		Ue: [][]byte{}, Trace: []byte{},
 	}
-	s, err = primitives.Encode(&sender)
+	s, err = binary.Marshal(&sender)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode hkuPKE sender state")
 	}
@@ -90,7 +91,7 @@ func (h hkuPKE) generate() (s, r []byte, err error) {
 		R: 0, I: 0,
 		Trace: []byte{},
 	}
-	r, err = primitives.Encode(&receiver)
+	r, err = binary.Marshal(&receiver)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode hkuPKE receiver state")
 	}
@@ -100,7 +101,7 @@ func (h hkuPKE) generate() (s, r []byte, err error) {
 // encrypt enciphers a message with associated data and updates the sender state.
 func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	var s hkuSender
-	if err := primitives.Decode(sender, &s); err != nil {
+	if err := binary.Unmarshal(sender, &s); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode hkuPKE sender state")
 	}
 
@@ -117,7 +118,7 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 		return nil, nil, errors.Wrap(err, "unable to sample randomness")
 	}
 	message := hkuMessage{Msg: msg, Ud: ud, Z: z}
-	m, err := primitives.Encode(&message)
+	m, err := binary.Marshal(&message)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode message")
 	}
@@ -129,7 +130,7 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to PKE encrypt ciphertext")
 	}
-	ct, err = primitives.Encode(&hkuCiphertext{C: c, J: s.J})
+	ct, err = binary.Marshal(&hkuCiphertext{C: c, J: s.J})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode ciphertext")
 	}
@@ -151,7 +152,7 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 	s.EkEph = ekEph
 	s.S++
 
-	upd, err = primitives.Encode(&s)
+	upd, err = binary.Marshal(&s)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode hku sender state")
 	}
@@ -162,11 +163,11 @@ func (h hkuPKE) encrypt(sender, msg, ad []byte) (upd, ct []byte, err error) {
 // receiver state.
 func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 	var r hkuReceiver
-	if err := primitives.Decode(receiver, &r); err != nil {
+	if err := binary.Unmarshal(receiver, &r); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode hkuPKE receiver state")
 	}
 	var ciphertext hkuCiphertext
-	if err := primitives.Decode(ct, &ciphertext); err != nil {
+	if err := binary.Unmarshal(ct, &ciphertext); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode ciphertext")
 	}
 	r.R++
@@ -181,7 +182,7 @@ func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 		return nil, nil, errors.Wrap(err, "unable to skuPKE decrypt ciphertext")
 	}
 	var message hkuMessage
-	if err := primitives.Decode(m, &message); err != nil {
+	if err := binary.Unmarshal(m, &message); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode message")
 	}
 
@@ -210,7 +211,7 @@ func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 		}
 	}
 
-	upd, err = primitives.Encode(&r)
+	upd, err = binary.Marshal(&r)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode hkuPKE receiver state")
 	}
@@ -220,7 +221,7 @@ func (h hkuPKE) decrypt(receiver, ct, ad []byte) (upd, msg []byte, err error) {
 // updateDK initiates a receiver healing that creates new key pairs.
 func (h hkuPKE) updateDK(receiver []byte) (upd, inf []byte, err error) {
 	var r hkuReceiver
-	if err := primitives.Decode(receiver, &r); err != nil {
+	if err := binary.Unmarshal(receiver, &r); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to decode hkuPKE receiver state")
 	}
 	r.I++
@@ -236,11 +237,11 @@ func (h hkuPKE) updateDK(receiver []byte) (upd, inf []byte, err error) {
 	r.DkUpd = append(r.DkUpd, dkUpd)
 	r.DkEph = append(r.DkEph, dkEph)
 
-	inf, err = primitives.Encode(&hkuUpdInfo{EkUpd: ekUpd, EkEph: ekEph, R: r.R})
+	inf, err = binary.Marshal(&hkuUpdInfo{EkUpd: ekUpd, EkEph: ekEph, R: r.R})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode update information")
 	}
-	upd, err = primitives.Encode(&r)
+	upd, err = binary.Marshal(&r)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to encode hkuPKE receiver state")
 	}
@@ -250,11 +251,11 @@ func (h hkuPKE) updateDK(receiver []byte) (upd, inf []byte, err error) {
 // updateEK updates the sender state with fresh public keys with the given update info.
 func (h hkuPKE) updateEK(sender, inf []byte) (upd []byte, err error) {
 	var s hkuSender
-	if err := primitives.Decode(sender, &s); err != nil {
+	if err := binary.Unmarshal(sender, &s); err != nil {
 		return nil, errors.Wrap(err, "unable to decode hkuPKE sender state")
 	}
 	var i hkuUpdInfo
-	if err := primitives.Decode(inf, &i); err != nil {
+	if err := binary.Unmarshal(inf, &i); err != nil {
 		return nil, errors.Wrap(err, "unable to decode hkuPKE update info")
 	}
 	s.J++
@@ -271,7 +272,7 @@ func (h hkuPKE) updateEK(sender, inf []byte) (upd []byte, err error) {
 		}
 		s.EkUpd = ek
 	}
-	upd, err = primitives.Encode(&s)
+	upd, err = binary.Marshal(&s)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encode hku sender state")
 	}

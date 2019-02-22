@@ -14,6 +14,7 @@ import (
 	"crypto/elliptic"
 	"strconv"
 
+	"github.com/alecthomas/binary"
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"
@@ -220,7 +221,7 @@ func (d DoubleRatchet) Send(user *User, msg []byte) ([]byte, error) {
 			return nil, errors.Wrap(err, "unable to dss sign message")
 		}
 
-		ct, err = primitives.Encode(&dratchCiphertext{
+		ct, err = binary.Marshal(&dratchCiphertext{
 			I: user.I, T: user.T,
 			C: c, S: s,
 			EK: user.ek[user.I+1], VK: user.vk[user.I+2],
@@ -229,7 +230,7 @@ func (d DoubleRatchet) Send(user *User, msg []byte) ([]byte, error) {
 			return nil, errors.Wrap(err, "unable to encode dratch ciphertext")
 		}
 	} else {
-		ct, err = primitives.Encode(&dratchCiphertext{I: user.I, T: user.T, C: c})
+		ct, err = binary.Marshal(&dratchCiphertext{I: user.I, T: user.T, C: c})
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to encode dratch ciphertext")
 		}
@@ -240,7 +241,7 @@ func (d DoubleRatchet) Send(user *User, msg []byte) ([]byte, error) {
 // Receive calls the double ratchet receive routine for a given user and ciphertext.
 func (d DoubleRatchet) Receive(user *User, ct []byte) ([]byte, error) {
 	var c dratchCiphertext
-	if err := primitives.Decode(ct, &c); err != nil {
+	if err := binary.Unmarshal(ct, &c); err != nil {
 		return nil, errors.Wrap(err, "unable to decode dratch ciphertext")
 	}
 

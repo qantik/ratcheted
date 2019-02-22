@@ -58,7 +58,7 @@ func TestARCAD_Unidirectional(t *testing.T) {
 	alice, bob, err := arcad.Init()
 	require.Nil(err)
 
-	for i := 0; i < 15; i++ {
+	for i := 0; i < 25; i++ {
 		ct, err := arcad.Send(alice, ad, msg)
 		require.Nil(err)
 
@@ -67,7 +67,7 @@ func TestARCAD_Unidirectional(t *testing.T) {
 		require.True(bytes.Equal(msg, pt))
 	}
 
-	for i := 0; i < 15; i++ {
+	for i := 0; i < 25; i++ {
 		ct, err := arcad.Send(bob, ad, msg)
 		require.Nil(err)
 
