@@ -21,8 +21,8 @@ var (
 	aes   = encryption.NewAES()
 
 	//bark      = dv.NewBARK(dv.NewUniARCAD(ecies, ecdsa))
-	arcad     = dv.NewARCAD(ecdsa, ecies, aes)
-	liteARCAD = dv.NewLiteARCAD(gcm, aes)
+	arcad = dv.NewARCAD(ecdsa, ecies, aes)
+	lite  = dv.NewLiteARCAD(gcm, aes)
 	//lite      = dv.NewBARK(dv.NewLiteUniARCAD(gcm))
 )
 
