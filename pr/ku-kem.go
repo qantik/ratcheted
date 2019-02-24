@@ -5,6 +5,7 @@ package pr
 
 import (
 	"github.com/alecthomas/binary"
+
 	"github.com/qantik/ratcheted/primitives/hibe"
 )
 
