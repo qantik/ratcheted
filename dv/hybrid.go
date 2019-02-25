@@ -86,11 +86,11 @@ func (h HybridARCAD) Init() (alice, bob *HybridUser, err error) {
 }
 
 // Send invokes the hybrid-ARCAD send routine.
-func (h HybridARCAD) Send(user *HybridUser, ad, msg []byte, flag bool) ([]byte, error) {
+func (h HybridARCAD) Send(user *HybridUser, ad, msg []byte) ([]byte, error) {
 	var ct []byte
 	var e, c int
 
-	if flag {
+	if int(ad[0]) == 1 {
 		if user.snd < user.rec {
 			e, c = user.rec+1, 0
 		} else {
@@ -122,8 +122,7 @@ func (h HybridARCAD) Send(user *HybridUser, ad, msg []byte, flag bool) ([]byte, 
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to encrypt plaintext")
 		}
-
-		user.snd, user.ctr[user.rec] = e, c
+		user.snd, user.ctr[user.snd] = e, c
 	} else {
 		if user.snd >= user.rec {
 			e = user.snd
@@ -143,13 +142,22 @@ func (h HybridARCAD) Send(user *HybridUser, ad, msg []byte, flag bool) ([]byte, 
 		}
 	}
 
-	return binary.Marshal(&hybridCiphertext{CT: ct, E: e, C: c})
+	// Clean-up states.
+	for e := 0; e < user.snd && e < user.rec; e++ {
+		for c := 0; c < user.ctr[user.snd] && c < user.ctr[user.rec]; c++ {
+			// fmt.Println("************", e, c)
+			delete(user.stLite, index(e, c))
+		}
+	}
+	for e := 0; e < user.snd && e < user.rec; e++ {
+		delete(user.ctr, e)
+	}
 
-	// TODO: Clean-up
+	return binary.Marshal(&hybridCiphertext{CT: ct, E: e, C: c})
 }
 
 // Receive invokes the hybrid-ARCAD receive routine.
-func (h HybridARCAD) Receive(user *HybridUser, ad, ct []byte, flag bool) ([]byte, error) {
+func (h HybridARCAD) Receive(user *HybridUser, ad, ct []byte) ([]byte, error) {
 	var cipher hybridCiphertext
 	if err := binary.Unmarshal(ct, &cipher); err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshal hybrid-ARCAD ciphertext")
@@ -162,7 +170,7 @@ func (h HybridARCAD) Receive(user *HybridUser, ad, ct []byte, flag bool) ([]byte
 
 	var m []byte
 
-	if flag {
+	if int(ad[0]) == 1 {
 		pt, err := h.arcad.Receive(user.stARCAD, ba, cipher.CT)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to decrypt ciphertext")
@@ -189,10 +197,17 @@ func (h HybridARCAD) Receive(user *HybridUser, ad, ct []byte, flag bool) ([]byte
 		m = pt
 	}
 
+	// Clean-up states.
+	for e := 0; e < user.snd && e < user.rec; e++ {
+		for c := 0; c < user.ctr[user.snd] && c < user.ctr[user.rec]; c++ {
+			delete(user.stLite, index(e, c))
+		}
+	}
+	for e := 0; e < user.snd && e < user.rec; e++ {
+		delete(user.ctr, e)
+	}
+
 	return m, nil
-
-	// TODO: Clean-up
-
 }
 
 // index creates a hashable map index out of two integers.
