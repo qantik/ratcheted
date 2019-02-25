@@ -5,6 +5,7 @@ package dv
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"strconv"
 
 	"github.com/alecthomas/binary"
@@ -91,6 +92,7 @@ func (h HybridARCAD) Send(user *HybridUser, ad, msg []byte) ([]byte, error) {
 	var e, c int
 
 	if int(ad[0]) == 1 {
+		fmt.Println("===============")
 		if user.snd < user.rec {
 			e, c = user.rec+1, 0
 		} else {
