@@ -119,18 +119,27 @@ func size_def(n int) (int, int) {
 
 func main() {
 	msg := make([]int, 10)
+
+	s := ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
 		msg[i], _ = size_alternating(n)
+		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
-	fmt.Println("Total Message Size (ALT)", msg)
+	fmt.Println("Total Message Size (ALT)\n", s)
+
+	s = ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
 		msg[i], _ = size_unidirectional(n)
+		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
-	fmt.Println("Total Message Size (UNI)", msg)
+	fmt.Println("Total Message Size (UNI)\n", s)
+
+	s = ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
 		msg[i], _ = size_def(n)
+		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
-	fmt.Println("Total Message Size (DEF)", msg)
+	fmt.Println("Total Message Size (DEF)\n", s)
 }
 
 func max(a, b int) int {

@@ -124,18 +124,27 @@ func size_def(arcad *dv.ARCAD, n int) (int, int) {
 
 func main() {
 	msg := make([]int, 10)
+
+	s := ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_alternating(arcad, n)
+		msg[i], _ = size_alternating(lite, n)
+		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
-	fmt.Println("Total Message Size (ALT):", msg)
+	fmt.Println("Total Message Size (ALT)\n", s)
+
+	s = ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_unidirectional(arcad, n)
+		msg[i], _ = size_unidirectional(lite, n)
+		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
-	fmt.Println("Total Message Size (UNI):", msg)
+	fmt.Println("Total Message Size (UNI)\n", s)
+
+	s = ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_def(arcad, n)
+		msg[i], _ = size_def(lite, n)
+		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
-	fmt.Println("Total Message Size (DEF):", msg)
+	fmt.Println("Total Message Size (DEF)\n", s)
 }
 
 func max(a, b int) int {

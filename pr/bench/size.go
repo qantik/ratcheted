@@ -122,20 +122,29 @@ func size_def(n int) (int, int) {
 
 func main() {
 	msg := make([]int, 10)
+
+	s := ""
 	//for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
 	//	msg[i], _ = size_alternating(n)
-	//	fmt.Println(msg[i])
+	//	s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	//}
-	//fmt.Println("Total Message Size (ALT)", msg)
-	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_unidirectional(n)
-		fmt.Println(msg[i])
-	}
-	fmt.Println("Total Message Size (UNI)", msg)
-	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+	//fmt.Println("Total Message Size (ALT)\n", s)
+
+	// s = ""
+	// for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+	// 	msg[i], _ = size_unidirectional(n)
+	// 	s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
+	// 	fmt.Println(s)
+	// }
+	// fmt.Println("Total Message Size (UNI)\n", s)
+
+	s = ""
+	for i, n := range []int{200, 300, 400, 500, 600, 700, 800, 900} {
 		msg[i], _ = size_def(n)
+		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
+		fmt.Println(s)
 	}
-	fmt.Println("Total Message Size (DEF)", msg)
+	fmt.Println("Total Message Size (DEF)\n", s)
 }
 
 func max(a, b int) int {
