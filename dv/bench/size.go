@@ -5,33 +5,9 @@
 package main
 
 import (
-	"crypto/elliptic"
 	"fmt"
 
 	"github.com/qantik/ratcheted/dv"
-	"github.com/qantik/ratcheted/primitives/encryption"
-	"github.com/qantik/ratcheted/primitives/signature"
-)
-
-var (
-	curve = elliptic.P256()
-	ecies = encryption.NewECIES(curve)
-	ecdsa = signature.NewECDSA(curve)
-	gcm   = encryption.NewGCM()
-	aes   = encryption.NewAES()
-
-	flags = []int{250, 500, 750, 1000}
-
-	//bark      = dv.NewBARK(dv.NewUniARCAD(ecies, ecdsa))
-	arcad  = dv.NewARCAD(ecdsa, ecies, aes)
-	lite   = dv.NewLiteARCAD(gcm, aes)
-	hybrid = dv.NewHybridARCAD(ecdsa, ecies, aes, gcm, flags)
-	//lite      = dv.NewBARK(dv.NewLiteUniARCAD(gcm))
-)
-
-var (
-	msg = []byte("msg")
-	ad  = []byte("ad")
 )
 
 func size_alternating(p dv.Protocol, n int) (int, int) {
@@ -125,29 +101,40 @@ func size_def(p dv.Protocol, n int) (int, int) {
 	return msgSize, maxState
 }
 
-func main() {
+// func main() {
+// 	// msg := make([]int, 10)
+
+// 	// s := ""
+// 	// for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+// 	// 	msg[i], _ = size_alternating(lite, n)
+// 	// 	s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
+// 	// }
+// 	// fmt.Println("Total Message Size (ALT)\n", s)
+
+// 	// s = ""
+// 	// for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+// 	// 	msg[i], _ = size_unidirectional(lite, n)
+// 	// 	s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
+// 	// }
+// 	// fmt.Println("Total Message Size (UNI)\n", s)
+
+// 	// s = ""
+// 	// for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+// 	// 	msg[i], _ = size_def(lite, n)
+// 	// 	s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
+// 	// }
+// 	// fmt.Println("Total Message Size (DEF)\n", s)
+// }
+
+func size(p dv.Protocol, tp func(p dv.Protocol, i int) (int, int)) {
 	msg := make([]int, 10)
 
 	s := ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_alternating(lite, n)
+		msg[i], _ = tp(p, n)
 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
-	fmt.Println("Total Message Size (ALT)\n", s)
-
-	s = ""
-	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_unidirectional(lite, n)
-		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
-	}
-	fmt.Println("Total Message Size (UNI)\n", s)
-
-	s = ""
-	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_def(lite, n)
-		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
-	}
-	fmt.Println("Total Message Size (DEF)\n", s)
+	fmt.Println(s)
 }
 
 func max(a, b int) int {
