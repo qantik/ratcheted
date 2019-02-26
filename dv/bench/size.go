@@ -32,23 +32,23 @@ var (
 	ad  = []byte("ad")
 )
 
-func size_alternating(arcad *dv.ARCAD, n int) (int, int) {
-	alice, bob, _ := arcad.Init()
+func size_alternating(p dv.Protocol, n int) (int, int) {
+	alice, bob, _ := p.Init()
 
 	msgSize := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(alice, ad, msg)
-		pt, _ := arcad.Receive(bob, ad, ct)
+		ct, _ := p.Send(alice, ad, msg)
+		pt, _ := p.Receive(bob, ad, ct)
 		_ = pt
 
 		msgSize += len(ct)
 		//maxState = max(maxState, alice.Size())
 		//maxState = max(maxState, bob.Size())
 
-		ct, _ = arcad.Send(bob, ad, msg)
-		pt, _ = arcad.Receive(alice, ad, ct)
+		ct, _ = p.Send(bob, ad, msg)
+		pt, _ = p.Receive(alice, ad, ct)
 		_ = pt
 
 		msgSize += len(ct)
@@ -59,15 +59,15 @@ func size_alternating(arcad *dv.ARCAD, n int) (int, int) {
 	return msgSize, maxState
 }
 
-func size_unidirectional(arcad *dv.ARCAD, n int) (int, int) {
-	alice, bob, _ := arcad.Init()
+func size_unidirectional(p dv.Protocol, n int) (int, int) {
+	alice, bob, _ := p.Init()
 
 	msgSize := 0
 	maxState := 0
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(alice, ad, msg)
-		pt, _ := arcad.Receive(bob, ad, ct)
+		ct, _ := p.Send(alice, ad, msg)
+		pt, _ := p.Receive(bob, ad, ct)
 		_ = pt
 
 		msgSize += len(ct)
@@ -76,8 +76,8 @@ func size_unidirectional(arcad *dv.ARCAD, n int) (int, int) {
 	}
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(bob, ad, msg)
-		pt, _ := arcad.Receive(alice, ad, ct)
+		ct, _ := p.Send(bob, ad, msg)
+		pt, _ := p.Receive(alice, ad, ct)
 		_ = pt
 
 		msgSize += len(ct)
@@ -88,15 +88,15 @@ func size_unidirectional(arcad *dv.ARCAD, n int) (int, int) {
 	return msgSize, maxState
 }
 
-func size_def(arcad *dv.ARCAD, n int) (int, int) {
-	alice, bob, _ := arcad.Init()
+func size_def(p dv.Protocol, n int) (int, int) {
+	alice, bob, _ := p.Init()
 
 	msgSize := 0
 	maxState := 0
 
 	var cts [1000][]byte
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(alice, ad, msg)
+		ct, _ := p.Send(alice, ad, msg)
 		cts[i] = ct
 
 		msgSize += len(ct)
@@ -104,8 +104,8 @@ func size_def(arcad *dv.ARCAD, n int) (int, int) {
 	}
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(bob, ad, msg)
-		pt, _ := arcad.Receive(alice, ad, ct)
+		ct, _ := p.Send(bob, ad, msg)
+		pt, _ := p.Receive(alice, ad, ct)
 		_ = pt
 
 		msgSize += len(ct)
@@ -114,7 +114,7 @@ func size_def(arcad *dv.ARCAD, n int) (int, int) {
 	}
 
 	for i := 0; i < n/2; i++ {
-		pt, _ := arcad.Receive(bob, ad, cts[i])
+		pt, _ := p.Receive(bob, ad, cts[i])
 		_ = pt
 
 		//maxState = max(maxState, bob.Size())

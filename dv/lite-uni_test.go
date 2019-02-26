@@ -3,28 +3,19 @@
 
 package dv
 
-import (
-	"bytes"
-	"testing"
+// func TestLiteUniARCAD(t *testing.T) {
+// 	require := require.New(t)
 
-	"github.com/stretchr/testify/require"
+// 	lu := NewLiteUniARCAD(encryption.NewGCM())
 
-	"github.com/qantik/ratcheted/primitives/encryption"
-)
+// 	s, r, err := lu.Init()
+// 	require.Nil(err)
 
-func TestLiteUniARCAD(t *testing.T) {
-	require := require.New(t)
+// 	su, ct, err := lu.Send(s, pt, pt, false)
+// 	require.Nil(err)
 
-	lu := NewLiteUniARCAD(encryption.NewGCM())
-
-	s, r, err := lu.Init()
-	require.Nil(err)
-
-	su, ct, err := lu.Send(s, pt, pt, false)
-	require.Nil(err)
-
-	ru, pt1, err := lu.Receive(r, pt, ct)
-	require.Nil(err)
-	require.True(bytes.Equal(su, ru))
-	require.True(bytes.Equal(pt, pt1))
-}
+// 	ru, pt1, err := lu.Receive(r, pt, ct)
+// 	require.Nil(err)
+// 	require.True(bytes.Equal(su, ru))
+// 	require.True(bytes.Equal(pt, pt1))
+// }

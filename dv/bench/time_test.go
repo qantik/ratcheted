@@ -9,54 +9,54 @@ import (
 	"github.com/qantik/ratcheted/dv"
 )
 
-func alt(arcad *dv.ARCAD, n int) {
-	alice, bob, _ := arcad.Init()
+func alt(p dv.Protocol, n int) {
+	alice, bob, _ := p.Init()
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(alice, ad, msg)
-		pt, _ := arcad.Receive(bob, ad, ct)
+		ct, _ := p.Send(alice, ad, msg)
+		pt, _ := p.Receive(bob, ad, ct)
 		_ = pt
 
-		ct, _ = arcad.Send(bob, ad, msg)
-		pt, _ = arcad.Receive(alice, ad, ct)
+		ct, _ = p.Send(bob, ad, msg)
+		pt, _ = p.Receive(alice, ad, ct)
 		_ = pt
 	}
 }
 
-func unidirectional(arcad *dv.ARCAD, n int) {
+func unidirectional(p dv.Protocol, n int) {
 	alice, bob, _ := arcad.Init()
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(alice, ad, msg)
-		pt, _ := arcad.Receive(bob, ad, ct)
+		ct, _ := p.Send(alice, ad, msg)
+		pt, _ := p.Receive(bob, ad, ct)
 		_ = pt
 	}
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(bob, ad, msg)
-		pt, _ := arcad.Receive(alice, ad, ct)
+		ct, _ := p.Send(bob, ad, msg)
+		pt, _ := p.Receive(alice, ad, ct)
 		_ = pt
 	}
 }
 
-func deferredUni(arcad *dv.ARCAD, n int) {
+func deferredUni(p dv.Protocol, n int) {
 	alice, bob, _ := arcad.Init()
 
 	var cts [1000][]byte
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(alice, ad, msg)
+		ct, _ := p.Send(alice, ad, msg)
 
 		cts[i] = ct
 	}
 
 	for i := 0; i < n/2; i++ {
-		ct, _ := arcad.Send(bob, ad, msg)
-		pt, _ := arcad.Receive(alice, ad, ct)
+		ct, _ := p.Send(bob, ad, msg)
+		pt, _ := p.Receive(alice, ad, ct)
 		_ = pt
 	}
 
 	for i := 0; i < n/2; i++ {
-		pt, _ := arcad.Receive(bob, ad, cts[i])
+		pt, _ := p.Receive(bob, ad, cts[i])
 		_ = pt
 	}
 }
@@ -89,19 +89,19 @@ func hybridAlt(n int) {
 	}
 }
 
-func benchmarkAlt(arcad *dv.ARCAD, i int, b *testing.B) {
+func benchmarkAlt(p dv.Protocol, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		alt(arcad, i)
+		alt(p, i)
 	}
 }
 
-func benchmarkUni(arcad *dv.ARCAD, i int, b *testing.B) {
+func benchmarkUni(arcad dv.Protocol, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		unidirectional(arcad, i)
 	}
 }
 
-func benchmarkDeferredUni(arcad *dv.ARCAD, i int, b *testing.B) {
+func benchmarkDeferredUni(arcad dv.Protocol, i int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		deferredUni(arcad, i)
 	}

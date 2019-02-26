@@ -5,7 +5,6 @@ package dv
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"strconv"
 
 	"github.com/alecthomas/binary"
@@ -24,8 +23,8 @@ type HybridARCAD struct {
 
 // HybridUser designates a hybrid-ARCAD user state.
 type HybridUser struct {
-	stARCAD *ARCADUser
-	stLite  map[string]*ARCADUser
+	stARCAD Uuser
+	stLite  map[string]Uuser
 
 	snd, rec int
 	ctr      map[int]int
@@ -63,7 +62,7 @@ func NewHybridARCAD(
 }
 
 // Init intializes the hybrid-ARCAD protocol and returns two user states.
-func (h HybridARCAD) Init() (alice, bob *HybridUser, err error) {
+func (h HybridARCAD) Init() (alice, bob Uuser, err error) {
 	as, ar, err := h.arcad.Init()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to create fresh ARCAD states")
@@ -75,35 +74,37 @@ func (h HybridARCAD) Init() (alice, bob *HybridUser, err error) {
 
 	alice = &HybridUser{
 		stARCAD: as,
-		stLite:  map[string]*ARCADUser{index(0, 0): ls},
+		stLite:  map[string]Uuser{index(0, 0): ls},
 		snd:     0, rec: -1, ctr: map[int]int{0: 0},
 	}
 	bob = &HybridUser{
 		stARCAD: ar,
-		stLite:  map[string]*ARCADUser{index(0, 0): lr},
+		stLite:  map[string]Uuser{index(0, 0): lr},
 		snd:     -1, rec: 0, ctr: map[int]int{0: 0},
 	}
 	return
 }
 
 // Send invokes the hybrid-ARCAD send routine.
-func (h HybridARCAD) Send(user *HybridUser, ad, msg []byte) ([]byte, error) {
+func (h HybridARCAD) Send(user Uuser, ad, msg []byte) ([]byte, error) {
 	var ct []byte
 	var e, c int
 
+	u := user.(*HybridUser)
+
 	if int(ad[0]) == 1 {
-		fmt.Println("===============")
-		if user.snd < user.rec {
-			e, c = user.rec+1, 0
+		// fmt.Println("===============")
+		if u.snd < u.rec {
+			e, c = u.rec+1, 0
 		} else {
-			e, c = user.snd, user.ctr[e]+1
+			e, c = u.snd, u.ctr[e]+1
 		}
 
 		s, r, err := h.lite.Init()
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to create fresh lite-ARCAD states")
 		}
-		user.stLite[index(e, c)] = s
+		u.stLite[index(e, c)] = s
 
 		st, err := binary.Marshal(r)
 		if err != nil {
@@ -120,50 +121,52 @@ func (h HybridARCAD) Send(user *HybridUser, ad, msg []byte) ([]byte, error) {
 			return nil, errors.Wrap(err, "unable to marshal hybrid-ARCAD associated data")
 		}
 
-		ct, err = h.arcad.Send(user.stARCAD, ba, pt)
+		ct, err = h.arcad.Send(u.stARCAD, ba, pt)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to encrypt plaintext")
 		}
-		user.snd, user.ctr[user.snd] = e, c
+		u.snd, u.ctr[u.snd] = e, c
 	} else {
-		if user.snd >= user.rec {
-			e = user.snd
+		if u.snd >= u.rec {
+			e = u.snd
 		} else {
-			e = user.rec
+			e = u.rec
 		}
-		c = user.ctr[e]
+		c = u.ctr[e]
 
 		ba, err := binary.Marshal(&hybridAssociated{AD: ad, E: e, C: c})
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to marshal hybrid-ARCAD associated data")
 		}
 
-		ct, err = h.lite.Send(user.stLite[index(e, c)], ba, msg)
+		ct, err = h.lite.Send(u.stLite[index(e, c)], ba, msg)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to encrypt plaintext")
 		}
 	}
 
 	// Clean-up states.
-	for e := 0; e < user.snd && e < user.rec; e++ {
-		for c := 0; c < user.ctr[user.snd] && c < user.ctr[user.rec]; c++ {
+	for e := 0; e < u.snd && e < u.rec; e++ {
+		for c := 0; c < u.ctr[u.snd] && c < u.ctr[u.rec]; c++ {
 			// fmt.Println("************", e, c)
-			delete(user.stLite, index(e, c))
+			delete(u.stLite, index(e, c))
 		}
 	}
-	for e := 0; e < user.snd && e < user.rec; e++ {
-		delete(user.ctr, e)
+	for e := 0; e < u.snd && e < u.rec; e++ {
+		delete(u.ctr, e)
 	}
 
 	return binary.Marshal(&hybridCiphertext{CT: ct, E: e, C: c})
 }
 
 // Receive invokes the hybrid-ARCAD receive routine.
-func (h HybridARCAD) Receive(user *HybridUser, ad, ct []byte) ([]byte, error) {
+func (h HybridARCAD) Receive(user Uuser, ad, ct []byte) ([]byte, error) {
 	var cipher hybridCiphertext
 	if err := binary.Unmarshal(ct, &cipher); err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshal hybrid-ARCAD ciphertext")
 	}
+
+	u := user.(*HybridUser)
 
 	ba, err := binary.Marshal(&hybridAssociated{AD: ad, E: cipher.E, C: cipher.C})
 	if err != nil {
@@ -173,7 +176,7 @@ func (h HybridARCAD) Receive(user *HybridUser, ad, ct []byte) ([]byte, error) {
 	var m []byte
 
 	if int(ad[0]) == 1 {
-		pt, err := h.arcad.Receive(user.stARCAD, ba, cipher.CT)
+		pt, err := h.arcad.Receive(u.stARCAD, ba, cipher.CT)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to decrypt ciphertext")
 		}
@@ -189,10 +192,10 @@ func (h HybridARCAD) Receive(user *HybridUser, ad, ct []byte) ([]byte, error) {
 			return nil, errors.Wrap(err, "unable to unmarshal hybrid-ARCAD state")
 		}
 
-		user.stLite[index(cipher.E, cipher.C)] = &st
-		user.rec, user.ctr[cipher.E] = cipher.E, cipher.C
+		u.stLite[index(cipher.E, cipher.C)] = &st
+		u.rec, u.ctr[cipher.E] = cipher.E, cipher.C
 	} else {
-		pt, err := h.lite.Receive(user.stLite[index(cipher.E, cipher.C)], ba, cipher.CT)
+		pt, err := h.lite.Receive(u.stLite[index(cipher.E, cipher.C)], ba, cipher.CT)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to decrypt ciphertext")
 		}
@@ -200,13 +203,13 @@ func (h HybridARCAD) Receive(user *HybridUser, ad, ct []byte) ([]byte, error) {
 	}
 
 	// Clean-up states.
-	for e := 0; e < user.snd && e < user.rec; e++ {
-		for c := 0; c < user.ctr[user.snd] && c < user.ctr[user.rec]; c++ {
-			delete(user.stLite, index(e, c))
+	for e := 0; e < u.snd && e < u.rec; e++ {
+		for c := 0; c < u.ctr[u.snd] && c < u.ctr[u.rec]; c++ {
+			delete(u.stLite, index(e, c))
 		}
 	}
-	for e := 0; e < user.snd && e < user.rec; e++ {
-		delete(user.ctr, e)
+	for e := 0; e < u.snd && e < u.rec; e++ {
+		delete(u.ctr, e)
 	}
 
 	return m, nil

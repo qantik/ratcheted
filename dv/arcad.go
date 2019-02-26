@@ -31,6 +31,10 @@ type ARCADUser struct {
 	Sender, Receiver [][]byte
 }
 
+// func (u ARCADUser) Size() int {
+// 	return 0
+// }
+
 // arcadMessage bundles plaintext material.
 type arcadMessage struct {
 	S, Msg []byte
@@ -42,6 +46,8 @@ type arcadCiphertext struct {
 	C []byte
 	N int
 }
+
+var hashKeySize = 16
 
 // NewARCAD returns a fresh ARCAD instance for a given signature scheme,
 // a public-key encryption scheme and a symmetric encryption scheme.
@@ -59,7 +65,7 @@ func NewLiteARCAD(otae encryption.Authenticated, symmetric encryption.Symmetric)
 }
 
 // Init initializes the ARCAD protocol and returns two user states.
-func (a ARCAD) Init() (alice, bob *ARCADUser, err error) {
+func (a ARCAD) Init() (alice, bob Uuser, err error) {
 	sa, ra, err := a.unid.init()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to create new onion states")
@@ -80,36 +86,39 @@ func (a ARCAD) Init() (alice, bob *ARCADUser, err error) {
 }
 
 // Send invokes the ARCAD send routine.
-func (a ARCAD) Send(user *ARCADUser, ad, msg []byte) (ct []byte, err error) {
+func (a ARCAD) Send(user Uuser, ad, msg []byte) (ct []byte, err error) {
 	s, r, err := a.unid.init()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create new onion states")
 	}
-	user.Receiver = append(user.Receiver, r)
+
+	u := user.(*ARCADUser)
+
+	u.Receiver = append(u.Receiver, r)
 
 	i := 0
-	for j, s := range user.Sender {
+	for j, s := range u.Sender {
 		if s != nil {
 			i = j
 			break
 		}
 	}
-	pt, err := binary.Marshal(arcadMessage{S: s, Msg: msg, N: len(user.Sender) - i - 1})
+	pt, err := binary.Marshal(arcadMessage{S: s, Msg: msg, N: len(u.Sender) - i - 1})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encode arcad message")
 	}
 
-	st, c, err := a.unid.send(user.Sender[i:], user.Hk, ad, pt)
+	st, c, err := a.unid.send(u.Sender[i:], u.Hk, ad, pt)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to onion encrypt message")
 	}
-	user.Sender[len(user.Sender)-1] = st
+	u.Sender[len(u.Sender)-1] = st
 
-	for i := 0; i < len(user.Sender)-1; i++ {
-		user.Sender[i] = nil
+	for i := 0; i < len(u.Sender)-1; i++ {
+		u.Sender[i] = nil
 	}
 
-	ct, err = binary.Marshal(arcadCiphertext{C: c, N: len(user.Sender[i:])})
+	ct, err = binary.Marshal(arcadCiphertext{C: c, N: len(u.Sender[i:])})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to encode arcad ciphertext")
 	}
@@ -117,21 +126,23 @@ func (a ARCAD) Send(user *ARCADUser, ad, msg []byte) (ct []byte, err error) {
 }
 
 // receive invokes the ARCAD receive routine.
-func (a ARCAD) Receive(user *ARCADUser, ad, ct []byte) (msg []byte, err error) {
+func (a ARCAD) Receive(user Uuser, ad, ct []byte) (msg []byte, err error) {
 	var c arcadCiphertext
 	if err := binary.Unmarshal(ct, &c); err != nil {
 		return nil, errors.Wrap(err, "unable to decode arcad ciphertext")
 	}
 
+	u := user.(*ARCADUser)
+
 	i := 0
-	for j, s := range user.Receiver {
+	for j, s := range u.Receiver {
 		if s != nil {
 			i = j
 			break
 		}
 	}
 
-	st, pt, err := a.unid.receive(user.Receiver[i:i+c.N], user.Hk, ad, c.C)
+	st, pt, err := a.unid.receive(u.Receiver[i:i+c.N], u.Hk, ad, c.C)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to onion decrypt ciphertext")
 	}
@@ -140,12 +151,12 @@ func (a ARCAD) Receive(user *ARCADUser, ad, ct []byte) (msg []byte, err error) {
 	if err = binary.Unmarshal(pt, &m); err != nil {
 		return nil, errors.Wrap(err, "unable to decode arcad message")
 	}
-	user.Sender = append(user.Sender, m.S)
+	u.Sender = append(u.Sender, m.S)
 
 	for j := i; j < i+c.N; j++ {
-		user.Receiver[j] = nil
+		u.Receiver[j] = nil
 	}
-	user.Receiver[i+c.N-1] = st
+	u.Receiver[i+c.N-1] = st
 
 	return m.Msg, nil
 }
