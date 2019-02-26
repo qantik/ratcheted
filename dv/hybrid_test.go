@@ -10,24 +10,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var hybrid = NewHybridARCAD(ecdsa, ecies, aes, gcm)
+var (
+	flags  = []int{2, 5, 7}
+	hybrid = NewHybridARCAD(ecdsa, ecies, aes, gcm, flags)
+)
 
 func TestHybridARCAD_Alternating(t *testing.T) {
 	require := require.New(t)
 
 	msg := []byte("arcad")
+	ad := []byte("ad")
 
 	alice, bob, err := hybrid.Init()
 	require.Nil(err)
 
 	for i := 0; i < 10; i++ {
-		ad := []byte("ad")
-		if i&5 == 0 {
-			ad = append([]byte{byte(1)}, ad...)
-		} else {
-			ad = append([]byte{byte(0)}, ad...)
-		}
-
 		ct, err := hybrid.Send(alice, ad, msg)
 		require.Nil(err)
 
@@ -48,7 +45,7 @@ func TestHybridARCAD_Unidirectional(t *testing.T) {
 	require := require.New(t)
 
 	msg := []byte("arcad")
-	ad := []byte("\x00ad")
+	ad := []byte("ad")
 
 	alice, bob, err := hybrid.Init()
 	require.Nil(err)
@@ -76,7 +73,7 @@ func TestHybridARCAD_DefUnidirectional(t *testing.T) {
 	require := require.New(t)
 
 	msg := []byte("arcad")
-	ad := []byte("\x00ad")
+	ad := []byte("ad")
 
 	alice, bob, err := hybrid.Init()
 	require.Nil(err)

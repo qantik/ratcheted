@@ -19,6 +19,12 @@ import (
 // HybridARCAD implements the hybrid-ARCAD protocol.
 type HybridARCAD struct {
 	arcad, lite *ARCAD
+
+	count int // count is the number of sent messages.
+
+	// flags contains a list of counts that determine if the ARCAD
+	// suite has to be switched for the next message.
+	flags []int
 }
 
 // HybridUser designates a hybrid-ARCAD user state.
@@ -46,6 +52,8 @@ type hybridAssociated struct {
 type hybridCiphertext struct {
 	CT   []byte
 	E, C int
+
+	Flag bool
 }
 
 // NewHybridARCAD creates a fresh hybrid-ARCAD instance.
@@ -53,16 +61,18 @@ func NewHybridARCAD(
 	signature signature.Signature,
 	asymmetric encryption.Asymmetric,
 	symmetric encryption.Symmetric,
-	otae encryption.Authenticated) *HybridARCAD {
+	otae encryption.Authenticated,
+	flags []int) *HybridARCAD {
 
 	return &HybridARCAD{
 		arcad: NewARCAD(signature, asymmetric, symmetric),
 		lite:  NewLiteARCAD(otae, symmetric),
+		count: 0, flags: flags,
 	}
 }
 
 // Init intializes the hybrid-ARCAD protocol and returns two user states.
-func (h HybridARCAD) Init() (alice, bob Uuser, err error) {
+func (h *HybridARCAD) Init() (alice, bob Uuser, err error) {
 	as, ar, err := h.arcad.Init()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to create fresh ARCAD states")
@@ -71,6 +81,7 @@ func (h HybridARCAD) Init() (alice, bob Uuser, err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to create fresh lite-ARCAD states")
 	}
+	h.count = 0
 
 	alice = &HybridUser{
 		stARCAD: as,
@@ -86,14 +97,21 @@ func (h HybridARCAD) Init() (alice, bob Uuser, err error) {
 }
 
 // Send invokes the hybrid-ARCAD send routine.
-func (h HybridARCAD) Send(user Uuser, ad, msg []byte) ([]byte, error) {
+func (h *HybridARCAD) Send(user Uuser, ad, msg []byte) ([]byte, error) {
 	var ct []byte
 	var e, c int
 
 	u := user.(*HybridUser)
 
-	if int(ad[0]) == 1 {
-		// fmt.Println("===============")
+	flag := false
+	for _, f := range h.flags {
+		if h.count == f {
+			flag = true
+			break
+		}
+	}
+
+	if flag {
 		if u.snd < u.rec {
 			e, c = u.rec+1, 0
 		} else {
@@ -156,11 +174,12 @@ func (h HybridARCAD) Send(user Uuser, ad, msg []byte) ([]byte, error) {
 		delete(u.ctr, e)
 	}
 
-	return binary.Marshal(&hybridCiphertext{CT: ct, E: e, C: c})
+	h.count++
+	return binary.Marshal(&hybridCiphertext{CT: ct, E: e, C: c, Flag: flag})
 }
 
 // Receive invokes the hybrid-ARCAD receive routine.
-func (h HybridARCAD) Receive(user Uuser, ad, ct []byte) ([]byte, error) {
+func (h *HybridARCAD) Receive(user Uuser, ad, ct []byte) ([]byte, error) {
 	var cipher hybridCiphertext
 	if err := binary.Unmarshal(ct, &cipher); err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshal hybrid-ARCAD ciphertext")
@@ -175,7 +194,7 @@ func (h HybridARCAD) Receive(user Uuser, ad, ct []byte) ([]byte, error) {
 
 	var m []byte
 
-	if int(ad[0]) == 1 {
+	if cipher.Flag {
 		pt, err := h.arcad.Receive(u.stARCAD, ba, cipher.CT)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to decrypt ciphertext")

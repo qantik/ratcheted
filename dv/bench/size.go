@@ -20,10 +20,12 @@ var (
 	gcm   = encryption.NewGCM()
 	aes   = encryption.NewAES()
 
+	flags = []int{250, 500, 750, 1000}
+
 	//bark      = dv.NewBARK(dv.NewUniARCAD(ecies, ecdsa))
 	arcad  = dv.NewARCAD(ecdsa, ecies, aes)
 	lite   = dv.NewLiteARCAD(gcm, aes)
-	hybrid = dv.NewHybridARCAD(ecdsa, ecies, aes, gcm)
+	hybrid = dv.NewHybridARCAD(ecdsa, ecies, aes, gcm, flags)
 	//lite      = dv.NewBARK(dv.NewLiteUniARCAD(gcm))
 )
 

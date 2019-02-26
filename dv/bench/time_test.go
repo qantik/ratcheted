@@ -107,22 +107,16 @@ func benchmarkDeferredUni(arcad dv.Protocol, i int, b *testing.B) {
 	}
 }
 
-func benchmarkHybridAlt(i int, b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		hybridAlt(i)
-	}
-}
-
-func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(arcad, 50, b) }
-func BenchmarkAlt100(b *testing.B) { benchmarkAlt(arcad, 100, b) }
-func BenchmarkAlt200(b *testing.B) { benchmarkAlt(arcad, 200, b) }
-func BenchmarkAlt300(b *testing.B) { benchmarkAlt(arcad, 300, b) }
-func BenchmarkAlt400(b *testing.B) { benchmarkAlt(arcad, 400, b) }
-func BenchmarkAlt500(b *testing.B) { benchmarkAlt(arcad, 500, b) }
-func BenchmarkAlt600(b *testing.B) { benchmarkAlt(arcad, 600, b) }
-func BenchmarkAlt700(b *testing.B) { benchmarkAlt(arcad, 700, b) }
-func BenchmarkAlt800(b *testing.B) { benchmarkAlt(arcad, 800, b) }
-func BenchmarkAlt900(b *testing.B) { benchmarkAlt(arcad, 900, b) }
+func BenchmarkAlt50(b *testing.B)  { benchmarkAlt(lite, 50, b) }
+func BenchmarkAlt100(b *testing.B) { benchmarkAlt(lite, 100, b) }
+func BenchmarkAlt200(b *testing.B) { benchmarkAlt(lite, 200, b) }
+func BenchmarkAlt300(b *testing.B) { benchmarkAlt(lite, 300, b) }
+func BenchmarkAlt400(b *testing.B) { benchmarkAlt(lite, 400, b) }
+func BenchmarkAlt500(b *testing.B) { benchmarkAlt(lite, 500, b) }
+func BenchmarkAlt600(b *testing.B) { benchmarkAlt(lite, 600, b) }
+func BenchmarkAlt700(b *testing.B) { benchmarkAlt(lite, 700, b) }
+func BenchmarkAlt800(b *testing.B) { benchmarkAlt(lite, 800, b) }
+func BenchmarkAlt900(b *testing.B) { benchmarkAlt(lite, 900, b) }
 
 func BenchmarkUni50(b *testing.B)  { benchmarkUni(arcad, 50, b) }
 func BenchmarkUni100(b *testing.B) { benchmarkUni(arcad, 100, b) }
@@ -146,13 +140,16 @@ func BenchmarkDeferredUni700(b *testing.B) { benchmarkDeferredUni(arcad, 700, b)
 func BenchmarkDeferredUni800(b *testing.B) { benchmarkDeferredUni(arcad, 800, b) }
 func BenchmarkDeferredUni900(b *testing.B) { benchmarkDeferredUni(arcad, 900, b) }
 
-func BenchmarkHybridAlt50(b *testing.B)  { benchmarkHybridAlt(50, b) }
-func BenchmarkHybridAlt100(b *testing.B) { benchmarkHybridAlt(100, b) }
-func BenchmarkHybridAlt200(b *testing.B) { benchmarkHybridAlt(200, b) }
-func BenchmarkHybridAlt300(b *testing.B) { benchmarkHybridAlt(300, b) }
-func BenchmarkHybridAlt400(b *testing.B) { benchmarkHybridAlt(400, b) }
-func BenchmarkHybridAlt500(b *testing.B) { benchmarkHybridAlt(500, b) }
-func BenchmarkHybridAlt600(b *testing.B) { benchmarkHybridAlt(600, b) }
-func BenchmarkHybridAlt700(b *testing.B) { benchmarkHybridAlt(700, b) }
-func BenchmarkHybridAlt800(b *testing.B) { benchmarkHybridAlt(800, b) }
-func BenchmarkHybridAlt900(b *testing.B) { benchmarkHybridAlt(900, b) }
+func BenchmarkHybridAlt50(b *testing.B)   { benchmarkAlt(hybrid, 50, b) }
+func BenchmarkHybridAlt100(b *testing.B)  { benchmarkAlt(hybrid, 100, b) }
+func BenchmarkHybridAlt200(b *testing.B)  { benchmarkAlt(hybrid, 200, b) }
+func BenchmarkHybridAlt300(b *testing.B)  { benchmarkAlt(hybrid, 300, b) }
+func BenchmarkHybridAlt400(b *testing.B)  { benchmarkAlt(hybrid, 400, b) }
+func BenchmarkHybridAlt500(b *testing.B)  { benchmarkAlt(hybrid, 500, b) }
+func BenchmarkHybridAlt600(b *testing.B)  { benchmarkAlt(hybrid, 600, b) }
+func BenchmarkHybridAlt700(b *testing.B)  { benchmarkAlt(hybrid, 700, b) }
+func BenchmarkHybridAlt800(b *testing.B)  { benchmarkAlt(hybrid, 800, b) }
+func BenchmarkHybridAlt900(b *testing.B)  { benchmarkAlt(hybrid, 900, b) }
+func BenchmarkHybridAlt1000(b *testing.B) { benchmarkAlt(hybrid, 1000, b) }
+func BenchmarkHybridAlt1100(b *testing.B) { benchmarkAlt(hybrid, 1100, b) }
+func BenchmarkHybridAlt1200(b *testing.B) { benchmarkAlt(hybrid, 1200, b) }
