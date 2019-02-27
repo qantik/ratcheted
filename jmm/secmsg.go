@@ -14,6 +14,7 @@ import (
 	"strconv"
 
 	"github.com/alecthomas/binary"
+
 	"github.com/pkg/errors"
 
 	"github.com/qantik/ratcheted/primitives"

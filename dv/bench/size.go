@@ -10,7 +10,7 @@ import (
 	"github.com/qantik/ratcheted/dv"
 )
 
-func size_alternating(p dv.Protocol, n int) (int, int) {
+func size_alt(p dv.Protocol, n int) (int, int) {
 	alice, bob, _ := p.Init()
 
 	msgSize := 0
@@ -37,7 +37,7 @@ func size_alternating(p dv.Protocol, n int) (int, int) {
 	return msgSize, maxState
 }
 
-func size_unidirectional(p dv.Protocol, n int) (int, int) {
+func size_uni(p dv.Protocol, n int) (int, int) {
 	alice, bob, _ := p.Init()
 
 	msgSize := 0
@@ -127,10 +127,10 @@ func size_def(p dv.Protocol, n int) (int, int) {
 // }
 
 func size(p dv.Protocol, tp func(p dv.Protocol, i int) (int, int)) {
-	msg := make([]int, 10)
+	msg := make([]int, 20)
 
 	s := ""
-	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200} {
 		msg[i], _ = tp(p, n)
 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}

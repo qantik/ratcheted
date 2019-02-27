@@ -10,7 +10,7 @@ import (
 	"github.com/qantik/ratcheted/dv"
 )
 
-func alt(p dv.Protocol, n int) {
+func time_alt(p dv.Protocol, n int) {
 	alice, bob, _ := p.Init()
 
 	for i := 0; i < n/2; i++ {
@@ -24,7 +24,7 @@ func alt(p dv.Protocol, n int) {
 	}
 }
 
-func unidirectional(p dv.Protocol, n int) {
+func time_uni(p dv.Protocol, n int) {
 	alice, bob, _ := p.Init()
 
 	for i := 0; i < n/2; i++ {
@@ -40,7 +40,7 @@ func unidirectional(p dv.Protocol, n int) {
 	}
 }
 
-func deferredUni(p dv.Protocol, n int) {
+func time_def(p dv.Protocol, n int) {
 	alice, bob, _ := p.Init()
 
 	var cts [1200][]byte

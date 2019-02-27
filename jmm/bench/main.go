@@ -25,6 +25,5 @@ var (
 )
 
 func main() {
-	time(time_alt)
-	size(size_alt)
+	time(time_def)
 }

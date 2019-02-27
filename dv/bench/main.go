@@ -33,6 +33,8 @@ var (
 )
 
 func main() {
-	time(lite, alt)
-	size(lite, size_def)
+	// time(arcad, time_alt)
+	size(hybrid, size_alt)
+	size(hybrid, size_uni)
+	size(hybrid, size_def)
 }
