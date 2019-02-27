@@ -5,28 +5,10 @@
 package main
 
 import (
-	"crypto/elliptic"
 	"fmt"
-
-	"github.com/qantik/ratcheted/pr"
-	"github.com/qantik/ratcheted/primitives/hibe"
-	"github.com/qantik/ratcheted/primitives/signature"
 )
 
-var (
-	curve  = elliptic.P256()
-	ecdsa  = signature.NewECDSA(curve)
-	gentry = hibe.NewGentry()
-
-	brke = pr.NewBRKE(gentry, ecdsa)
-)
-
-var (
-	msg = []byte("msg")
-	ad  = []byte("ad")
-)
-
-func size_alternating(n int) (int, int) {
+func size_alt(n int) (int, int) {
 	alice, bob, _ := brke.Init()
 
 	msgSize := 0
@@ -37,7 +19,7 @@ func size_alternating(n int) (int, int) {
 		kb, _ := brke.Receive(bob, ad, c)
 		_, _ = ka, kb
 
-		msgSize += size(c)
+		msgSize += mSize(c)
 		//maxState = max(maxState, alice.Size())
 		//maxState = max(maxState, bob.Size())
 
@@ -46,7 +28,7 @@ func size_alternating(n int) (int, int) {
 		_, _ = ka, kb
 
 		//msgSize = max(msgSize, size(c))
-		msgSize += size(c)
+		msgSize += mSize(c)
 		//maxState = max(maxState, alice.Size())
 		//maxState = max(maxState, bob.Size())
 	}
@@ -54,7 +36,7 @@ func size_alternating(n int) (int, int) {
 	return msgSize, maxState
 }
 
-func size_unidirectional(n int) (int, int) {
+func size_uni(n int) (int, int) {
 	alice, bob, _ := brke.Init()
 
 	msgSize := 0
@@ -65,7 +47,7 @@ func size_unidirectional(n int) (int, int) {
 		kb, _ := brke.Receive(bob, ad, c)
 		_, _ = ka, kb
 
-		msgSize += size(c)
+		msgSize += mSize(c)
 		//maxState = max(maxState, alice.Size())
 		//maxState = max(maxState, bob.Size())
 	}
@@ -75,7 +57,7 @@ func size_unidirectional(n int) (int, int) {
 		ka, _ := brke.Receive(alice, ad, c)
 		_, _ = ka, kb
 
-		msgSize += size(c)
+		msgSize += mSize(c)
 		//maxState = max(maxState, alice.Size())
 		//maxState = max(maxState, bob.Size())
 	}
@@ -89,14 +71,14 @@ func size_def(n int) (int, int) {
 	msgSize := 0
 	maxState := 0
 
-	var ks [1000][]byte
-	var cs [1000][][]byte
+	var ks [1200][]byte
+	var cs [1200][][]byte
 	for i := 0; i < n/2; i++ {
 		k, c, _ := brke.Send(alice, ad)
 		ks[i] = k
 		cs[i] = c
 
-		msgSize += size(c)
+		msgSize += mSize(c)
 		//maxState = max(maxState, alice.Size())
 	}
 
@@ -105,7 +87,7 @@ func size_def(n int) (int, int) {
 		ka, _ := brke.Receive(alice, ad, c)
 		_, _ = ka, kb
 
-		msgSize += size(c)
+		msgSize += mSize(c)
 		//maxState = max(maxState, alice.Size())
 		//maxState = max(maxState, bob.Size())
 	}
@@ -120,32 +102,43 @@ func size_def(n int) (int, int) {
 	return msgSize, maxState
 }
 
-func main() {
+func size(tp func(i int) (int, int)) {
 	msg := make([]int, 10)
 
 	s := ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_alternating(n)
+		msg[i], _ = tp(n)
 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
-	fmt.Println("Total Message Size (ALT)\n", s)
-
-	s = ""
-	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_unidirectional(n)
-		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
-		fmt.Println(s)
-	}
-	fmt.Println("Total Message Size (UNI)\n", s)
-
-	s = ""
-	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
-		msg[i], _ = size_def(n)
-		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
-		fmt.Println(s)
-	}
-	fmt.Println("Total Message Size (DEF)\n", s)
+	fmt.Println(s)
 }
+
+// func main() {
+// 	msg := make([]int, 10)
+
+// 	s := ""
+// 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+// 		msg[i], _ = size_alternating(n)
+// 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
+// 	}
+// 	fmt.Println("Total Message Size (ALT)\n", s)
+
+// 	s = ""
+// 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+// 		msg[i], _ = size_unidirectional(n)
+// 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
+// 		fmt.Println(s)
+// 	}
+// 	fmt.Println("Total Message Size (UNI)\n", s)
+
+// 	s = ""
+// 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+// 		msg[i], _ = size_def(n)
+// 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
+// 		fmt.Println(s)
+// 	}
+// 	fmt.Println("Total Message Size (DEF)\n", s)
+// }
 
 func max(a, b int) int {
 	if a < b {
@@ -154,7 +147,7 @@ func max(a, b int) int {
 	return a
 }
 
-func size(m [][]byte) int {
+func mSize(m [][]byte) int {
 	size := 0
 	for _, b := range m {
 		size += len(b)
