@@ -34,7 +34,7 @@ var (
 
 func main() {
 	// time(arcad, time_alt)
-	size(hybrid, size_alt)
-	size(hybrid, size_uni)
-	size(hybrid, size_def)
+	size(arcad, size_alt)
+	size(arcad, size_uni)
+	size(arcad, size_def)
 }

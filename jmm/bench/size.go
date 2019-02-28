@@ -100,10 +100,10 @@ func size_def(n int) (int, int) {
 }
 
 func size(tp func(i int) (int, int)) {
-	msg := make([]int, 10)
+	msg := make([]int, 20)
 
 	s := ""
-	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900} {
+	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200} {
 		msg[i], _ = tp(n)
 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
