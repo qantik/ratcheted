@@ -1,6 +1,7 @@
 .DS_Store
 
 vendor/
+example
 
 # Latex output files.
 *.aux
