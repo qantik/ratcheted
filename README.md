@@ -24,19 +24,8 @@ $ go test -v ./...
 ````
 
 ## Benchmarks
-```
-# To run the BRKE benchmarks, same for the other protocols.
-$ cd pt/bench
-
-# Turn off Go garbage collection.
-$ GOGC=off
-
-# Runtime benchmarks.
-$ go test -bench=. -run=Benchmark
-
-# Message and state size benchmarks.
-$ go run size.go
-```
+The `bench` directory within each package contains the runtime, message and
+state size benchmarks which can be run by simply executing the `main.go` file.
 
 ## Project Structure
 - `./acd` Double Ratchet protocol by [Alwen, Coretti & Dodis](https://eprint.iacr.org/2018/1037).
