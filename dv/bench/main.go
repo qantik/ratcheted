@@ -19,11 +19,11 @@ var (
 	gcm   = encryption.NewGCM()
 	aes   = encryption.NewAES()
 
-	flags = []int{250, 500, 750, 1000}
+	flag = 250
 
 	arcad  = dv.NewARCAD(ecdsa, ecies, aes)
 	lite   = dv.NewLiteARCAD(gcm, aes)
-	hybrid = dv.NewHybridARCAD(ecdsa, ecies, aes, gcm, flags)
+	hybrid = dv.NewHybridARCAD(ecdsa, ecies, aes, gcm, flag)
 	block  = dv.NewBlockchainARCAD(hybrid)
 )
 
@@ -33,8 +33,5 @@ var (
 )
 
 func main() {
-	// time(arcad, time_alt)
-	size(arcad, size_alt)
-	size(arcad, size_uni)
-	size(arcad, size_def)
+	time_hybrid(block, time_uni)
 }

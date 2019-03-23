@@ -31,10 +31,6 @@ type ARCADUser struct {
 	Sender, Receiver [][]byte
 }
 
-// func (u ARCADUser) Size() int {
-// 	return 0
-// }
-
 // arcadMessage bundles plaintext material.
 type arcadMessage struct {
 	S, Msg []byte
@@ -65,7 +61,7 @@ func NewLiteARCAD(otae encryption.Authenticated, symmetric encryption.Symmetric)
 }
 
 // Init initializes the ARCAD protocol and returns two user states.
-func (a ARCAD) Init() (alice, bob Uuser, err error) {
+func (a ARCAD) Init() (alice, bob User, err error) {
 	sa, ra, err := a.unid.init()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to create new onion states")
@@ -86,7 +82,7 @@ func (a ARCAD) Init() (alice, bob Uuser, err error) {
 }
 
 // Send invokes the ARCAD send routine.
-func (a ARCAD) Send(user Uuser, ad, msg []byte) (ct []byte, err error) {
+func (a ARCAD) Send(user User, ad, msg []byte) (ct []byte, err error) {
 	s, r, err := a.unid.init()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create new onion states")
@@ -126,7 +122,7 @@ func (a ARCAD) Send(user Uuser, ad, msg []byte) (ct []byte, err error) {
 }
 
 // receive invokes the ARCAD receive routine.
-func (a ARCAD) Receive(user Uuser, ad, ct []byte) (msg []byte, err error) {
+func (a ARCAD) Receive(user User, ad, ct []byte) (msg []byte, err error) {
 	var c arcadCiphertext
 	if err := binary.Unmarshal(ct, &c); err != nil {
 		return nil, errors.Wrap(err, "unable to decode arcad ciphertext")
@@ -159,4 +155,16 @@ func (a ARCAD) Receive(user Uuser, ad, ct []byte) (msg []byte, err error) {
 	u.Receiver[i+c.N-1] = st
 
 	return m.Msg, nil
+}
+
+// Size returns the size of a user state in bytes.
+func (u ARCADUser) Size() int {
+	s := len(u.Hk)
+	for _, b := range u.Sender {
+		s += len(b)
+	}
+	for _, b := range u.Receiver {
+		s += len(b)
+	}
+	return s
 }

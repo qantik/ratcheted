@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	flags  = []int{2, 5, 7}
-	hybrid = NewHybridARCAD(ecdsa, ecies, aes, gcm, flags)
+	// flags  = []int{2, 5, 7}
+	flag   = 2
+	hybrid = NewHybridARCAD(ecdsa, ecies, aes, gcm, flag)
 )
 
 func TestHybridARCAD_Alternating(t *testing.T) {

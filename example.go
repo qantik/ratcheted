@@ -16,11 +16,11 @@ var (
 	aes   = encryption.NewAES()
 	gcm   = encryption.NewGCM()
 
-	flags = []int{50, 100, 200}
+	flag = 100
 )
 
 func main() {
-	arcad := dv.NewHybridARCAD(ecdsa, ecies, aes, gcm, flags)
+	arcad := dv.NewHybridARCAD(ecdsa, ecies, aes, gcm, flag)
 	block := dv.NewBlockchainARCAD(arcad)
 
 	msg := []byte("ratchet")

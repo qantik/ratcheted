@@ -20,8 +20,8 @@ func size_alt(n int) (int, int) {
 		_, _ = ka, kb
 
 		msgSize += mSize(c)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 
 		kb, c, _ = brke.Send(bob, ad)
 		ka, _ = brke.Receive(alice, ad, c)
@@ -29,8 +29,8 @@ func size_alt(n int) (int, int) {
 
 		//msgSize = max(msgSize, size(c))
 		msgSize += mSize(c)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 	}
 
 	return msgSize, maxState
@@ -48,8 +48,8 @@ func size_uni(n int) (int, int) {
 		_, _ = ka, kb
 
 		msgSize += mSize(c)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
@@ -58,8 +58,8 @@ func size_uni(n int) (int, int) {
 		_, _ = ka, kb
 
 		msgSize += mSize(c)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 	}
 
 	return msgSize, maxState
@@ -79,7 +79,7 @@ func size_def(n int) (int, int) {
 		cs[i] = c
 
 		msgSize += mSize(c)
-		//maxState = max(maxState, alice.Size())
+		maxState = max(maxState, alice.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
@@ -88,8 +88,8 @@ func size_def(n int) (int, int) {
 		_, _ = ka, kb
 
 		msgSize += mSize(c)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
@@ -107,7 +107,7 @@ func size(tp func(i int) (int, int)) {
 
 	s := ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200} {
-		msg[i], _ = tp(n)
+		_, msg[i] = tp(n)
 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 		fmt.Println(s)
 	}

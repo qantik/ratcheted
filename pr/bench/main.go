@@ -25,5 +25,5 @@ var (
 )
 
 func main() {
-	size(size_uni)
+	size(size_def)
 }

@@ -20,16 +20,16 @@ func size_alt(dr *acd.DoubleRatchet, n int) (int, int) {
 		ct, _ := dr.Send(alice, msg)
 
 		msgSize += len(ct)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 
 		pt, _ := dr.Receive(bob, ct)
 		ct, _ = dr.Send(bob, msg)
 		_ = pt
 
 		msgSize += len(ct)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 
 		pt, _ = dr.Receive(alice, ct)
 		_ = pt
@@ -50,8 +50,8 @@ func size_uni(dr *acd.DoubleRatchet, n int) (int, int) {
 		_ = pt
 
 		msgSize += len(ct)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
@@ -60,8 +60,8 @@ func size_uni(dr *acd.DoubleRatchet, n int) (int, int) {
 		_ = pt
 
 		msgSize += len(ct)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 	}
 
 	return msgSize, maxState
@@ -79,7 +79,7 @@ func size_def(dr *acd.DoubleRatchet, n int) (int, int) {
 		cts[i] = ct
 
 		msgSize += len(ct)
-		//maxState = max(maxState, alice.Size())
+		maxState = max(maxState, alice.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
@@ -88,15 +88,15 @@ func size_def(dr *acd.DoubleRatchet, n int) (int, int) {
 		_ = pt
 
 		msgSize += len(ct)
-		//maxState = max(maxState, alice.Size())
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, alice.Size())
+		maxState = max(maxState, bob.Size())
 	}
 
 	for i := 0; i < n/2; i++ {
 		pt, _ := dr.Receive(bob, cts[i])
 		_ = pt
 
-		//maxState = max(maxState, bob.Size())
+		maxState = max(maxState, bob.Size())
 	}
 
 	return msgSize, maxState
@@ -107,7 +107,7 @@ func size(p *acd.DoubleRatchet, tp func(p *acd.DoubleRatchet, i int) (int, int))
 
 	s := ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200} {
-		msg[i], _ = tp(p, n)
+		_, msg[i] = tp(p, n)
 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
 	fmt.Println(s)

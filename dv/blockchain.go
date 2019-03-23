@@ -22,7 +22,7 @@ type BlockchainARCAD struct {
 
 // BlockchainUser designates a blockchain-ARCAD user state.
 type BlockchainUser struct {
-	st Uuser
+	st User
 
 	hk []byte
 
@@ -49,7 +49,7 @@ func NewBlockchainARCAD(arcad Protocol) *BlockchainARCAD {
 }
 
 // Init initializes the blockchain-ARCAD protocol and returns two user states.
-func (b BlockchainARCAD) Init() (alice, bob Uuser, err error) {
+func (b BlockchainARCAD) Init() (alice, bob User, err error) {
 	s, r, err := b.arcad.Init()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to initialize arcad protocol")
@@ -76,7 +76,7 @@ func (b BlockchainARCAD) Init() (alice, bob Uuser, err error) {
 }
 
 // Send invokes the blockchain-ARCAD send routine.
-func (b BlockchainARCAD) Send(user Uuser, ad, msg []byte) ([]byte, error) {
+func (b BlockchainARCAD) Send(user User, ad, msg []byte) ([]byte, error) {
 	u := user.(*BlockchainUser)
 
 	ack := u.hrec
@@ -107,7 +107,7 @@ func (b BlockchainARCAD) Send(user Uuser, ad, msg []byte) ([]byte, error) {
 }
 
 // Receive invokes the blockchain-ARCAD receive routine.
-func (b BlockchainARCAD) Receive(user Uuser, ad, ct []byte) ([]byte, error) {
+func (b BlockchainARCAD) Receive(user User, ad, ct []byte) ([]byte, error) {
 	var cipher blockchainCiphertext
 	if err := binary.Unmarshal(ct, &cipher); err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshal ciphertext")
@@ -144,4 +144,13 @@ func (b BlockchainARCAD) Receive(user Uuser, ad, ct []byte) ([]byte, error) {
 	u.asnd = u.asnd[:i]
 
 	return msg, nil
+}
+
+// Size returns the size of a user state in bytes.
+func (b BlockchainUser) Size() int {
+	s := b.st.Size() + len(b.hk) + len(b.hsnd) + len(b.hrec)
+	for _, h := range b.asnd {
+		s += len(h)
+	}
+	return s
 }

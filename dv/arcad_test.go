@@ -5,22 +5,24 @@ package dv
 
 import (
 	"bytes"
+	"crypto/elliptic"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/qantik/ratcheted/primitives/encryption"
+	"github.com/qantik/ratcheted/primitives/signature"
 )
 
 var (
-	//curve = elliptic.P256()
-	//ecies = encryption.NewECIES(curve)
-	//ecdsa = signature.NewECDSA(curve)
-	aes = encryption.NewAES()
-	//gcm = encryption.NewGCM()
+	curve = elliptic.P256()
+	ecies = encryption.NewECIES(curve)
+	ecdsa = signature.NewECDSA(curve)
+	aes   = encryption.NewAES()
+	gcm   = encryption.NewGCM()
 
-	arcad = NewARCAD(ecdsa, ecies, aes)
-	//arcad = NewLiteARCAD(gcm, aes)
+	arcad     = NewARCAD(ecdsa, ecies, aes)
+	liteARCAD = NewLiteARCAD(gcm, aes)
 )
 
 func TestARCAD_Alternating(t *testing.T) {
@@ -58,7 +60,7 @@ func TestARCAD_Unidirectional(t *testing.T) {
 	alice, bob, err := arcad.Init()
 	require.Nil(err)
 
-	for i := 0; i < 25; i++ {
+	for i := 0; i < 10; i++ {
 		ct, err := arcad.Send(alice, ad, msg)
 		require.Nil(err)
 
@@ -67,7 +69,7 @@ func TestARCAD_Unidirectional(t *testing.T) {
 		require.True(bytes.Equal(msg, pt))
 	}
 
-	for i := 0; i < 25; i++ {
+	for i := 0; i < 10; i++ {
 		ct, err := arcad.Send(bob, ad, msg)
 		require.Nil(err)
 

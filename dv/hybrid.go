@@ -22,15 +22,13 @@ type HybridARCAD struct {
 
 	count int // count is the number of sent messages.
 
-	// flags contains a list of counts that determine if the ARCAD
-	// suite has to be switched for the next message.
-	flags []int
+	flag int
 }
 
 // HybridUser designates a hybrid-ARCAD user state.
 type HybridUser struct {
-	stARCAD Uuser
-	stLite  map[string]Uuser
+	stARCAD User
+	stLite  map[string]User
 
 	snd, rec int
 	ctr      map[int]int
@@ -62,17 +60,17 @@ func NewHybridARCAD(
 	asymmetric encryption.Asymmetric,
 	symmetric encryption.Symmetric,
 	otae encryption.Authenticated,
-	flags []int) *HybridARCAD {
+	flag int) *HybridARCAD {
 
 	return &HybridARCAD{
 		arcad: NewARCAD(signature, asymmetric, symmetric),
 		lite:  NewLiteARCAD(otae, symmetric),
-		count: 0, flags: flags,
+		count: 0, flag: flag,
 	}
 }
 
 // Init intializes the hybrid-ARCAD protocol and returns two user states.
-func (h *HybridARCAD) Init() (alice, bob Uuser, err error) {
+func (h *HybridARCAD) Init() (alice, bob User, err error) {
 	as, ar, err := h.arcad.Init()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to create fresh ARCAD states")
@@ -85,33 +83,29 @@ func (h *HybridARCAD) Init() (alice, bob Uuser, err error) {
 
 	alice = &HybridUser{
 		stARCAD: as,
-		stLite:  map[string]Uuser{index(0, 0): ls},
+		stLite:  map[string]User{index(0, 0): ls},
 		snd:     0, rec: -1, ctr: map[int]int{0: 0},
 	}
 	bob = &HybridUser{
 		stARCAD: ar,
-		stLite:  map[string]Uuser{index(0, 0): lr},
+		stLite:  map[string]User{index(0, 0): lr},
 		snd:     -1, rec: 0, ctr: map[int]int{0: 0},
 	}
 	return
 }
 
 // Send invokes the hybrid-ARCAD send routine.
-func (h *HybridARCAD) Send(user Uuser, ad, msg []byte) ([]byte, error) {
+func (h *HybridARCAD) Send(user User, ad, msg []byte) ([]byte, error) {
 	var ct []byte
 	var e, c int
 
 	u := user.(*HybridUser)
 
 	flag := false
-	for _, f := range h.flags {
-		if h.count == f {
-			flag = true
-			break
-		}
-	}
 
-	if flag {
+	if h.count%h.flag == 0 {
+		flag = true
+
 		if u.snd < u.rec {
 			e, c = u.rec+1, 0
 		} else {
@@ -164,13 +158,12 @@ func (h *HybridARCAD) Send(user Uuser, ad, msg []byte) ([]byte, error) {
 	}
 
 	// Clean-up states.
-	for e := 0; e < u.snd && e < u.rec; e++ {
-		for c := 0; c < u.ctr[u.snd] && c < u.ctr[u.rec]; c++ {
-			// fmt.Println("************", e, c)
+	for e := -1; e < u.snd && e < u.rec; e++ {
+		for c := -1; c < u.ctr[u.snd] && c < u.ctr[u.rec]; c++ {
 			delete(u.stLite, index(e, c))
 		}
 	}
-	for e := 0; e < u.snd && e < u.rec; e++ {
+	for e := -1; e < u.snd && e < u.rec; e++ {
 		delete(u.ctr, e)
 	}
 
@@ -179,7 +172,7 @@ func (h *HybridARCAD) Send(user Uuser, ad, msg []byte) ([]byte, error) {
 }
 
 // Receive invokes the hybrid-ARCAD receive routine.
-func (h *HybridARCAD) Receive(user Uuser, ad, ct []byte) ([]byte, error) {
+func (h *HybridARCAD) Receive(user User, ad, ct []byte) ([]byte, error) {
 	var cipher hybridCiphertext
 	if err := binary.Unmarshal(ct, &cipher); err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshal hybrid-ARCAD ciphertext")
@@ -222,12 +215,12 @@ func (h *HybridARCAD) Receive(user Uuser, ad, ct []byte) ([]byte, error) {
 	}
 
 	// Clean-up states.
-	for e := 0; e < u.snd && e < u.rec; e++ {
+	for e := -1; e < u.snd && e < u.rec; e++ {
 		for c := 0; c < u.ctr[u.snd] && c < u.ctr[u.rec]; c++ {
 			delete(u.stLite, index(e, c))
 		}
 	}
-	for e := 0; e < u.snd && e < u.rec; e++ {
+	for e := -1; e < u.snd && e < u.rec; e++ {
 		delete(u.ctr, e)
 	}
 
@@ -241,4 +234,13 @@ func index(a, b int) string {
 		[]byte(strconv.Itoa(a)),
 		[]byte(strconv.Itoa(b)),
 	))
+}
+
+// Size returns the size of a user state in bytes.
+func (h HybridUser) Size() int {
+	s := h.stARCAD.Size()
+	for _, u := range h.stLite {
+		s += u.Size()
+	}
+	return s
 }
