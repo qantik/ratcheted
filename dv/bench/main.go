@@ -25,6 +25,7 @@ var (
 	lite   = dv.NewLiteARCAD(gcm, aes)
 	hybrid = dv.NewHybridARCAD(ecdsa, ecies, aes, gcm, flag)
 	block  = dv.NewBlockchainARCAD(hybrid)
+	sarcad = dv.NewSARCAD(gcm)
 )
 
 var (
@@ -33,5 +34,5 @@ var (
 )
 
 func main() {
-	time_hybrid(block, time_uni)
+	time(sarcad, time_uni)
 }
