@@ -1,4 +1,4 @@
-// (c) 2018 EPFL
+// (c) 2020 EPFL
 // This code is licensed under MIT license (see LICENSE.txt for details)
 
 // Runtime, message size and state size benchmarks for the dv protocol.
@@ -34,5 +34,5 @@ var (
 )
 
 func main() {
-	time(sarcad, time_uni)
+	time(sarcad, time_alt)
 }
