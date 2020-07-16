@@ -6,7 +6,6 @@ package encryption
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"fmt"
 )
 
@@ -31,9 +30,9 @@ func (g GCM) Encrypt(key, msg, ad []byte) ([]byte, error) {
 	}
 
 	var nonce [nonceSize]byte
-	if _, err := rand.Read(nonce[:]); err != nil {
-		return nil, err
-	}
+	// if _, err := rand.Read(nonce[:]); err != nil {
+	// 	return nil, err
+	// }
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {

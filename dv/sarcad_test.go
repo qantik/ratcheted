@@ -12,7 +12,7 @@ import (
 	"github.com/qantik/ratcheted/primitives/encryption"
 )
 
-var sarcad = NewSARCAD(encryption.NewGCM())
+var sarcad = NewSARCAD(encryption.NewGCM(), encryption.NewAES(), false)
 
 func TestSARCAD_Alternating(t *testing.T) {
 	require := require.New(t)

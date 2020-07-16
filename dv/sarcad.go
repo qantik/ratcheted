@@ -15,6 +15,9 @@ import (
 
 type SARCAD struct {
 	otae encryption.Authenticated
+	aes  encryption.Symmetric
+
+	oteae bool
 }
 
 type SARCADUser struct {
@@ -22,17 +25,20 @@ type SARCADUser struct {
 	sk, rk []byte
 }
 
-func NewSARCAD(otae encryption.Authenticated) *SARCAD {
-	return &SARCAD{otae: otae}
+func NewSARCAD(otae encryption.Authenticated, aes encryption.Symmetric, oteae bool) *SARCAD {
+	return &SARCAD{otae: otae, aes: aes, oteae: oteae}
 }
 
 func (s SARCAD) Init() (alice, bob User, err error) {
-	hk := make([]byte, hashKeySize)
-	if _, err := rand.Read(hk); err != nil {
-		return nil, nil, errors.Wrap(err, "unable to initialize sarcad protocol")
+	var hk []byte
+	if !s.oteae {
+		hk = make([]byte, hashKeySize)
+		if _, err := rand.Read(hk); err != nil {
+			return nil, nil, errors.Wrap(err, "unable to initialize sarcad protocol")
+		}
 	}
 
-	k1, k2 := make([]byte, 32), make([]byte, 32)
+	k1, k2 := make([]byte, 16), make([]byte, 16)
 	if _, err := rand.Read(k1); err != nil {
 		return nil, nil, errors.Wrap(err, "unable to initialize sarcad protocol")
 	}
@@ -53,7 +59,14 @@ func (s SARCAD) Send(user User, ad, msg []byte) ([]byte, error) {
 		return nil, errors.Wrap(err, "unable to encrypt plaintext")
 	}
 
-	u.sk = primitives.Digest(sha256.New(), u.hk, u.sk)
+	if s.oteae {
+		ones := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+		enc, _ := s.aes.Encrypt(u.sk, ones)
+		u.sk = enc[16:]
+	} else {
+		dig := primitives.Digest(sha256.New(), u.hk, u.sk)
+		u.sk = dig[:16]
+	}
 
 	return ct, nil
 }
@@ -66,12 +79,19 @@ func (s SARCAD) Receive(user User, ad, ct []byte) ([]byte, error) {
 		return nil, errors.Wrap(err, "unable to decrypt ciphertext")
 	}
 
-	u.rk = primitives.Digest(sha256.New(), u.hk, u.rk)
+	if s.oteae {
+		ones := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+		enc, _ := s.aes.Encrypt(u.rk, ones)
+		u.rk = enc[16:]
+	} else {
+		dig := primitives.Digest(sha256.New(), u.hk, u.rk)
+		u.rk = dig[:16]
+	}
 
 	return pt, nil
 }
 
 // Size returns the size of a user state in bytes.
 func (b SARCADUser) Size() int {
-	return 16 + 32 + 32
+	return len(b.hk) + len(b.sk) + len(b.rk)
 }

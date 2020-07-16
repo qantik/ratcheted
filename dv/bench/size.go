@@ -105,7 +105,7 @@ func size(p dv.Protocol, tp func(p dv.Protocol, i int) (int, int)) {
 
 	s := ""
 	for i, n := range []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200} {
-		msg[i], _ = tp(p, n)
+		_, msg[i] = tp(p, n)
 		s += fmt.Sprintf("(%d,%.2f)", n, float32(msg[i])/1000)
 	}
 	fmt.Println(s)

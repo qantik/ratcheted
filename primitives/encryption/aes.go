@@ -52,9 +52,9 @@ func (a AES) Encrypt(key, msg []byte) ([]byte, error) {
 
 	ct := make([]byte, aes.BlockSize+len(padded))
 	iv := ct[:aes.BlockSize]
-	if _, err := rand.Read(iv); err != nil {
-		return nil, err
-	}
+	// if _, err := rand.Read(iv); err != nil {
+	// 	return nil, err
+	// }
 
 	cbc := cipher.NewCBCEncrypter(block, iv)
 	cbc.CryptBlocks(ct[aes.BlockSize:], padded)
@@ -80,6 +80,9 @@ func (a AES) Decrypt(key, ct []byte) ([]byte, error) {
 
 // pad a byte slice to a multiple of the AES block size.
 func pad(src []byte) []byte {
+	if len(src)%16 == 0 {
+		return src
+	}
 	padding := aes.BlockSize - len(src)%aes.BlockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(src, padtext...)
@@ -87,6 +90,9 @@ func pad(src []byte) []byte {
 
 // unpad a byte slice.
 func unpad(src []byte) []byte {
+	if len(src)%16 == 0 {
+		return src
+	}
 	length := len(src)
 	unpadding := int(src[length-1])
 	return src[:(length - unpadding)]
